@@ -21,12 +21,11 @@ import org.apache.storm.topology.TopologyBuilder;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception{
-        File output = new File("D:\\BigData\\output.csv");
         HashMap < Integer, HashMap <String, HashMap<String, Double> > > data = new HashMap<Integer, HashMap<String, HashMap<String, Double>>>();
         HashMap <Integer, HashMap<String, HashMap<Long, HashMap<Long, Double > > > > map_house = new HashMap<Integer, HashMap<String, HashMap<Long, HashMap<Long, Double>>>>();
         HashMap < Integer, HashMap <String, Double> > final_data = new HashMap<Integer, HashMap<String, Double>>();
         String topoName = "DataAnalize";
-        File inputFile = new File("D:\\BigData\\sorted100M.csv");
+        File inputFile;
         JFileChooser chooser = new JFileChooser();
         FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV","csv");
         chooser.setFileFilter(filter);
@@ -51,13 +50,13 @@ public class MainTopo {
             builder.setBolt("avg60", new Bolt_avg(60, map_house), 1).shuffleGrouping("split60");
             builder.setBolt("split120", new Bolt_split(120), 1).shuffleGrouping("spout");
             builder.setBolt("avg120", new Bolt_avg(120, map_house), 1).shuffleGrouping("split120");
-            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
-            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
-            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
-            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
-            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
-            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
-            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File("D:\\BigData\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
+            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File( inputFile.getAbsolutePath() + "\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
+            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
+            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
+            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
+            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
+            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
+            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
             Config conf = new Config(); // define a configuration object
 //            Render ren = new Render(final_data, output);
 //            ren.start();
