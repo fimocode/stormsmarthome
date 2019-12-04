@@ -22,7 +22,7 @@ import org.apache.storm.topology.TopologyBuilder;
 public class MainTopo {
     public static void main(String[] args) throws Exception{
         HashMap < Integer, HashMap <String, HashMap<String, Double> > > data = new HashMap<Integer, HashMap<String, HashMap<String, Double>>>();
-        HashMap <Integer, HashMap<String, HashMap<Long, HashMap<Long, Double > > > > map_house = new HashMap<Integer, HashMap<String, HashMap<Long, HashMap<Long, Double>>>>();
+        HashMap <Integer, HashMap<String, HashMap<Long, HashMap<String, Double > > > > map_house = new HashMap<Integer, HashMap<String, HashMap<Long, HashMap<String, Double>>>>();
         HashMap < Integer, HashMap <String, Double> > final_data = new HashMap<Integer, HashMap<String, Double>>();
         String topoName = "DataAnalize";
         File inputFile;
@@ -32,7 +32,7 @@ public class MainTopo {
         int returnVal = chooser.showOpenDialog(null);
         if(returnVal == JFileChooser.APPROVE_OPTION) {
             System.out.println("You chose to open this file: " +
-                    chooser.getSelectedFile().getAbsolutePath());
+                    chooser.getSelectedFile().getParent());
             inputFile = chooser.getSelectedFile();
             TopologyBuilder builder = new TopologyBuilder();
             builder.setSpout("spout", new Spout(inputFile), 1);
@@ -50,16 +50,17 @@ public class MainTopo {
             builder.setBolt("avg60", new Bolt_avg(60, map_house), 1).shuffleGrouping("split60");
             builder.setBolt("split120", new Bolt_split(120), 1).shuffleGrouping("spout");
             builder.setBolt("avg120", new Bolt_avg(120, map_house), 1).shuffleGrouping("split120");
-            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File( inputFile.getAbsolutePath() + "\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
-            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
-            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
-            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
-            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
-            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
-            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File(inputFile.getAbsolutePath() + "\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
+            if(!(new File( inputFile.getParent() + "\\Result_" + inputFile.getName()).isDirectory())){
+                new File( inputFile.getParent() + "\\Result_" + inputFile.getName()).mkdir();
+            }
+            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File( inputFile.getParent() + "\\Result_" + inputFile.getName() + "\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
+            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File(inputFile.getParent() + "\\Result_" + inputFile.getName() + "\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
+            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File(inputFile.getParent() + "\\Result_" + inputFile.getName() + "\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
+            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File(inputFile.getParent() + "\\Result_" + inputFile.getName() + "\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
+            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File(inputFile.getParent() + "\\Result_" + inputFile.getName() + "\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
+            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File(inputFile.getParent() + "\\Result_" + inputFile.getName() + "\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
+            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File(inputFile.getParent()+ "\\Result_" + inputFile.getName() + "\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
             Config conf = new Config(); // define a configuration object
-//            Render ren = new Render(final_data, output);
-//            ren.start();
             if (args != null && args.length > 1) {
                 conf.setNumWorkers(Integer.parseInt("10"));
                 StormSubmitter.submitTopology(topoName, conf, builder.createTopology());
@@ -74,56 +75,10 @@ public class MainTopo {
                 cluster.submitTopology("debs-topologie", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
 //                Thread.sleep(20000); // sleep for two seconds
 //                cluster.shutdown(); // and then shuts down the cluster
-//                ren.done();
             }
         }
         else{
             System.out.print("Wrong format");
-        }
-    }
-}
-
-class Render extends Thread{
-    public volatile HashMap < Integer, HashMap <String, Double> > final_data;
-    File output;
-    private Boolean done = false;
-    public Render (HashMap < Integer, HashMap <String, Double> > final_data, File output){
-        this.final_data = final_data;
-        this.output = output;
-    }
-    
-    public void done(){
-        this.done = true;
-    }
-    
-    @Override
-    public void run(){
-        BufferedWriter bw = null;
-        try {
-            while(!done){
-                Thread.sleep(5000);
-                bw = new BufferedWriter(new FileWriter(output,false));
-                System.out.println("Rendering...");
-                for(Integer house : final_data.keySet()){
-                    bw.write(house);
-                    for(String slice_name : final_data.get(house).keySet()){
-                        bw.write(","+ final_data.get(house).get(slice_name));
-                    }
-                    bw.write('\n');
-                    bw.close();
-                }
-                System.out.println(final_data);
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(Render.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Render.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                bw.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Render.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
     }
 }

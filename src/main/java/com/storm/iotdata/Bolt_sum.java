@@ -53,23 +53,30 @@ class Bolt_sum extends BaseRichBolt {
         BufferedWriter bw     = null;
         if((Boolean)tuple.getValueByField("end")){
             try {
-                Object[] keySet = final_data.get(final_data.keySet().toArray()[0]).keySet().toArray();
-                Arrays.sort(keySet);
-                bw = new BufferedWriter(new FileWriter(output,false));
-                bw.write("House");
-                for(Object slice: keySet){
-                    bw.write(","+slice);
+                if(final_data.size()==0){
+                    System.out.println("No data recorded");
                 }
-                bw.write('\n');
-                for(Integer house : final_data.keySet()){
-                    bw.write(String.valueOf(house));
-                    HashMap <String, Double> house_data = final_data.get(house);
-                    for(Object slice : keySet){
-                        bw.write(","+ house_data.get(slice));
+                else{
+                    System.out.println("Writing to " + output.getAbsolutePath());
+                    Object[] keySet = final_data.get(final_data.keySet().toArray()[0]).keySet().toArray();
+                    Arrays.sort(keySet);
+                    bw = new BufferedWriter(new FileWriter(output,false));
+                    bw.write("House");
+                    for(Object slice: keySet){
+                        bw.write(","+slice);
                     }
                     bw.write('\n');
+                    for(Integer house : final_data.keySet()){
+                        bw.write(String.valueOf(house));
+                        HashMap <String, Double> house_data = final_data.get(house);
+                        for(Object slice : keySet){
+                            bw.write(","+ house_data.get(slice));
+                        }
+                        bw.write('\n');
+                    }
+                    bw.close();
+                    System.out.print("Successfuly write to file " + output.getAbsolutePath());
                 }
-                bw.close();
             } catch (IOException ex) {
                 Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);
             }
