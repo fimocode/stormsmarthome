@@ -51,7 +51,7 @@ class Bolt_sum extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         BufferedWriter bw     = null;
-        if((Boolean)tuple.getValueByField("end")){
+        if((Long)tuple.getValueByField("end")!=0){
             try {
                 if(final_data.size()==0){
                     System.out.println("No data recorded");
@@ -75,7 +75,16 @@ class Bolt_sum extends BaseRichBolt {
                         bw.write('\n');
                     }
                     bw.close();
-                    System.out.print("Successfuly write to file " + output.getAbsolutePath());
+                    Long duration = System.currentTimeMillis() - (Long)tuple.getValueByField("end");
+                    if(duration>=3600000){
+                        System.out.printf("\nSuccessfuly write to file %s (%d hours %d minutes %d seconds\n)", output.getAbsolutePath(), Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000 );
+                    }
+                    else if(duration>=60000){
+                        System.out.printf("\nSuccessfuly write to file %s (%d minutes %d seconds)\n", output.getAbsolutePath(), Math.floorDiv(duration,60000), (duration%60000)/1000 );
+                    }
+                    else{
+                        System.out.printf("\nSuccessfuly write to file %s (%d seconds)\n", output.getAbsolutePath(), duration/1000 );
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);

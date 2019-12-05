@@ -54,12 +54,7 @@ public class Bolt_split extends BaseRichBolt {
         long slice_num = (int) Math.floorDiv(time,(windows*60000));
         Long index = time%(windows*60000);
         String household_deviceid = household_id + "_" + plug_id;
-        String index_random = String.valueOf(index) + UUID.randomUUID().toString().replace("-", ""); //Might be more than one record in received in 1 second
-        if((Boolean)tuple.getValueByField("end")){
-            _collector.emit(new Values(house_id, household_deviceid, day, slice_num, index_random, value, true));
-        }
-        else{
-            _collector.emit(new Values(house_id, household_deviceid, day, slice_num, index_random, value, false));
-        }
+        String index_random = String.valueOf(index) + UUID.randomUUID().toString().replace("-", ""); //Might be more than one record in received in 1 second`
+        _collector.emit(new Values(house_id, household_deviceid, day, slice_num, index_random, value, (Long)tuple.getValueByField("end")));
     }
 }

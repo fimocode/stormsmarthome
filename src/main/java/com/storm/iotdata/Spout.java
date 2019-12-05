@@ -52,13 +52,13 @@ public class Spout extends BaseRichSpout {
             while((!done) && ((line = br.readLine()) != null)){
                 String[] metric = line.split(",");
                 if(Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], false));
+                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
                 }
 //                Thread.sleep(1);
                 System.out.print("\rSended: " + ++inc);
             }
             if(!done){
-                _collector.emit(new Values("0", "0", "0", "0", "0", "0", true));
+                _collector.emit(new Values("0", "0", "0", "0", "0", "0", start));
                 done=true;
             }
             br.close(); 

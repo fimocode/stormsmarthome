@@ -45,8 +45,8 @@ class Bolt_avg extends BaseRichBolt {
         String index = (String) tuple.getValueByField("index");
         Long slice_num = (Long) tuple.getValueByField("slice_num");
         String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
-        if((Boolean)tuple.getValueByField("end")){
-            _collector.emit(new Values(house_id, household_deviceid, slice_name, new Double("0"), true));
+        if((Long)tuple.getValueByField("end")!=0){
+            _collector.emit(new Values(house_id, household_deviceid, slice_name, new Double("0"), (Long)tuple.getValueByField("end")));
         }
         else{
             Double val = new Double(String.valueOf(0));
@@ -70,7 +70,7 @@ class Bolt_avg extends BaseRichBolt {
                 val += slice.get(sample);
             }
             avg = val/slice.size();
-            _collector.emit(new Values(house_id, household_deviceid, slice_name, avg, false));
+            _collector.emit(new Values(house_id, household_deviceid, slice_name, avg, (Long)tuple.getValueByField("end")));
         }
     }
 
