@@ -55,7 +55,7 @@ public class Spout extends BaseRichSpout {
                     _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
                 }
 //                Thread.sleep(1);
-                System.out.print("\rSended: " + ++inc);
+                System.out.print("\rSended: " + ++inc + " (" +(inc*1000/(System.currentTimeMillis()-start)) + " mess/s)");
             }
             if(!done){
                 _collector.emit(new Values("0", "0", "0", "0", "0", "0", start));
