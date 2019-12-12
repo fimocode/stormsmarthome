@@ -35,11 +35,6 @@ public class Spout extends BaseRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
-    }
-
-    @Override
-    /* emits a new tuple into the topology or simply returns if there are no new tuples to emit */
-    public void nextTuple( ) {
         try {
             MqttClient client = new MqttClient(brokerUrl, clientId);
             client.setCallback(new MqttCallback() {
@@ -68,6 +63,11 @@ public class Spout extends BaseRichSpout {
         catch (Exception e){
                 System.out.println(e.toString());
         }
+    }
+
+    @Override
+    /* emits a new tuple into the topology or simply returns if there are no new tuples to emit */
+    public void nextTuple( ) {
     }
 
     @Override
