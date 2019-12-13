@@ -7,7 +7,7 @@ package com.storm.iotdata;
 
 import java.io.File;
 import java.util.HashMap;
-import javax.swing.JFileChooser;
+// import javax.swing.JFileChooser;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
@@ -48,13 +48,13 @@ public class MainTopo {
             if(!(new File("Result").isDirectory())){
                 new File("Result").mkdir();
             }
-            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File("Result\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
-            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File("Result\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
-            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File("Result\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
-            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File("Result\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
-            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File("Result\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
-            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File("Result\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
-            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File("Result\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
+            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File("Result/output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
+            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File("Result/output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
+            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File("Result/output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
+            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File("Result/output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
+            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File("Result/output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
+            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File("Result/output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
+            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File("Result/output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
             Config conf = new Config(); // define a configuration object
             if (args != null && args.length > 1) {
                 conf.setNumWorkers(Integer.parseInt("10"));
