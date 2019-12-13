@@ -19,16 +19,16 @@ public class MainTopo {
         HashMap <Integer, HashMap<String, HashMap<Long, HashMap<String, Double > > > > map_house = new HashMap<Integer, HashMap<String, HashMap<Long, HashMap<String, Double>>>>();
         HashMap < Integer, HashMap <String, Double> > final_data = new HashMap<Integer, HashMap<String, Double>>();
         String topoName = "DataAnalize";
-        String brokerURL = "";
-        File outputDir;
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Select output folder");
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
-        int returnVal = chooser.showOpenDialog(null);
-        if(returnVal == JFileChooser.APPROVE_OPTION) {
-            System.out.println("You chose to open this file: " + chooser.getSelectedFile().getParent());
-            outputDir = chooser.getSelectedFile();
+        String brokerURL = "tcp://127.0.0.1:1883";
+        // File outputDir;
+        // JFileChooser chooser = new JFileChooser();
+        // chooser.setDialogTitle("Select output folder");
+        // chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        // chooser.setAcceptAllFileFilterUsed(false);
+        // int returnVal = chooser.showOpenDialog(null);
+        // if(returnVal == JFileChooser.APPROVE_OPTION) {
+        //     System.out.println("You chose to open this file: " + chooser.getSelectedFile().getParent());
+        //     outputDir = chooser.getSelectedFile();
             TopologyBuilder builder = new TopologyBuilder();
             builder.setSpout("spout", new Spout(brokerURL), 1);
             builder.setBolt("split5", new Bolt_split(5), 1).shuffleGrouping("spout");
@@ -45,16 +45,16 @@ public class MainTopo {
             builder.setBolt("avg60", new Bolt_avg(60, map_house), 1).shuffleGrouping("split60");
             builder.setBolt("split120", new Bolt_split(120), 1).shuffleGrouping("spout");
             builder.setBolt("avg120", new Bolt_avg(120, map_house), 1).shuffleGrouping("split120");
-            if(!(new File( outputDir.getAbsoluteFile() + "\\Result").isDirectory())){
-                new File( outputDir.getAbsoluteFile() + "\\Result").mkdir();
+            if(!(new File("Result").isDirectory())){
+                new File("Result").mkdir();
             }
-            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File( outputDir.getAbsoluteFile() + "\\Result\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
-            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File(outputDir.getAbsoluteFile() + "\\Result\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
-            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File(outputDir.getAbsoluteFile() + "\\Result\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
-            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File(outputDir.getAbsoluteFile() + "\\Result\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
-            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File(outputDir.getAbsoluteFile() + "\\Result\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
-            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File(outputDir.getAbsoluteFile() + "\\Result\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
-            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File(outputDir.getAbsoluteFile()+ "\\Result\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
+            builder.setBolt("sum5",new Bolt_sum(data, final_data, new File("Result\\output_windows_5_min.csv")), 1).shuffleGrouping("avg5");
+            builder.setBolt("sum10",new Bolt_sum(data, final_data, new File("Result\\output_windows_10_min.csv")), 1).shuffleGrouping("avg10");
+            builder.setBolt("sum15",new Bolt_sum(data, final_data, new File("Result\\output_windows_15_min.csv")), 1).shuffleGrouping("avg15");
+            builder.setBolt("sum20",new Bolt_sum(data, final_data, new File("Result\\output_windows_20_min.csv")), 1).shuffleGrouping("avg20");
+            builder.setBolt("sum30",new Bolt_sum(data, final_data, new File("Result\\output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
+            builder.setBolt("sum60",new Bolt_sum(data, final_data, new File("Result\\output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
+            builder.setBolt("sum120",new Bolt_sum(data, final_data, new File("Result\\output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
             Config conf = new Config(); // define a configuration object
             if (args != null && args.length > 1) {
                 conf.setNumWorkers(Integer.parseInt("10"));
@@ -63,7 +63,6 @@ public class MainTopo {
                 // test the topology in local mode
 
                 //conf.setDebug(false); // enable Debug mode
-                conf.put("input_file", outputDir.getName());
                 conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
 
                 LocalCluster cluster = new LocalCluster(); // create the local cluster
@@ -71,9 +70,9 @@ public class MainTopo {
 //                Thread.sleep(20000); // sleep for two seconds
 //                cluster.shutdown(); // and then shuts down the cluster
             }
-        }
-        else{
-            System.out.print("Wrong format");
-        }
+        // }
+        // else{
+        //     System.out.print("Wrong format");
+        // }
     }
 }

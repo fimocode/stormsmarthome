@@ -23,11 +23,14 @@ public class Spout extends BaseRichSpout {
     private SpoutOutputCollector _collector;
     long start;
     Long total = new Long("0");
-    String brokerUrl = "";
+    String brokerUrl = "localhost";
     String clientId = "";
+    MqttClient client;
+    long lastW = new Long("0");
 
     public Spout (String broker_url) {
         this.start = System.currentTimeMillis();
+        this.lastW = start;
         this.brokerUrl = broker_url;
         this.clientId = generateClientId();
     }
@@ -36,7 +39,7 @@ public class Spout extends BaseRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
         try {
-            MqttClient client = new MqttClient(brokerUrl, clientId);
+            client = new MqttClient(brokerUrl, clientId);
             client.setCallback(new MqttCallback() {
                 public void connectionLost(Throwable cause) {
                     System.out.println("Lost connection with MQTT Server.");
@@ -45,16 +48,19 @@ public class Spout extends BaseRichSpout {
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
                     String[] metric = message.toString().split(",");
                     if(Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                        _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
+                        if((System.currentTimeMillis()-lastW)>300000){ //Trigger signal to write data to file after 5 min
+                            _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], start));
+                            lastW = System.currentTimeMillis();
+                        }
+                        else{
+                            _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
+                        } 
+                        total++;
                     }
-                    if(total%1000000 == 0){
-                        _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], start));
-                    }
-                    System.out.print("\rSended: "+ total);
+                    System.out.print("\rReceived: "+ total);
                 }
 
                 public void deliveryComplete(IMqttDeliveryToken token) {
-                    total++;
                 }
             });
             client.connect();

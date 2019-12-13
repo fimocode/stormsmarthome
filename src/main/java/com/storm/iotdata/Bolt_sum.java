@@ -73,17 +73,17 @@ class Bolt_sum extends BaseRichBolt {
                         }
                         bw.write('\n');
                     }
-                    bw.close();
                     Long duration = System.currentTimeMillis() - (Long)tuple.getValueByField("end");
                     if(duration>=3600000){
-                        System.out.printf("\nSuccessfuly write to file %s (%d hours %d minutes %d seconds\n)", output.getAbsolutePath(), Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000 );
+                        bw.write(String.format("\nTotal,%d hours %d minutes %d seconds", Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000 ));
                     }
                     else if(duration>=60000){
-                        System.out.printf("\nSuccessfuly write to file %s (%d minutes %d seconds)\n", output.getAbsolutePath(), Math.floorDiv(duration,60000), (duration%60000)/1000 );
+                        bw.write(String.format("\nTotal,%d minutes %d seconds", Math.floorDiv(duration,60000), (duration%60000)/1000 ));
                     }
                     else{
-                        System.out.printf("\nSuccessfuly write to file %s (%d seconds)\n", output.getAbsolutePath(), duration/1000 );
+                        bw.write(String.format("\nTotal,%d seconds", duration/1000 ));
                     }
+                    bw.close();
                 }
             } catch (IOException ex) {
                 Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);
