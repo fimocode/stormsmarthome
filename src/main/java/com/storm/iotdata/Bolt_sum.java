@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -75,14 +76,15 @@ class Bolt_sum extends BaseRichBolt {
                     }
                     Long duration = System.currentTimeMillis() - (Long)tuple.getValueByField("end");
                     if(duration>=3600000){
-                        bw.write(String.format("\nTotal,%d hours %d minutes %d seconds", Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000 ));
+                        bw.write(String.format("\nTotal time,%d hours %d minutes %d seconds", Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000 ));
                     }
                     else if(duration>=60000){
-                        bw.write(String.format("\nTotal,%d minutes %d seconds", Math.floorDiv(duration,60000), (duration%60000)/1000 ));
+                        bw.write(String.format("\nTotal time,%d minutes %d seconds", Math.floorDiv(duration,60000), (duration%60000)/1000 ));
                     }
                     else{
-                        bw.write(String.format("\nTotal,%d seconds", duration/1000 ));
+                        bw.write(String.format("\nTotal time,%d seconds", duration/1000 ));
                     }
+                    bw.write("\nLast update,"+ new Date().toString());
                     bw.close();
                 }
             } catch (IOException ex) {
