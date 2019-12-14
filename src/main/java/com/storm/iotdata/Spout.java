@@ -27,12 +27,14 @@ public class Spout extends BaseRichSpout {
     String clientId = "";
     MqttClient client;
     long lastW = new Long("0");
+    String topic = "#";
 
-    public Spout (String broker_url) {
+    public Spout (String broker_url, String topic) {
         this.start = System.currentTimeMillis();
         this.lastW = start;
         this.brokerUrl = broker_url;
         this.clientId = generateClientId();
+        this.topic = topic;
     }
 
     @Override
@@ -57,14 +59,14 @@ public class Spout extends BaseRichSpout {
                         } 
                         total++;
                     }
-                    System.out.print("\rReceived: "+ total);
+                    // System.out.print("\rReceived: "+ total);
                 }
 
                 public void deliveryComplete(IMqttDeliveryToken token) {
                 }
             });
             client.connect();
-            client.subscribe("#");
+            client.subscribe(topic);
         }		
         catch (Exception e){
                 System.out.println(e.toString());
