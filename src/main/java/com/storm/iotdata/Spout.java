@@ -50,13 +50,7 @@ public class Spout extends BaseRichSpout {
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
                     String[] metric = message.toString().split(",");
                     if(Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                        if((System.currentTimeMillis()-lastW)>300000){ //Trigger signal to write data to file after 5 min
-                            _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], start));
-                            lastW = System.currentTimeMillis();
-                        }
-                        else{
-                            _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
-                        } 
+                        _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
                         total++;
                     }
                     // System.out.print("\rReceived: "+ total);
@@ -76,6 +70,10 @@ public class Spout extends BaseRichSpout {
     @Override
     /* emits a new tuple into the topology or simply returns if there are no new tuples to emit */
     public void nextTuple( ) {
+        if((System.currentTimeMillis()-lastW)>300000){ //Trigger signal to write data to file after 5 min
+            _collector.emit(new Values("0", "0", "0", "0", "0", "0", start));
+            lastW = System.currentTimeMillis();
+        }
     }
 
     @Override
