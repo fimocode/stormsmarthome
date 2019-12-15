@@ -29,7 +29,7 @@ public class Spout extends BaseRichSpout {
     long lastW = new Long("0");
     String topic = "#";
 
-    public Spout (String broker_url, String topic) {
+    public Spout(String broker_url, String topic) {
         this.start = System.currentTimeMillis();
         this.lastW = start;
         this.brokerUrl = broker_url;
@@ -49,8 +49,9 @@ public class Spout extends BaseRichSpout {
 
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
                     String[] metric = message.toString().split(",");
-                    if(Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                        _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], new Long("0")));
+                    if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+                        _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6],
+                                new Long("0")));
                         total++;
                     }
                     // System.out.print("\rReceived: "+ total);
@@ -61,19 +62,24 @@ public class Spout extends BaseRichSpout {
             });
             client.connect();
             client.subscribe(topic);
-        }		
-        catch (Exception e){
-                System.out.println(e.toString());
+        } catch (Exception e) {
+            System.out.println(e.toString());
         }
     }
 
     @Override
-    /* emits a new tuple into the topology or simply returns if there are no new tuples to emit */
-    public void nextTuple( ) {
-        if((System.currentTimeMillis()-lastW)>300000){ //Trigger signal to write data to file after 5 min
-            _collector.emit(new Values("0", "0", "0", "0", "0", "0", start));
-            lastW = System.currentTimeMillis();
+    /*
+     * emits a new tuple into the topology or simply returns if there are no new
+     * tuples to emit
+     */
+    public void nextTuple() {
+        try {
+            Thread.sleep(60000);
+            _collector.emit(new Values("0", "0", "0", "0", "0", "0", start)); // Trigger signal to write data to file after 5 min
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        
     }
 
     @Override

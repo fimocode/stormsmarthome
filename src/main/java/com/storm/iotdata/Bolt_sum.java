@@ -28,6 +28,7 @@ import org.apache.storm.tuple.Tuple;
  */
 class Bolt_sum extends BaseRichBolt {
     private OutputCollector _collector;
+    public long processed = new Long("0");
     public File output;
     public volatile HashMap < Integer, HashMap <String, HashMap<String, Double> > > data;
     public volatile HashMap < Integer, HashMap <String, Double> > final_data;
@@ -108,6 +109,7 @@ class Bolt_sum extends BaseRichBolt {
             HashMap<String, Double> result_house = final_data.getOrDefault(house_id, new HashMap<String, Double>());
             result_house.put(slice_name, sum);
             final_data.put(house_id, result_house);
+            System.out.printf("\rProcessed: %d",++processed);
         }
     }
 }

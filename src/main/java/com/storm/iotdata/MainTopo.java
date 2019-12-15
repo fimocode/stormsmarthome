@@ -34,7 +34,7 @@ public class MainTopo {
                 String topic = "house-" + i;
                 topic_list[i] = topic;
             }
-            int[] window_list = {5,10,15,20,30,60,120};
+            int[] window_list = {5};
             TopologyBuilder builder = new TopologyBuilder();
             
             for(String topic : topic_list){
@@ -54,6 +54,11 @@ public class MainTopo {
                     sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size + "-" + topic);
                 }
             }
+
+            Config conf = new Config();
+            conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 5000);
+            LocalCluster cluster = new LocalCluster(); // create the local cluster
+            cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
 
 
             // File outputDir;
@@ -90,17 +95,12 @@ public class MainTopo {
                 // builder.setBolt("sum30",new Bolt_sum(data, final_data, new File("Result/output_windows_30_min.csv")), 1).shuffleGrouping("avg30");
                 // builder.setBolt("sum60",new Bolt_sum(data, final_data, new File("Result/output_windows_60_min.csv")), 1).shuffleGrouping("avg60");
                 // builder.setBolt("sum120",new Bolt_sum(data, final_data, new File("Result/output_windows_120_min.csv")), 1).shuffleGrouping("avg120");
-                Config conf = new Config(); // define a configuration object
-                if (args != null && args.length > 1) {
-                    conf.setNumWorkers(Integer.parseInt("10"));
-                    StormSubmitter.submitTopology(topoName, conf, builder.createTopology());
-                } else {
+                // if (args != null && args.length > 1) {
+                //     // conf.setNumWorkers(Integer.parseInt("10"));
+                //     StormSubmitter.submitTopology(topoName, conf, builder.createTopology());
+                // } else {
                     //conf.setDebug(false); // enable Debug mode
-                    conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
-
-                    LocalCluster cluster = new LocalCluster(); // create the local cluster
-                    cluster.submitTopology("debs-topologie", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
-                }
+                // }
             // }
             // else{
             //     System.out.print("Wrong format");
