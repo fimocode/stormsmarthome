@@ -60,16 +60,15 @@ class Bolt_avg extends BaseRichBolt {
             house = map_house.getOrDefault(house_id, new HashMap<String, HashMap<Long, HashMap<String, Double>>>());
             device = house.getOrDefault(household_deviceid, new HashMap<Long, HashMap<String, Double>>());
             slice = device.getOrDefault(slice_num, new HashMap<String, Double>());
-            slice.put(index, value);
+            slice.put("value", slice.getOrDefault("value", new Double("0")) + value);
+            slice.put("sampleNum", slice.getOrDefault("sampleNum", new Double("0")) + 1);
             device.put(slice_num, slice);
             house.put(household_deviceid, device);
             map_house.put(house_id, house);
 
             //Cal avg
-            for (String sample : slice.keySet()) {
-                val += slice.get(sample);
-            }
-            avg = val/slice.size();
+            avg = slice.get("value")/slice.get("sampleNum");
+
             _collector.emit(new Values(house_id, household_deviceid, slice_name, avg, (Long)tuple.getValueByField("end")));
         }
     }
