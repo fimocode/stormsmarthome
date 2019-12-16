@@ -77,13 +77,13 @@ class Bolt_sum extends BaseRichBolt {
                     }
                     Long duration = System.currentTimeMillis() - (Long)tuple.getValueByField("end");
                     if(duration>=3600000){
-                        bw.write(String.format("\nTotal time,%d hours %d minutes %d seconds", Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000 ));
+                        bw.write(String.format("\nTotal time,%d hours %d minutes %d seconds,,Total messages,%d", Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000, processed));
                     }
                     else if(duration>=60000){
-                        bw.write(String.format("\nTotal time,%d minutes %d seconds", Math.floorDiv(duration,60000), (duration%60000)/1000 ));
+                        bw.write(String.format("\nTotal time,%d minutes %d seconds,,Total messages,%d", Math.floorDiv(duration,60000), (duration%60000)/1000, processed ));
                     }
                     else{
-                        bw.write(String.format("\nTotal time,%d seconds", duration/1000 ));
+                        bw.write(String.format("\nTotal time,%d seconds,,Total messages,%d", duration/1000, processed));
                     }
                     bw.write("\nLast update,"+ new Date().toString());
                     bw.close();
@@ -109,7 +109,7 @@ class Bolt_sum extends BaseRichBolt {
             HashMap<String, Double> result_house = final_data.getOrDefault(house_id, new HashMap<String, Double>());
             result_house.put(slice_name, sum);
             final_data.put(house_id, result_house);
-            System.out.printf("\rProcessed: %d",++processed);
+            processed++;
         }
     }
 }

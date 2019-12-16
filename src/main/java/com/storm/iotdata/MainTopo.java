@@ -34,7 +34,7 @@ public class MainTopo {
                 String topic = "house-" + i;
                 topic_list[i] = topic;
             }
-            int[] window_list = {5};
+            int[] window_list = {5,10,15,20,30,60,120};
             TopologyBuilder builder = new TopologyBuilder();
             
             for(String topic : topic_list){
