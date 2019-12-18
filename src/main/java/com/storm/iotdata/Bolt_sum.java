@@ -32,6 +32,8 @@ class Bolt_sum extends BaseRichBolt {
     public File output;
     public volatile HashMap < Integer, HashMap <String, HashMap<String, Double> > > data;
     public volatile HashMap < Integer, HashMap <String, Double> > final_data;
+    public Date lastChange = new Date();
+    private Long lastProcessed = new Long("0");
     
     public Bolt_sum(HashMap<Integer, HashMap<String, HashMap<String, Double>>> data, HashMap < Integer, HashMap <String, Double> > final_data, File output) {
         this.data = new HashMap<>();
@@ -85,7 +87,16 @@ class Bolt_sum extends BaseRichBolt {
                     else{
                         bw.write(String.format("\nTotal time,%d seconds,,Total messages,%d", duration/1000, processed));
                     }
-                    bw.write("\nLast update,"+ new Date().toString());
+                    if(lastProcessed!=processed){
+                        bw.write(String.format("\nTemporal processed speed,%.2f (mess/s)", ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+                        lastChange = new Date();
+                        lastProcessed = processed;
+                    }
+                    else{
+                        bw.write("\nTemporal processed speed,0 (mess/s),Not received any messages");
+                    }
+                    bw.write("\nLast update,"+ new Date().toGMTString());
+                    bw.write("\nLast change,"+ lastChange.toGMTString());
                     bw.close();
                 }
             } catch (IOException ex) {
