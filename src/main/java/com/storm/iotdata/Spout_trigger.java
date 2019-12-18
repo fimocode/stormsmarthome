@@ -11,13 +11,14 @@ import org.apache.storm.tuple.Values;
 public class Spout_trigger extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
-    private long start = new Long("0");
+    private long start = System.currentTimeMillis();
     public int interval = 1;
 
     public Spout_trigger(int interval){
         this.interval = interval;
+        this.start = System.currentTimeMillis();
     }
-    
+
     @Override
     public void open(Map<String, Object> conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
