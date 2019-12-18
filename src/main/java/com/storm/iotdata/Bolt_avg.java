@@ -42,7 +42,6 @@ class Bolt_avg extends BaseRichBolt {
         Double  value        = (Double) tuple.getValueByField("value");
         String household_deviceid = (String)tuple.getValueByField("household_deviceid");
         String date = (String)tuple.getValueByField("date");
-        String index = (String) tuple.getValueByField("index");
         Long slice_num = (Long) tuple.getValueByField("slice_num");
         String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
         if((Long)tuple.getValueByField("end")!=0){

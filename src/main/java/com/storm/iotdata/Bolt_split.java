@@ -31,7 +31,7 @@ public class Bolt_split extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","household_deviceid", "date","slice_num","index","value","end"));
+        declarer.declare(new Fields("house_id","household_deviceid", "date","slice_num","value","end"));
     }
 
     @Override
@@ -52,9 +52,9 @@ public class Bolt_split extends BaseRichBolt {
         String day = (1900+date.getYear()) + "/" + String.format("%02d", (1+date.getMonth())) + "/" +  String.format("%02d", date.getDate()) ;
         Long time = (date.getTime()%86400000);
         long slice_num = (int) Math.floorDiv(time,(windows*60000));
-        Long index = time%(windows*60000);
-        String household_deviceid = household_id + "_" + plug_id;
-        String index_random = String.valueOf(index) + UUID.randomUUID().toString().replace("-", ""); //Might be more than one record in received in 1 second`
-        _collector.emit(new Values(house_id, household_deviceid, day, slice_num, index_random, value, (Long)tuple.getValueByField("end")));
+        // Long index = time%(windows*60000);
+        // String household_deviceid = household_id + "_" + plug_id;
+        // String index_random = String.valueOf(index) + UUID.randomUUID().toString().replace("-", ""); //Might be more than one record in received in 1 second`
+        _collector.emit(new Values(house_id, household_deviceid, day, slice_num, value, (Long)tuple.getValueByField("end")));
     }
 }
