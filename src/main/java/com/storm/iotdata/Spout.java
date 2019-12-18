@@ -21,17 +21,13 @@ import static org.eclipse.paho.client.mqttv3.MqttClient.generateClientId;
 public class Spout extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
-    long start;
     Long total = new Long("0");
     String brokerUrl = "localhost";
     String clientId = "";
     MqttClient client;
-    long lastW = new Long("0");
     String topic = "#";
 
     public Spout(String broker_url, String topic) {
-        this.start = System.currentTimeMillis();
-        this.lastW = start;
         this.brokerUrl = broker_url;
         this.clientId = generateClientId();
         this.topic = topic;
@@ -73,13 +69,6 @@ public class Spout extends BaseRichSpout {
      * tuples to emit
      */
     public void nextTuple() {
-        try {
-            Thread.sleep(60000);
-            _collector.emit(new Values("0", "0", "0", "0", "0", "0", start)); // Trigger signal to write data to file after 5 min
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        
     }
 
     @Override

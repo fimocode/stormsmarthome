@@ -88,12 +88,12 @@ class Bolt_sum extends BaseRichBolt {
                         bw.write(String.format("\nTotal time,%d seconds,,Total messages,%d", duration/1000, processed));
                     }
                     if(lastProcessed!=processed){
-                        bw.write(String.format("\nTemporal processed speed,%.2f (mess/s)", ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+                        bw.write(String.format("\nTemporal process speed,%.2f (mess/s)", ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
                         lastChange = new Date();
                         lastProcessed = processed;
                     }
                     else{
-                        bw.write("\nTemporal processed speed,0 (mess/s),Not received any messages");
+                        bw.write("\nTemporal process speed,0 (mess/s),Not received any messages");
                     }
                     bw.write("\nLast update,"+ new Date().toGMTString());
                     bw.write("\nLast change,"+ lastChange.toGMTString());

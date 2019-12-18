@@ -16,6 +16,7 @@ import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
+import org.checkerframework.checker.units.qual.s;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception{
@@ -36,6 +37,8 @@ public class MainTopo {
             }
             int[] window_list = {5,10,15,20,30,60,120};
             TopologyBuilder builder = new TopologyBuilder();
+
+            builder.setSpout("trigger", new Spout_trigger(1), 1);
             
             for(String topic : topic_list){
                 //Spout
@@ -53,6 +56,7 @@ public class MainTopo {
                 for(String topic : topic_list){
                     sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size + "-" + topic);
                 }
+                sum_list.get("sum" + window_size).shuffleGrouping("trigger");
             }
 
             Config conf = new Config();
