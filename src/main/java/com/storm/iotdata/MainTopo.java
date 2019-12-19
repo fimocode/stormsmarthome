@@ -33,6 +33,7 @@ public class MainTopo {
                 String topic = "house-" + i;
                 topic_list[i] = topic;
             }
+            // topic_list = new String[]{"#"};
             int[] window_list = {5,10,15,20,30,60,120};
             TopologyBuilder builder = new TopologyBuilder();
 

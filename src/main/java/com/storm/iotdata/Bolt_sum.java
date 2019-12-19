@@ -73,7 +73,7 @@ class Bolt_sum extends BaseRichBolt {
                         bw.write(String.valueOf(house));
                         HashMap <String, Double> house_data = final_data.get(house);
                         for(Object slice : keySet){
-                            bw.write(","+ house_data.get(slice));
+                            bw.write(","+ house_data.getOrDefault(slice,new Double("0")));
                         }
                         bw.write('\n');
                     }
