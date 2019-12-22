@@ -37,23 +37,24 @@ public class MainTopo {
             int[] window_list = {5,10,15,20,30,60,120};
             TopologyBuilder builder = new TopologyBuilder();
 
-            builder.setSpout("trigger", new Spout_trigger(1), 1);
+            builder.setSpout("trigger", new Spout_trigger(30), 1);
             
             for(String topic : topic_list){
                 //Spout
-                builder.setSpout("spout-" + topic, new Spout(brokerURL, topic), 1);
-                //Split and Avg Bolt
-                for(int window_size : window_list){
-                    builder.setBolt("split" + window_size + "-" + topic, new Bolt_split(window_size), 1).shuffleGrouping("spout-" + topic);
-                    builder.setBolt("avg" + window_size + "-" + topic, new Bolt_avg(window_size, map_house), 1).shuffleGrouping("split" + window_size + "-" + topic);
-                }
+                builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
             }
 
+            HashMap<String,BoltDeclarer> split_list = new HashMap<String,BoltDeclarer>();
+            HashMap<String,BoltDeclarer> avg_list = new HashMap<String,BoltDeclarer>();
             HashMap<String,BoltDeclarer> sum_list = new HashMap<String,BoltDeclarer>();
             for(int window_size : window_list){
+                split_list.put("split" + window_size, builder.setBolt("split" + window_size, new Bolt_split(window_size), 1));
+                avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size + "-" + topic, new Bolt_avg(window_size, map_house), 1));
                 sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(data, final_data, new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
                 for(String topic : topic_list){
-                    sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size + "-" + topic);
+                    split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
+                    avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
+                    sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
                 }
                 sum_list.get("sum" + window_size).shuffleGrouping("trigger");
             }
