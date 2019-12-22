@@ -29,13 +29,13 @@ public class Spout extends BaseRichSpout {
 
     public Spout(String broker_url, String topic) {
         this.brokerUrl = broker_url;
-        this.clientId = generateClientId();
         this.topic = topic;
     }
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
+        this.clientId = generateClientId();
         try {
             client = new MqttClient(brokerUrl, clientId);
             client.setCallback(new MqttCallback() {

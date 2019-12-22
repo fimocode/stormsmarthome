@@ -41,7 +41,7 @@ public class MainTopo {
             
             for(String topic : topic_list){
                 //Spout
-                builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
+                builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 2);
             }
 
             HashMap<String,BoltDeclarer> split_list = new HashMap<String,BoltDeclarer>();
