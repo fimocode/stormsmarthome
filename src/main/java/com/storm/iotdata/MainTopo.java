@@ -49,7 +49,7 @@ public class MainTopo {
             HashMap<String,BoltDeclarer> sum_list = new HashMap<String,BoltDeclarer>();
             for(int window_size : window_list){
                 split_list.put("split" + window_size, builder.setBolt("split" + window_size, new Bolt_split(window_size), 1));
-                avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size + "-" + topic, new Bolt_avg(window_size, map_house), 1));
+                avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size, new Bolt_avg(window_size, map_house), 1));
                 sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(data, final_data, new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
                 for(String topic : topic_list){
                     split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
