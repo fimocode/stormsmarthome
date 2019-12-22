@@ -51,6 +51,9 @@ public class MainTopo {
                 split_list.put("split" + window_size, builder.setBolt("split" + window_size, new Bolt_split(window_size), 1));
                 avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size, new Bolt_avg(window_size, map_house), 1));
                 sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(data, final_data, new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
+            }
+            
+            for(int window_size : window_list){
                 for(String topic : topic_list){
                     split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
                 }
@@ -60,7 +63,7 @@ public class MainTopo {
             }
 
             Config conf = new Config();
-            conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 5000);
+            conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 50000);
             LocalCluster cluster = new LocalCluster(); // create the local cluster
             cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
 
