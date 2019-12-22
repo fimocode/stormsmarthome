@@ -53,9 +53,9 @@ public class MainTopo {
                 sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(data, final_data, new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
                 for(String topic : topic_list){
                     split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
-                    avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
-                    sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
                 }
+                avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
+                sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
                 sum_list.get("sum" + window_size).shuffleGrouping("trigger");
             }
 
