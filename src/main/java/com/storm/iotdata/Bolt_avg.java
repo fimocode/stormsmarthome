@@ -47,7 +47,7 @@ class Bolt_avg extends BaseRichBolt {
         Long slice_num = (Long) tuple.getValueByField("slice_num");
         Double avg = (double) 0;
         if((Long)tuple.getValueByField("end")!=0){
-            _collector.emit(new Values(house_id, household_deviceid, year, month, date, Double.valueOf(0), (Long)tuple.getValueByField("end")));
+            _collector.emit(new Values(house_id, household_deviceid, year, month, date, slice_num, Double.valueOf(0), (Long)tuple.getValueByField("end")));
             db_store.pushData(windows, map_house);
         }
         else{
@@ -75,13 +75,13 @@ class Bolt_avg extends BaseRichBolt {
             house_data.put(household_deviceid, device_data);
             map_house.put(house_id, house_data);
             System.out.printf("\ravg: %f",total);
-            _collector.emit(new Values(house_id, household_deviceid, year, month, date, avg, (Long)tuple.getValueByField("end")));
+            _collector.emit(new Values(house_id, household_deviceid, year, month, date, slice_num, avg, (Long)tuple.getValueByField("end")));
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","household_deviceid","year","month","date","value","end"));
+        declarer.declare(new Fields("house_id","household_deviceid","year","month","date","slice_num","value","end"));
     }
     
 }
