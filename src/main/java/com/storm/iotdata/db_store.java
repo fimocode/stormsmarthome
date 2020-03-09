@@ -1,10 +1,13 @@
 package com.storm.iotdata;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.Serializable;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.yaml.snakeyaml.Yaml;
 public class db_store implements Serializable{
     // private Connection conn;
     // public db_store(String dbURL, String userName, String password){
@@ -20,6 +23,7 @@ public class db_store implements Serializable{
 
     public boolean purgeData(){
         try {
+            Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
             Map<String, Object> obj = yaml.load(inputStream);
             String dbURL = "jdbc:mysql://"+obj.get("db_url");
@@ -44,6 +48,7 @@ public class db_store implements Serializable{
 
     public boolean initData(){
         try{
+            Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
             Map<String, Object> obj = yaml.load(inputStream);
             String dbURL = "jdbc:mysql://"+obj.get("db_url");
@@ -67,6 +72,7 @@ public class db_store implements Serializable{
 
     public static boolean pushData(int windows, HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house){
         try{
+            Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
             Map<String, Object> obj = yaml.load(inputStream);
             String dbURL = "jdbc:mysql://"+obj.get("db_url");

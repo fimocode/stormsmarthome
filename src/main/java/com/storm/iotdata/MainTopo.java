@@ -19,7 +19,6 @@ import org.yaml.snakeyaml.Yaml;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception{
-        Yaml yaml = new Yaml();
         if(!new File("cred.yaml").exists()){
             System.out.println("Credential file not found!");
         }
