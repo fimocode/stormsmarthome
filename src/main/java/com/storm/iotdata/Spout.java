@@ -67,7 +67,7 @@ public class Spout extends BaseRichSpout {
         // System.out.println(e.toString());
         // }
         try {
-            BufferedReader br = new BufferedReader(new FileReader(new File("data.csv")));
+            BufferedReader br = new BufferedReader(new FileReader(new File("/home/ubuntu/data/sorted.csv")));
             while(br.ready()){
                 String message = br.readLine();
                 String[] metric = message.toString().split(",");
