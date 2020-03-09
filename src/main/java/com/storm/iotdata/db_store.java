@@ -45,6 +45,7 @@ public class db_store{
 
     public boolean pushData(int windows, HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house){
         try{
+            Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for(int house_id : map_house.keySet()){
@@ -62,6 +63,7 @@ public class db_store{
                     }
                 }
             }
+            System.out.printf("\nSaved to DB (%.2f s)\n",(System.currentTimeMillis()-start)/60000);
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();

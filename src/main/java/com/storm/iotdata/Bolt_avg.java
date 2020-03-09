@@ -39,6 +39,7 @@ class Bolt_avg extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        Double total = Double.valueOf(0);
         Integer house_id     = (Integer) tuple.getValueByField("house_id");
         Double  value        = (Double) tuple.getValueByField("value");
         String household_deviceid = (String)tuple.getValueByField("household_deviceid");
@@ -75,6 +76,7 @@ class Bolt_avg extends BaseRichBolt {
             device_data.put(year, year_data);
             house_data.put(household_deviceid, device_data);
             map_house.put(house_id, house_data);
+            System.out.printf("\ravg: %d",total);
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, avg, (Long)tuple.getValueByField("end")));
         }
     }
