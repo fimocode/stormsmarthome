@@ -110,7 +110,7 @@ class Bolt_sum extends BaseRichBolt {
             Double  value        = (Double) tuple.getValueByField("value");
             String household_deviceid = (String)tuple.getValueByField("household_deviceid");
             Long slice_num = (Long)tuple.getValueByField("slice_num");
-            String date = (String)tuple.getValueByField("year") + "/" + (String)tuple.getValueByField("month") + "/" + (String)tuple.getValueByField("day");
+            String date = (String)tuple.getValueByField("year") + "/" + (String)tuple.getValueByField("month") + "/" + (String)tuple.getValueByField("date");
             String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
             HashMap<String, HashMap<String, Double>> data_house = data.getOrDefault(house_id, new HashMap<String, HashMap<String, Double>>());
             HashMap<String, Double> data_slice = data_house.getOrDefault(slice_name, new HashMap<String, Double>());
