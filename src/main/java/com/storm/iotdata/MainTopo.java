@@ -39,25 +39,48 @@ public class MainTopo {
                 if(!(new File("Result").isDirectory())){
                     new File("Result").mkdir();
                 }
-                String topoName = "DataAnalize";
-                String brokerURL = "tcp://127.0.0.1:1883";
-                //Init topic list and window list
-                String[] topic_list = new String[40];
-                for(int i = 0; i<40; i++){
-                    String topic = "house-" + i;
-                    topic_list[i] = topic;
-                }
-                // topic_list = new String[]{"#"};
-                int[] window_list = {5,10,15,20,30,60,120};
+                // String topoName = "DataAnalize";
+                // String brokerURL = "tcp://127.0.0.1:1883";
+                // //Init topic list and window list
+                // String[] topic_list = new String[40];
+                // for(int i = 0; i<40; i++){
+                //     String topic = "house-" + i;
+                //     topic_list[i] = topic;
+                // }
+                // // topic_list = new String[]{"#"};
+                // int[] window_list = {5,10,15,20,30,60,120};
+                // TopologyBuilder builder = new TopologyBuilder();
+    
+                // builder.setSpout("trigger", new Spout_trigger(30), 1);
+                
+                // for(String topic : topic_list){
+                //     //Spout
+                //     builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
+                // }
+    
+                // HashMap<String,BoltDeclarer> split_list = new HashMap<String,BoltDeclarer>();
+                // HashMap<String,BoltDeclarer> avg_list = new HashMap<String,BoltDeclarer>();
+                // HashMap<String,BoltDeclarer> sum_list = new HashMap<String,BoltDeclarer>();
+                // for(int window_size : window_list){
+                //     split_list.put("split" + window_size, builder.setBolt("split" + window_size, new Bolt_split(window_size), 1));
+                //     avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size, new Bolt_avg(window_size, db), 1));
+                //     sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
+                // }
+                
+                // for(int window_size : window_list){
+                //     for(String topic : topic_list){
+                //         split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
+                //     }
+                //     avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
+                //     sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
+                //     sum_list.get("sum" + window_size).shuffleGrouping("trigger");
+                // }
+
                 TopologyBuilder builder = new TopologyBuilder();
+                int[] window_list = {5,10,15,20,30,60,120};
     
                 builder.setSpout("trigger", new Spout_trigger(30), 1);
-                
-                for(String topic : topic_list){
-                    //Spout
-                    builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
-                }
-    
+                builder.setSpout("spout", new Spout("brokerURL", "topic"), 1);
                 HashMap<String,BoltDeclarer> split_list = new HashMap<String,BoltDeclarer>();
                 HashMap<String,BoltDeclarer> avg_list = new HashMap<String,BoltDeclarer>();
                 HashMap<String,BoltDeclarer> sum_list = new HashMap<String,BoltDeclarer>();
@@ -66,14 +89,11 @@ public class MainTopo {
                     avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size, new Bolt_avg(window_size, db), 1));
                     sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
                 }
-                
                 for(int window_size : window_list){
-                    for(String topic : topic_list){
-                        split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
-                    }
+                    split_list.get("split" + window_size).shuffleGrouping("spout");
                     avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
                     sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
-                    sum_list.get("sum" + window_size).shuffleGrouping("trigger");
+                    sum_list.get("avg" + window_size).shuffleGrouping("trigger");
                 }
     
                 Config conf = new Config();
