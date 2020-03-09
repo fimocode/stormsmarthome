@@ -91,7 +91,7 @@ public class db_store implements Serializable{
                             for(String day : map_house.get(house_id).get(device_id).get(year).get(month).keySet()){
                                 for(long slice_num : map_house.get(house_id).get(device_id).get(year).get(month).get(day).keySet()){
                                     HashMap<String, Double> data = map_house.get(house_id).get(device_id).get(year).get(month).get(day).get(slice_num);
-                                    String sql = String.format("insert into iot_data(house_id,household_deviceid,year,month,day,slice_size,slice_num,total,count,avg) values (%d, %s, %s, %s, %s, %d, %d, %d, %d, %d)", house_id, device_id, year, month, day, windows, slice_num, data.get("total"), data.get("count"), data.get("avg"));
+                                    String sql = String.format("insert into iot_data(house_id,household_deviceid,year,month,day,slice_size,slice_num,total,count,avg) values (%d, %s, %s, %s, %s, %d, %d, %f, %f, %f)", house_id, device_id, year, month, day, windows, slice_num, data.get("total"), data.get("count"), data.get("avg"));
                                     stmt.executeUpdate(sql);
                                 }
                             }
