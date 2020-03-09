@@ -74,7 +74,7 @@ class Bolt_avg extends BaseRichBolt {
             device_data.put(year, year_data);
             house_data.put(household_deviceid, device_data);
             map_house.put(house_id, house_data);
-            System.out.printf("\ravg: %f",total);
+            System.out.printf("\ravg: %f",++total);
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, slice_num, avg, (Long)tuple.getValueByField("end")));
         }
     }
