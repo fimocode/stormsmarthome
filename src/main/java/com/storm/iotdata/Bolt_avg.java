@@ -47,7 +47,7 @@ class Bolt_avg extends BaseRichBolt {
         Long slice_num = (Long) tuple.getValueByField("slice_num");
         Double avg = (double) 0;
         if((Long)tuple.getValueByField("end")!=0){
-            _collector.emit(new Values(house_id, household_deviceid, year, month, date, new Double("0"), (Long)tuple.getValueByField("end")));
+            _collector.emit(new Values(house_id, household_deviceid, year, month, date, Double.valueOf(0), (Long)tuple.getValueByField("end")));
             db_store.pushData(windows, map_house);
         }
         else{
