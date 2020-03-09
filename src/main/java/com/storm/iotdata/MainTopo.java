@@ -10,15 +10,28 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Scanner;
+
 // import javax.swing.JFileChooser;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
-import org.yaml.snakeyaml.Yaml;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception{
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Do you want to purge data");
+        if(sc.nextLine().toUpperCase()=="Y"){
+            if(!db_store.purgeData()){
+                System.out.println("[WARN] DB purge fail");
+                Thread.sleep(3000);
+            }
+            if(!new File("Result").delete()){
+                System.out.println("[WARN] DB purge fail");
+                Thread.sleep(3000);
+            }
+        }
         if(!new File("cred.yaml").exists()){
             System.out.println("Credential file not found!");
         }

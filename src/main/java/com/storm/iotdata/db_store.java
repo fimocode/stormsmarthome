@@ -21,7 +21,7 @@ public class db_store implements Serializable{
     //     }
     // }
 
-    public boolean purgeData(){
+    public static boolean purgeData(){
         try {
             Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
@@ -39,14 +39,14 @@ public class db_store implements Serializable{
             ex.printStackTrace();
             return false;
         } finally {
-            if(this.initData())
+            if(db_store.initData())
                 return true;
             else
                 return false;
         }
     }
 
-    public boolean initData(){
+    public static boolean initData(){
         try{
             Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
