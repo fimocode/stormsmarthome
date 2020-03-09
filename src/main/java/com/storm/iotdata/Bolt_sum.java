@@ -35,7 +35,7 @@ class Bolt_sum extends BaseRichBolt {
     public Date lastChange = new Date();
     private Long lastProcessed = new Long("0");
     
-    public Bolt_sum(HashMap<Integer, HashMap<String, HashMap<String, Double>>> data, HashMap < Integer, HashMap <String, Double> > final_data, File output) {
+    public Bolt_sum(File output) {
         this.data = new HashMap<>();
         this.final_data = new HashMap<>();
         this.output = output;

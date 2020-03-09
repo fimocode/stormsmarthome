@@ -21,14 +21,16 @@ import org.apache.storm.tuple.Values;
  */
 class Bolt_avg extends BaseRichBolt {
     private int windows = 0;
+    public db_store db;
     
-    public Bolt_avg(int windows) {
+    public Bolt_avg(int windows, db_store db) {
+        this.db = db;
         this.windows = windows;
     }
     
     private OutputCollector _collector;
     
-    public HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > map_house;
+    public HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house;
 
     @Override
     public void prepare(Map<String, Object> map, TopologyContext tc, OutputCollector oc) {
@@ -47,15 +49,18 @@ class Bolt_avg extends BaseRichBolt {
         Double avg = (double) 0;
         if((Long)tuple.getValueByField("end")!=0){
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, new Double("0"), (Long)tuple.getValueByField("end")));
+            db.pushData(windows, map_house);
         }
         else{
-            HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > house_data;
+            HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > house_data;
+            HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > device_data;
             HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > year_data;
             HashMap<String, HashMap<Long, HashMap<String, Double > > > month_data;
             HashMap<Long, HashMap<String, Double > > day_data;
             HashMap<String, Double > slice_data;
-            house_data = map_house.getOrDefault(house_id, new HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > >());
-            year_data = house_data.getOrDefault(year, new HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > >());
+            house_data = map_house.getOrDefault(house_id, new HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > >());
+            device_data = house_data.getOrDefault(household_deviceid, new HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > >());
+            year_data = device_data.getOrDefault(year, new HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > >());
             month_data = year_data.getOrDefault(month, new HashMap<String, HashMap<Long, HashMap<String, Double > > >());
             day_data = month_data.getOrDefault(date, new HashMap<Long, HashMap<String, Double > >());
             slice_data = day_data.getOrDefault(slice_num, new HashMap<String, Double >());
@@ -67,7 +72,8 @@ class Bolt_avg extends BaseRichBolt {
             day_data.put(slice_num, slice_data);
             month_data.put(date, day_data);
             year_data.put(month, month_data);
-            house_data.put(year, year_data);
+            device_data.put(year, year_data);
+            house_data.put(household_deviceid, device_data);
             map_house.put(house_id, house_data);
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, avg, (Long)tuple.getValueByField("end")));
         }
