@@ -1,24 +1,36 @@
 package com.storm.iotdata;
+
+import java.io.FileInputStream;
 import java.io.Serializable;
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Map;
 public class db_store implements Serializable{
-    private Connection conn;
-    public db_store(String dbURL, String userName, String password){
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            conn = DriverManager.getConnection(dbURL, userName, password);
-            System.out.println("connect successfully!");
-        } catch (Exception ex) {
-            System.out.println("connect failure!");
-            ex.printStackTrace();
-        }
-    }
+    // private Connection conn;
+    // public db_store(String dbURL, String userName, String password){
+    //     try {
+    //         Class.forName("com.mysql.jdbc.Driver");
+    //         conn = DriverManager.getConnection(dbURL, userName, password);
+    //         System.out.println("connect successfully!");
+    //     } catch (Exception ex) {
+    //         System.out.println("connect failure!");
+    //         ex.printStackTrace();
+    //     }
+    // }
 
     public boolean purgeData(){
         try {
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://"+obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            System.out.println("connect successfully!");
             Statement stmt = conn.createStatement();
             int rs = stmt.executeUpdate("drop database iot_data");
+            conn.close();
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
@@ -32,11 +44,20 @@ public class db_store implements Serializable{
 
     public boolean initData(){
         try{
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://"+obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            System.out.println("connect successfully!");
             Statement stmt = conn.createStatement();
             stmt.executeUpdate("create database iot_data");
             stmt.execute("use iot_data");
             stmt.executeUpdate("create table device_data (house_id INT UNSIGNED NOT NULL, household_deviceid VARCHAR(30) NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL, slice_size INT NOT NULL, slice_num INT NOT NULL, total DOUBLE UNSIGNED NOT NULL, count DOUBLE UNSIGNED NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)");
             stmt.executeUpdate("create table house_data(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,slice_size INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)");
+            conn.close();
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -44,8 +65,16 @@ public class db_store implements Serializable{
         }
     }
 
-    public boolean pushData(int windows, HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house){
+    public static boolean pushData(int windows, HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house){
         try{
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://"+obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            System.out.println("connect successfully!");
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
@@ -65,6 +94,7 @@ public class db_store implements Serializable{
                 }
             }
             System.out.printf("\nSaved to DB (%.2f s)\n",(System.currentTimeMillis()-start)/60000);
+            conn.close();
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
