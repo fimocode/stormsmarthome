@@ -28,7 +28,7 @@ class Bolt_avg extends BaseRichBolt {
     
     private OutputCollector _collector;
     
-    public HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house;
+    public HashMap <Integer, HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > > map_house = new HashMap<>();
 
     @Override
     public void prepare(Map<String, Object> map, TopologyContext tc, OutputCollector oc) {

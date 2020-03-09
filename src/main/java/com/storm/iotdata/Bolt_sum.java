@@ -30,8 +30,8 @@ class Bolt_sum extends BaseRichBolt {
     private OutputCollector _collector;
     public long processed = new Long("0");
     public File output;
-    public volatile HashMap < Integer, HashMap <String, HashMap<String, Double> > > data;
-    public volatile HashMap < Integer, HashMap <String, Double> > final_data;
+    public volatile HashMap < Integer, HashMap <String, HashMap<String, Double> > > data = new HashMap<>();
+    public volatile HashMap < Integer, HashMap <String, Double> > final_data = new HashMap<>();
     public Date lastChange = new Date();
     private Long lastProcessed = new Long("0");
     
