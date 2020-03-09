@@ -93,7 +93,7 @@ public class MainTopo {
                     split_list.get("split" + window_size).shuffleGrouping("spout");
                     avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
                     sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
-                    sum_list.get("avg" + window_size).shuffleGrouping("trigger");
+                    avg_list.get("avg" + window_size).shuffleGrouping("trigger");
                 }
                 Config conf = new Config();
                 conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 50000);
