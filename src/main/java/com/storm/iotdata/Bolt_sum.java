@@ -27,15 +27,17 @@ import org.apache.storm.tuple.Tuple;
  * @author kulz0
  */
 class Bolt_sum extends BaseRichBolt {
+    public int windows;
     private OutputCollector _collector;
-    public long processed = new Long("0");
+    public long processed = Long.valueOf(0);
     public File output;
     public volatile HashMap < Integer, HashMap <String, HashMap<String, Double> > > data = new HashMap<>();
     public volatile HashMap < Integer, HashMap <String, Double> > final_data = new HashMap<>();
     public Date lastChange = new Date();
-    private Long lastProcessed = new Long("0");
+    private Long lastProcessed = Long.valueOf(0);
     
-    public Bolt_sum(File output) {
+    public Bolt_sum(int windows ,File output) {
+        this.windows = windows;
         this.data = new HashMap<>();
         this.final_data = new HashMap<>();
         this.output = output;
@@ -73,7 +75,7 @@ class Bolt_sum extends BaseRichBolt {
                         bw.write(String.valueOf(house));
                         HashMap <String, Double> house_data = final_data.get(house);
                         for(Object slice : keySet){
-                            bw.write(","+ house_data.getOrDefault(slice,new Double("0")));
+                            bw.write(","+ house_data.getOrDefault(slice,Double.valueOf(0)));
                         }
                         bw.write('\n');
                     }
@@ -107,13 +109,15 @@ class Bolt_sum extends BaseRichBolt {
             Integer house_id     = (Integer) tuple.getValueByField("house_id");
             Double  value        = (Double) tuple.getValueByField("value");
             String household_deviceid = (String)tuple.getValueByField("household_deviceid");
-            String slice_name = (String)tuple.getValueByField("slice_name");
+            int slice_num = (Integer)tuple.getValueByField("slice_num");
+            String date = (String)tuple.getValueByField("year") + "/" + (String)tuple.getValueByField("month") + "/" + (String)tuple.getValueByField("day");
+            String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
             HashMap<String, HashMap<String, Double>> data_house = data.getOrDefault(house_id, new HashMap<String, HashMap<String, Double>>());
             HashMap<String, Double> data_slice = data_house.getOrDefault(slice_name, new HashMap<String, Double>());
             data_slice.put(household_deviceid, value);
             data_house.put(slice_name, data_slice);
             data.put(house_id, data_house);
-            Double sum = new Double("0");
+            Double sum = Double.valueOf(0);
             for(String device : data_slice.keySet()){
                 sum += data_slice.get(device);
             }

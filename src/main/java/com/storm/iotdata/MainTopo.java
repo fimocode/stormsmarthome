@@ -75,7 +75,7 @@ public class MainTopo {
                 for(int window_size : window_list){
                     split_list.put("split" + window_size, builder.setBolt("split" + window_size, new Bolt_split(window_size), 1));
                     avg_list.put("avg" + window_size, builder.setBolt("avg" + window_size, new Bolt_avg(window_size), 1));
-                    sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
+                    sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,new Bolt_sum(window_size, new File("Result/output_windows_"+ window_size +"_min.csv")), 1));
                 }
                 for(int window_size : window_list){
                     split_list.get("split" + window_size).shuffleGrouping("spout");
