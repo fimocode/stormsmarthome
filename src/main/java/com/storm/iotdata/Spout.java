@@ -68,13 +68,15 @@ public class Spout extends BaseRichSpout {
         // }
         try {
             BufferedReader br = new BufferedReader(new FileReader(new File("data.csv")));
-            String message = br.readLine();
-            String[] metric = message.toString().split(",");
-            if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                _collector.emit(
-                        new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
-                total++;
-            }
+            while(br.ready()){
+                String message = br.readLine();
+                String[] metric = message.toString().split(",");
+                if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+                    _collector.emit(
+                            new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
+                    total++;
+                }
+            }  
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Data file not found");
