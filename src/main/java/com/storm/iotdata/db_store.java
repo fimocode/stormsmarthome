@@ -1,7 +1,8 @@
 package com.storm.iotdata;
+import java.io.Serializable;
 import java.sql.*;
 import java.util.HashMap;
-public class db_store{
+public class db_store implements Serializable{
     private Connection conn;
     public db_store(String dbURL, String userName, String password){
         try {
