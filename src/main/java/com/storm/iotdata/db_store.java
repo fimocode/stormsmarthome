@@ -84,6 +84,7 @@ public class db_store implements Serializable{
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
+            String sql = "insert into device_data (house_id,household_deviceid,year,month,day,slice_size,slice_num,total,count,avg) values ";
             for(int house_id : map_house.keySet()){
                 for(String device_id : map_house.get(house_id).keySet()){
                     for(String year : map_house.get(house_id).get(device_id).keySet()){
@@ -91,14 +92,14 @@ public class db_store implements Serializable{
                             for(String day : map_house.get(house_id).get(device_id).get(year).get(month).keySet()){
                                 for(long slice_num : map_house.get(house_id).get(device_id).get(year).get(month).get(day).keySet()){
                                     HashMap<String, Double> data = map_house.get(house_id).get(device_id).get(year).get(month).get(day).get(slice_num);
-                                    String sql = String.format("insert into device_data(house_id,household_deviceid,year,month,day,slice_size,slice_num,total,count,avg) values (%d, %s, %s, %s, %s, %d, %d, %f, %f, %f)", house_id, device_id, year, month, day, windows, slice_num, data.get("total"), data.get("count"), data.get("avg"));
-                                    stmt.executeUpdate(sql);
+                                    sql += String.format("(%d, %s, %s, %s, %s, %d, %d, %f, %f, %f),", house_id, device_id, year, month, day, windows, slice_num, data.get("total"), data.get("count"), data.get("avg"));
                                 }
                             }
                         }
                     }
                 }
             }
+            stmt.executeUpdate(sql.substring(0, sql.length()-1));
             System.out.printf("\nSaved to DB (%.2f s)\n",(System.currentTimeMillis()-start)/60000);
             conn.close();
             return true;
