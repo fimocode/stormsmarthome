@@ -21,8 +21,8 @@ import org.apache.storm.tuple.Values;
  */
 class Bolt_avg extends BaseRichBolt {
     private int windows = 0;
-    public Double avg = (double) 0;
-    
+    public Double total = Double.valueOf(0);
+
     public Bolt_avg(int windows) {
         this.windows = windows;
     }
@@ -38,7 +38,6 @@ class Bolt_avg extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        Double total = Double.valueOf(0);
         Integer house_id     = (Integer) tuple.getValueByField("house_id");
         Double  value        = (Double) tuple.getValueByField("value");
         String household_deviceid = (String)tuple.getValueByField("household_deviceid");
@@ -46,6 +45,7 @@ class Bolt_avg extends BaseRichBolt {
         String month = (String)tuple.getValueByField("month");
         String date = (String)tuple.getValueByField("date");
         Long slice_num = (Long) tuple.getValueByField("slice_num");
+        public Double avg = (double) 0;
         if((Long)tuple.getValueByField("end")!=0){
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, slice_num, Double.valueOf(0), (Long)tuple.getValueByField("end")));
             db_store.pushData(windows, map_house);

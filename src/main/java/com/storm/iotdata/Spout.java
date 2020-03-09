@@ -75,7 +75,7 @@ public class Spout extends BaseRichSpout {
                     _collector.emit(
                             new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
                     total++;
-                    System.out.printf("\rReaded: %d", total);
+                    // System.out.printf("\rReaded: %d", total);
                 }
             }  
         } catch (IOException e) {
