@@ -1,5 +1,5 @@
 /target/
-/Result/
+/Result*
 .vscode/
 .settings/
 .classpath
@@ -7,3 +7,4 @@
 .project
 paho*
 cred.yaml
+Error.log

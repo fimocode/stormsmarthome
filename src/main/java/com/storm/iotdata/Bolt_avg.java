@@ -48,7 +48,7 @@ class Bolt_avg extends BaseRichBolt {
         Double avg = (double) 0;
         if((Long)tuple.getValueByField("end")!=0){
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, slice_num, Double.valueOf(0), (Long)tuple.getValueByField("end")));
-            db_store.pushData(windows, map_house);
+            //db_store.pushData(windows, map_house);
         }
         else{
             HashMap<String, HashMap<String, HashMap<String, HashMap<String, HashMap<Long, HashMap<String, Double > > > > > > house_data;
@@ -74,7 +74,7 @@ class Bolt_avg extends BaseRichBolt {
             device_data.put(year, year_data);
             house_data.put(household_deviceid, device_data);
             map_house.put(house_id, house_data);
-            System.out.printf("\ravg: %f",++total);
+            //System.out.printf("\ravg: %f",++total);
             _collector.emit(new Values(house_id, household_deviceid, year, month, date, slice_num, avg, (Long)tuple.getValueByField("end")));
         }
     }
