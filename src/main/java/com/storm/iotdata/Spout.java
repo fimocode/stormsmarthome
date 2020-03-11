@@ -5,6 +5,11 @@
  */
 package com.storm.iotdata;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
@@ -35,31 +40,48 @@ public class Spout extends BaseRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
-        this.clientId = generateClientId();
+        // this.clientId = generateClientId();
+        // try {
+        //     client = new MqttClient(brokerUrl, clientId);
+        //     client.setCallback(new MqttCallback() {
+        //         public void connectionLost(Throwable cause) {
+        //             System.out.println("Lost connection with MQTT Server.");
+        //         }
+
+        //         public void messageArrived(String topic, MqttMessage message) throws Exception {
+        //             String[] metric = message.toString().split(",");
+        //             if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+        //                 _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6],
+        //                         new Long("0")));
+        //                 total++;
+        //             }
+        //             // System.out.print("\rReceived: "+ total);
+        //         }
+
+        //         public void deliveryComplete(IMqttDeliveryToken token) {
+        //         }
+        //     });
+        //     client.connect();
+        //     client.subscribe(topic);
+        // } catch (Exception e) {
+        //     System.out.println(e.toString());
+        // }
+
         try {
-            client = new MqttClient(brokerUrl, clientId);
-            client.setCallback(new MqttCallback() {
-                public void connectionLost(Throwable cause) {
-                    System.out.println("Lost connection with MQTT Server.");
+            BufferedReader br = new BufferedReader(new FileReader(new File("/root/bigdata/sorted.csv")));
+            while(br.ready()){
+                String message = br.readLine();
+                String[] metric = message.toString().split(",");
+                if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+                    _collector.emit(
+                            new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
+                    total++;
+                    System.out.printf("\rReaded: %d", total);
                 }
-
-                public void messageArrived(String topic, MqttMessage message) throws Exception {
-                    String[] metric = message.toString().split(",");
-                    if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                        _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6],
-                                new Long("0")));
-                        total++;
-                    }
-                    // System.out.print("\rReceived: "+ total);
-                }
-
-                public void deliveryComplete(IMqttDeliveryToken token) {
-                }
-            });
-            client.connect();
-            client.subscribe(topic);
-        } catch (Exception e) {
-            System.out.println(e.toString());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Data file not found");
         }
     }
 

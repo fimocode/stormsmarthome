@@ -39,10 +39,12 @@ public class MainTopo {
 
             builder.setSpout("trigger", new Spout_trigger(30), 1);
             
-            for(String topic : topic_list){
-                //Spout
-                builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
-            }
+            // for(String topic : topic_list){
+            //     //Spout
+            //     builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
+            // }
+
+            builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
 
             HashMap<String,BoltDeclarer> split_list = new HashMap<String,BoltDeclarer>();
             HashMap<String,BoltDeclarer> avg_list = new HashMap<String,BoltDeclarer>();
@@ -54,9 +56,10 @@ public class MainTopo {
             }
             
             for(int window_size : window_list){
-                for(String topic : topic_list){
-                    split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
-                }
+                // for(String topic : topic_list){
+                //     split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
+                // }
+                split_list.get("split" + window_size).shuffleGrouping("spout");
                 avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
                 sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
                 sum_list.get("sum" + window_size).shuffleGrouping("trigger");
