@@ -31,6 +31,7 @@ public class Spout extends BaseRichSpout {
     String clientId = "";
     MqttClient client;
     String topic = "#";
+    Boolean done = false;
 
     public Spout(String broker_url, String topic) {
         this.brokerUrl = broker_url;
@@ -67,22 +68,7 @@ public class Spout extends BaseRichSpout {
         //     System.out.println(e.toString());
         // }
 
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(new File("/root/bigdata/sorted.csv")));
-            while(br.ready()){
-                String message = br.readLine();
-                String[] metric = message.toString().split(",");
-                if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                    _collector.emit(
-                            new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
-                    total++;
-                    System.out.printf("\rReaded: %d", total);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Data file not found");
-        }
+        
     }
 
     @Override
@@ -91,6 +77,25 @@ public class Spout extends BaseRichSpout {
      * tuples to emit
      */
     public void nextTuple() {
+        if(!done){
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(new File("/root/bigdata/sorted.csv")));
+                while(br.ready()){
+                    String message = br.readLine();
+                    String[] metric = message.toString().split(",");
+                    if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+                        _collector.emit(
+                                new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
+                        total++;
+                        System.out.printf("\rReaded: %d", total);
+                    }
+                }
+                done = true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Data file not found");
+            }
+        }
     }
 
     @Override
