@@ -47,7 +47,6 @@ class Bolt_avg extends BaseRichBolt {
         String day              = (String)tuple.getValueByField("day");
         Integer slice_num       = (Integer) tuple.getValueByField("slice_num");
         Double  value           = (Double) tuple.getValueByField("value");
-        Double avg = (double) 0;
         String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
         if((Long)tuple.getValueByField("end")!=0){
             int needSave = 0;
@@ -60,6 +59,7 @@ class Bolt_avg extends BaseRichBolt {
                     needSave++;
                     if(db_store.saveData(data)){
                         data.saved();
+                        data_list.put(key, data);
                         newSave++;
                     }
                 }
