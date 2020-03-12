@@ -146,7 +146,7 @@ public class db_store {
                 temp_sql.setDouble(12, data.getValue());
                 temp_sql.setDouble(13, data.getCount());
                 temp_sql.setDouble(14, data.getAvg());
-                temp_sql.executeUpdate();
+                // temp_sql.executeUpdate();
                 result.push(data.getUniqueID());
             }
             conn.close();
