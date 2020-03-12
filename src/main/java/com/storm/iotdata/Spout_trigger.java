@@ -28,7 +28,7 @@ public class Spout_trigger extends BaseRichSpout {
     public void nextTuple() {
         try {
             Thread.sleep(interval*1000);
-            _collector.emit(new Values(0,0,0,"","","",(long)0,(double)0,start)); // Trigger signal to write data to file after 1 min
+            _collector.emit(new Values(0,0,0,"","","",0,(double)0,start)); // Trigger signal to write data to file after 1 min
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
