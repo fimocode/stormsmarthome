@@ -48,7 +48,7 @@ class Bolt_avg extends BaseRichBolt {
         Integer slice_num       = (Integer) tuple.getValueByField("slice_num");
         Double  value           = (Double) tuple.getValueByField("value");
         Double avg = (double) 0;
-        String unique_id = String.format("%d_%d_%d_%s_%s_%s_%f", house_id, household_id, device_id, year, month, day, slice_num);
+        String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
         if((Long)tuple.getValueByField("end")!=0){
             int needSave = 0;
             int needClean = 0;
