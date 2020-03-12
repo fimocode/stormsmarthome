@@ -107,7 +107,7 @@ class Bolt_sum extends BaseRichBolt {
         }
         else{
             Integer house_id        = (Integer) tuple.getValueByField("house_id");
-            Double  value           = (Double) tuple.getValueByField("value");
+            Double  value           = (Double) tuple.getValueByField("avg");
             Integer household_id    = (Integer)tuple.getValueByField("household_id");
             Integer device_id       = (Integer)tuple.getValueByField("device_id");
             Long slice_num          = (Long)tuple.getValueByField("slice_num");
