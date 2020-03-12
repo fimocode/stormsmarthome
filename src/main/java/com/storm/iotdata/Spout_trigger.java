@@ -28,7 +28,7 @@ public class Spout_trigger extends BaseRichSpout {
     public void nextTuple() {
         try {
             Thread.sleep(interval*1000);
-            _collector.emit(new Values(0,"","","","",(long)0,(double)0,start)); // Trigger signal to write data to file after 1 min
+            _collector.emit(new Values(0,0,0,"","","",(long)0,(double)0,start)); // Trigger signal to write data to file after 1 min
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -37,6 +37,6 @@ public class Spout_trigger extends BaseRichSpout {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id", "household_deviceid", "year", "month", "date", "slice_num", "value", "end"));
+        declarer.declare(new Fields("house_id", "household_id", "device_id", "year", "month", "date", "slice_num", "value", "end"));
     }
 }
