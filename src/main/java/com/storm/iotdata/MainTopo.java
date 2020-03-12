@@ -99,8 +99,8 @@ public class MainTopo {
                 }
                 Config conf = new Config();
                 conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 50000);
-                // LocalCluster cluster = new LocalCluster(); // create the local cluster
-                // cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
+                LocalCluster cluster = new LocalCluster(); // create the local cluster
+                cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
             } catch (Exception e) {
                 e.printStackTrace();
                 new BufferedWriter(new FileWriter(new File("Error.log"),true)).write(new Date().toString() + "|" + e.toString());
