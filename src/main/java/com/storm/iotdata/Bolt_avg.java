@@ -63,12 +63,12 @@ class Bolt_avg extends BaseRichBolt {
                         newSave++;
                     }
                 }
-                else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(2*windows)){
+                else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(1000*windows)){
                     needClean++;
                     data_list.remove(key);
                 }
             }
-            System.out.printf("\n[Bolt_avg_%-3d] Total: %-15d | Already saved: %-15d | Need save: %-15d | Saved: %-15d | Need clean: %-15d",windows, data_list.size(), data_list.size()-needClean-needSave, needSave, newSave, needClean);
+            System.out.printf("\n\n\n\n[Bolt_avg_%-3d] Total: %-15d | Already saved: %-15d | Need save: %-15d | Saved: %-15d | Need clean: %-15d\n\n\n\n",windows, data_list.size(), data_list.size()-needClean-needSave, needSave, newSave, needClean);
         }
         else{
             data_list.put(unique_id, data_list.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).increaseValue(value));
