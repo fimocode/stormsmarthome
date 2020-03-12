@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.storm.generated.DistributedRPCInvocations.AsyncProcessor.result;
 import org.yaml.snakeyaml.Yaml;
 
 public class db_store {
@@ -112,7 +113,8 @@ public class db_store {
         }
     }
 
-    public static boolean pushDeviceData(Stack<DeviceData> data_list){
+    public static Stack<String> pushDeviceData(Stack<DeviceData> data_list){
+        Stack<String> result = new Stack<String>();
         try{
             //Init connection
             Yaml yaml = new Yaml();
@@ -144,12 +146,13 @@ public class db_store {
                 temp_sql.setDouble(13, data.getCount());
                 temp_sql.setDouble(14, data.getAvg());
                 temp_sql.executeUpdate();
+                result.push(data.getUniqueID());
             }
             conn.close();
-            return true;
+            return result;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
+            return result;
         }
     }
 

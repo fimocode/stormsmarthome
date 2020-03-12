@@ -52,6 +52,10 @@ public class DeviceData implements Serializable{
         this.saved=false;
     }
 
+    public String getUniqueID(){
+        return String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
+    }
+
     public int getHouse_id() {
         return this.house_id;
     }
@@ -214,8 +218,9 @@ public class DeviceData implements Serializable{
         return this.saved;
     }
 
-    public void saved() {
+    public DeviceData saved() {
         this.saved = true;
+        return this;
     }
 
     public DeviceData slice_num(int slice_num) {
