@@ -78,7 +78,7 @@ class Bolt_avg extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","household_id","device_id","year","month","date","slice_num","avg","end"));
+        declarer.declare(new Fields("house_id","household_id","device_id","year","month","day","slice_num","avg","end"));
     }
     
 }
