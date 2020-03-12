@@ -116,6 +116,7 @@ public class db_store {
     public static Stack<String> pushDeviceData(Stack<DeviceData> data_list){
         Stack<String> result = new Stack<String>();
         try{
+            System.out.printf("\n\n\nStoring %d\n\n\n",data_list.size());
             //Init connection
             Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
