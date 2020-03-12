@@ -34,7 +34,7 @@ public class MainTopo {
                         Thread.sleep(3000);
                     }
                     if(!new File("Result").delete()){
-                        System.out.println("[WARN] DB purge fail");
+                        System.out.println("[WARN] Clean result folder fail");
                         Thread.sleep(3000);
                     }
                 }
