@@ -20,23 +20,24 @@ import org.apache.storm.topology.TopologyBuilder;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception{
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Do you want to purge data");
-        if(sc.nextLine().toUpperCase()=="Y"){
-            if(!db_store.purgeData()){
-                System.out.println("[WARN] DB purge fail");
-                Thread.sleep(3000);
-            }
-            if(!new File("Result").delete()){
-                System.out.println("[WARN] DB purge fail");
-                Thread.sleep(3000);
-            }
-        }
         if(!new File("cred.yaml").exists()){
             System.out.println("Credential file not found!");
         }
         else{
             try {
+                Scanner sc = new Scanner(System.in);
+                System.out.println("Do you want to purge data");
+                if(sc.nextLine().charAt(0)=='Y'){
+                    System.out.println("Purging old data");
+                    if(!db_store.purgeData()){
+                        System.out.println("[WARN] DB purge fail");
+                        Thread.sleep(3000);
+                    }
+                    if(!new File("Result").delete()){
+                        System.out.println("[WARN] DB purge fail");
+                        Thread.sleep(3000);
+                    }
+                }
                 if(!(new File("Result").isDirectory())){
                     new File("Result").mkdir();
                 }
@@ -98,8 +99,8 @@ public class MainTopo {
                 }
                 Config conf = new Config();
                 conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 50000);
-                LocalCluster cluster = new LocalCluster(); // create the local cluster
-                cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
+                // LocalCluster cluster = new LocalCluster(); // create the local cluster
+                // cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
             } catch (Exception e) {
                 e.printStackTrace();
                 new BufferedWriter(new FileWriter(new File("Error.log"),true)).write(new Date().toString() + "|" + e.toString());
