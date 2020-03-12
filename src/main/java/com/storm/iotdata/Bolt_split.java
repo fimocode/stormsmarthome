@@ -30,7 +30,7 @@ public class Bolt_split extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id", "household_deviceid", "year", "month", "date", "slice_num", "value", "end"));
+        declarer.declare(new Fields("house_id", "household_id", "device_id", "year", "month", "day", "slice_num", "value", "end"));
     }
 
     @Override
@@ -45,15 +45,14 @@ public class Bolt_split extends BaseRichBolt {
         Integer plug_id      = Integer.parseInt((String)tuple.getValueByField("plug_id"));
         Long    timestamp    = Long.parseLong((String)tuple.getValueByField("timestamp"));
         Double  value        = Double.parseDouble((String)tuple.getValueByField("value"));
-        Integer property     = Integer.parseInt((String)tuple.getValueByField("property"));
-//        Timestamp stamp = new Timestamp(timestamp);
+        // Integer property     = Integer.parseInt((String)tuple.getValueByField("property"));
+        // Timestamp stamp = new Timestamp(timestamp);
         Date date = new Date(timestamp*1000);
         String year = Integer.toString(1900 + date.getYear());;
         String month = String.format("%02d", (1+date.getMonth()));
         String day = String.format("%02d", date.getDate()) ;
         Long time = (date.getTime()%86400000);
-        long slice_num = (int) Math.floorDiv(time,(windows*60000));
-        String household_deviceid = household_id + "_" + plug_id;
-        _collector.emit(new Values(house_id, household_deviceid, year, month, day, slice_num, value, (Long)tuple.getValueByField("end")));
+        int slice_num = (int) Math.floorDiv(time,(windows*60000));
+        _collector.emit(new Values(house_id, household_id, plug_id, year, month, day, slice_num, value, (Long)tuple.getValueByField("end")));
     }
 }
