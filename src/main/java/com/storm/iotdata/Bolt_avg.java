@@ -49,7 +49,7 @@ class Bolt_avg extends BaseRichBolt {
         Double  value           = (Double) tuple.getValueByField("value");
         String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
         if((Long)tuple.getValueByField("end")!=0){
-            int needClean = 0;
+            Stack<String> needClean = new Stack<String>();
             int newSave = 0;
             Stack<DeviceData> needSave = new Stack<DeviceData>();
             _collector.emit(new Values(house_id, household_id, device_id, year, month, day, slice_num, value, (Long)tuple.getValueByField("end"))); //Trigger next bolt
@@ -59,15 +59,17 @@ class Bolt_avg extends BaseRichBolt {
                     needSave.push(data);
                 }
                 else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(120000*windows)){
-                    needClean++;
-                    data_list.remove(key);
+                    needClean.push(key);
                 }
             }
             for(String key : db_store.pushDeviceData(needSave)){
                 data_list.put(key, data_list.get(key).saved());
                 newSave++;
             }
-            System.out.printf("\n\n[Bolt_avg_%-3d] Total: %-15d | Already saved: %-15d | Need save: %-15d | Saved: %-15d | Need clean: %-15d\n\n",windows, data_list.size(), data_list.size()-needClean-needSave.size(), needSave.size(), newSave, needClean);
+            for(String key : needClean){
+                data_list.remove(key);
+            }
+            System.out.printf("\n\n[Bolt_avg_%-3d] Total: %-15d | Already saved: %-15d | Need save: %-15d | Saved: %-15d | Need clean: %-15d\n\n",windows, data_list.size(), data_list.size()-needClean.size()-needSave.size(), needSave.size(), newSave, needClean.size());
         }
         else{
             data_list.put(unique_id, data_list.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).increaseValue(value));
