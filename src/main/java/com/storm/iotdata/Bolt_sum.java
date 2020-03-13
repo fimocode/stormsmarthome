@@ -147,9 +147,9 @@ class Bolt_sum extends BaseRichBolt {
                     bw.write("\nLast change,"+ lastChange.toGMTString());
                     bw.close();
                 }
-                for(HouseData data : db_store.pushHouseData(needSave)){
-                    needSave.remove(data);
-                }
+                //for(HouseData data : db_store.pushHouseData(needSave)){
+                //    needSave.remove(data);
+                //}
             } catch (IOException ex) {
                 Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);
             }
