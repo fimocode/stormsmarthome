@@ -36,6 +36,7 @@ class Bolt_sum extends BaseRichBolt {
     public HashMap < Integer, HashMap <String, Double> > final_data = new HashMap< Integer, HashMap <String, Double> >();
     public Date lastChange = new Date();
     private Long lastProcessed = Long.valueOf(0);
+    Stack<HouseData> needSave = new Stack<HouseData>();
     
     public Bolt_sum(int windows ,File output) {
         this.windows = windows;
@@ -83,7 +84,6 @@ class Bolt_sum extends BaseRichBolt {
                     data_list.put(house_id, house_data);
                 }
                 //Calculate sum
-                Stack<HouseData> needSave = new Stack<HouseData>();
                 for(Integer house_id : data_list.keySet()){
                     HashMap<String, HashMap<String, DeviceData> >house_data = data_list.get(house_id);
                     for(String slice_name : house_data.keySet()){
