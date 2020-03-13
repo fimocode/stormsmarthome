@@ -64,6 +64,7 @@ class Bolt_avg extends BaseRichBolt {
             }
             for(DeviceData data : needSave){
                 data_list.put(data.getUniqueID(), data.saved());
+                newSave++;
             }
             // for(String key : db_store.pushDeviceData(needSave)){
             //     data_list.put(key, data_list.get(key).saved());
