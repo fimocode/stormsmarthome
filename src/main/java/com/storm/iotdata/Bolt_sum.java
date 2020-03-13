@@ -100,7 +100,7 @@ class Bolt_sum extends BaseRichBolt {
                         HashMap<String, Double> result_house = final_data.getOrDefault(house_id, new HashMap<String, Double>());
                         result_house.put(slice_name, sum);
                         final_data.put(house_id, result_house);
-                        needSave.push(new HouseData(house_id, year, month, day, slice_num, windows, sum));
+                        //needSave.push(new HouseData(house_id, year, month, day, slice_num, windows, sum));
                     }
                 }
 
