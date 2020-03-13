@@ -57,15 +57,16 @@ class Bolt_avg extends BaseRichBolt {
                 DeviceData data = data_list.get(key);
                 if(!data.isSaved()){
                     needSave.push(data);
+                    data_list.put(key, data_list.get(key).saved());
                 }
                 else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(120000*windows)){
                     needClean.push(key);
                 }
             }
-            for(String key : db_store.pushDeviceData(needSave)){
-                data_list.put(key, data_list.get(key).saved());
-                newSave++;
-            }
+            // for(String key : db_store.pushDeviceData(needSave)){
+            //     data_list.put(key, data_list.get(key).saved());
+            //     newSave++;
+            // }
             for(String key : needClean){
                 data_list.remove(key);
             }
