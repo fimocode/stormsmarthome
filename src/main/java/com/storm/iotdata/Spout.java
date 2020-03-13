@@ -67,14 +67,25 @@ public class Spout extends BaseRichSpout {
         // System.out.println(e.toString());
         // }
         try {
-            BufferedReader br = new BufferedReader(new FileReader(new File("/home/hiiamlala/Documents/sorted100M.csv")));
-            while(br.ready()){
+            int temp = 0;
+            BufferedReader br = new BufferedReader(
+                    new FileReader(new File("/home/hiiamlala/Documents/sorted100M.csv")));
+            while (br.ready()) {
                 String message = br.readLine();
                 String[] metric = message.toString().split(",");
                 if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                    _collector.emit(
-                            new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
+                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6],
+                            Long.valueOf(0)));
                     total++;
+                    if (++temp > 300) {
+                        try {
+                            Thread.sleep(10);
+                            temp=0;
+                        } catch (InterruptedException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
                     System.out.printf("\rReaded: %d", total);
                 }
             }  

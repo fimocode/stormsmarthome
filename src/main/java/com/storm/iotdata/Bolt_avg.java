@@ -58,7 +58,7 @@ class Bolt_avg extends BaseRichBolt {
                 if(!data.isSaved()){
                     needSave.push(data);
                 }
-                else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(120000*windows)){
+                else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*windows)){
                     needClean.push(key);
                 }
             }
