@@ -103,7 +103,7 @@ class Bolt_sum extends BaseRichBolt {
                         needSave.push(new HouseData(house_id, year, month, day, slice_num, windows, sum));
                     }
                 }
-                
+
                 for(HouseData data : db_store.pushHouseData(needSave)){
                     needSave.remove(data);
                 }
@@ -174,7 +174,7 @@ class Bolt_sum extends BaseRichBolt {
             slice_data.put(unique_id, slice_data.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).avg(avg));
             house_data.put(slice_name, slice_data);
             data_list.put(house_id, house_data);
-
+            processed++;
 
 
             // HashMap<String, HashMap<String, Double>> data_house = data.getOrDefault(house_id, new HashMap<String, HashMap<String, Double>>());
