@@ -78,7 +78,8 @@ public class db_store {
         }
     }
 
-    public static boolean pushHouseData(Stack<HouseData> data_list){
+    public static Stack<HouseData> pushHouseData(Stack<HouseData> data_list){
+        Stack<HouseData> result = new Stack<HouseData>();
         try{
             //Init connection
             Yaml yaml = new Yaml();
@@ -104,12 +105,13 @@ public class db_store {
                 temp_sql.setDouble(7, data.getValue());
                 temp_sql.setDouble(8, data.getValue());
                 temp_sql.executeUpdate();
+                result.push(data);
             }
             conn.close();
-            return true;
+            return result;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
+            return result;
         }
     }
 

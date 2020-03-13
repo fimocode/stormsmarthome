@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.storm.task.OutputCollector;
@@ -31,15 +32,13 @@ class Bolt_sum extends BaseRichBolt {
     private OutputCollector _collector;
     public long processed = Long.valueOf(0);
     public File output;
-    public volatile HashMap < Integer, HashMap <String, HashMap<String, Double> > > data = new HashMap<>();
-    public volatile HashMap < Integer, HashMap <String, Double> > final_data = new HashMap<>();
+    public HashMap<Integer,HashMap<String,HashMap<String, DeviceData> > > data_list = new HashMap<Integer,HashMap<String,HashMap<String, DeviceData> > >();
+    public HashMap < Integer, HashMap <String, Double> > final_data = new HashMap< Integer, HashMap <String, Double> >();
     public Date lastChange = new Date();
     private Long lastProcessed = Long.valueOf(0);
     
     public Bolt_sum(int windows ,File output) {
         this.windows = windows;
-        this.data = new HashMap<>();
-        this.final_data = new HashMap<>();
         this.output = output;
     }
 
@@ -62,6 +61,53 @@ class Bolt_sum extends BaseRichBolt {
                     System.out.println("No data recorded");
                 }
                 else{
+                    for(Integer house_id : data_list.keySet()){
+                        Stack<String> sliceNeedClean = new Stack<String>();
+                        HashMap<String, HashMap<String, DeviceData> >house_data = data_list.get(house_id);
+                        for(String slice_name : house_data.keySet()){
+                            Stack<String> dataNeedClean = new Stack<String>();
+                            HashMap<String,DeviceData> slice_data = house_data.get(slice_name);
+                            for(String unique_id : slice_data.keySet()){
+                                DeviceData data = slice_data.get(unique_id);
+                                if((System.currentTimeMillis()-data.getLastUpdate())>(120000*windows)){
+                                    dataNeedClean.push(unique_id);
+                                }
+                            }
+                            for(String unique_id : dataNeedClean){
+                                slice_data.remove(unique_id);
+                            }
+                            house_data.put(slice_name, slice_data);
+                            if(slice_data.isEmpty()){
+                                sliceNeedClean.push(slice_name);
+                            }
+                        }
+                        for(String slice_name : sliceNeedClean){
+                            house_data.remove(slice_name);
+                        }
+                        data_list.put(house_id, house_data);
+                    }
+                    //Calculate sum
+                    Stack<HouseData> needSave = new Stack<HouseData>();
+                    for(Integer house_id : data_list.keySet()){
+                        HashMap<String, HashMap<String, DeviceData> >house_data = data_list.get(house_id);
+                        for(String slice_name : house_data.keySet()){
+                            HashMap<String,DeviceData> slice_data = house_data.get(slice_name);
+                            Double sum = Double.valueOf(0);
+                            DeviceData temp = slice_data.get(slice_data.keySet().toArray()[0]);
+                            String year = temp.getYear();
+                            String month = temp.getMonth();
+                            String day = temp.getDay();
+                            Integer slice_num = temp.getSlice_num();
+                            for(String unique_id : slice_data.keySet()){
+                                sum += slice_data.get(unique_id).avg;
+                            }
+                            HashMap<String, Double> result_house = final_data.getOrDefault(house_id, new HashMap<String, Double>());
+                            result_house.put(slice_name, sum);
+                            final_data.put(house_id, result_house);
+                            needSave.push(new HouseData(house_id, year, month, day, slice_num, windows, sum));
+                        }
+                    }
+                    
                     System.out.println("Writing to " + output.getAbsolutePath());
                     Object[] keySet = final_data.get(final_data.keySet().toArray()[0]).keySet().toArray();
                     Arrays.sort(keySet);
@@ -100,6 +146,10 @@ class Bolt_sum extends BaseRichBolt {
                     bw.write("\nLast update,"+ new Date().toGMTString());
                     bw.write("\nLast change,"+ lastChange.toGMTString());
                     bw.close();
+
+                    for(HouseData data : db_store.pushHouseData(needSave)){
+                        needSave.remove(data);
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);
@@ -107,7 +157,7 @@ class Bolt_sum extends BaseRichBolt {
         }
         else{
             Integer house_id        = (Integer) tuple.getValueByField("house_id");
-            Double  value           = (Double) tuple.getValueByField("avg");
+            Double  avg           = (Double) tuple.getValueByField("avg");
             Integer household_id    = (Integer)tuple.getValueByField("household_id");
             Integer device_id       = (Integer)tuple.getValueByField("device_id");
             Integer slice_num       = (Integer)tuple.getValueByField("slice_num");
@@ -116,20 +166,30 @@ class Bolt_sum extends BaseRichBolt {
             String day              = (String)tuple.getValueByField("day");
             String date             = year + "/" + month + "/" + day;
             String household_deviceid = house_id+"_"+device_id;
+            String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
             String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
-            HashMap<String, HashMap<String, Double>> data_house = data.getOrDefault(house_id, new HashMap<String, HashMap<String, Double>>());
-            HashMap<String, Double> data_slice = data_house.getOrDefault(slice_name, new HashMap<String, Double>());
-            data_slice.put(household_deviceid, value);
-            data_house.put(slice_name, data_slice);
-            data.put(house_id, data_house);
-            Double sum = Double.valueOf(0);
-            for(String device : data_slice.keySet()){
-                sum += data_slice.get(device);
-            }
-            HashMap<String, Double> result_house = final_data.getOrDefault(house_id, new HashMap<String, Double>());
-            result_house.put(slice_name, sum);
-            final_data.put(house_id, result_house);
-            processed++;
+            
+            HashMap<String,HashMap<String, DeviceData> > house_data = data_list.getOrDefault(house_id, new HashMap<String,HashMap<String, DeviceData> >());
+            HashMap<String, DeviceData> slice_data = house_data.getOrDefault(slice_name, new  HashMap<String, DeviceData>());
+            slice_data.put(unique_id, slice_data.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).avg(avg));
+            house_data.put(slice_name, slice_data);
+            data_list.put(house_id, house_data);
+
+
+
+            // HashMap<String, HashMap<String, Double>> data_house = data.getOrDefault(house_id, new HashMap<String, HashMap<String, Double>>());
+            // HashMap<String, Double> data_slice = data_house.getOrDefault(slice_name, new HashMap<String, Double>());
+            // data_slice.put(household_deviceid, value);
+            // data_house.put(slice_name, data_slice);
+            // data.put(house_id, data_house);
+            // Double sum = Double.valueOf(0);
+            // for(String device : data_slice.keySet()){
+            //     sum += data_slice.get(device);
+            // }
+            // HashMap<String, Double> result_house = final_data.getOrDefault(house_id, new HashMap<String, Double>());
+            // result_house.put(slice_name, sum);
+            // final_data.put(house_id, result_house);
+            // processed++;
         }
     }
 }

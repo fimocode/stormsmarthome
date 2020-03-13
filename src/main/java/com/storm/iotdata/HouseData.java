@@ -18,7 +18,15 @@ public class HouseData implements Serializable{
     public Long lastUpdate;
     public boolean saved = false;
 
-    public HouseData() {
+    public HouseData(int house_id, String year, String month, String day, int slice_num, int windows, Double value) {
+        this.house_id = house_id;
+        this.year = year;
+        this.month = month;
+        this.day = day;
+        this.slice_num = slice_num;
+        this.windows = windows;
+        this.value = value;
+        this.lastUpdate = System.currentTimeMillis();
     }
 
     public HouseData(int house_id, String year, String month, String day, int slice_num, int windows, Double value, Long lastUpdate, boolean saved) {
@@ -196,4 +204,7 @@ public class HouseData implements Serializable{
             "}";
     }
 
+    public String getSliceName(){
+        return year + "/" + month + "/" + day + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
+    }
 }

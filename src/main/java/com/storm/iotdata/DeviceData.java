@@ -19,6 +19,7 @@ public class DeviceData implements Serializable{
     public int windows;
     public Double value;
     public Double count;
+    public Double avg;
     public Long lastUpdate;
     public boolean saved = false;
 
@@ -94,6 +95,12 @@ public class DeviceData implements Serializable{
         this.lastUpdate = System.currentTimeMillis();
         this.saved=false;
         this.year = year;
+    }
+
+    public DeviceData avg(Double avg) {
+        this.lastUpdate = System.currentTimeMillis();
+        this.avg = avg;
+        return this;
     }
 
     public String getMonth() {
