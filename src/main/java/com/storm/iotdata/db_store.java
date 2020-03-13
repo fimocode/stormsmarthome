@@ -95,7 +95,7 @@ public class db_store {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for(HouseData data : data_list){
-                PreparedStatement temp_sql = conn.prepareStatement("insert into house_data (house_id,year,month,day,windows,slice_num,value) values (?,?,?,?,?,?,?) on duplicate key update value=?", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement temp_sql = conn.prepareStatement("insert into house_data (house_id,year,month,day,windows,slice_num,avg) values (?,?,?,?,?,?,?) on duplicate key update value=?", Statement.RETURN_GENERATED_KEYS);
                 temp_sql.setInt(1, data.getHouse_id());
                 temp_sql.setString(2, data.getYear());
                 temp_sql.setString(3, data.getMonth());
