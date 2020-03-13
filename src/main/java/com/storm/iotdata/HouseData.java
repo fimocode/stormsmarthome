@@ -131,8 +131,9 @@ public class HouseData implements Serializable{
         return this.saved;
     }
 
-    public void saved() {
+    public HouseData saved() {
         this.saved = true;
+        return this;
     }
 
     public HouseData house_id(int house_id) {

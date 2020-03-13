@@ -78,8 +78,7 @@ public class db_store {
         }
     }
 
-    public static Stack<HouseData> pushHouseData(Stack<HouseData> data_list){
-        Stack<HouseData> result = new Stack<HouseData>();
+    public static boolean pushHouseData(Stack<HouseData> data_list){
         try{
             //Init connection
             Yaml yaml = new Yaml();
@@ -94,8 +93,9 @@ public class db_store {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
+            String sql = "insert into house_data (house_id,year,month,day,windows,slice_num,avg) values ";
             for(HouseData data : data_list){
-                PreparedStatement temp_sql = conn.prepareStatement("insert into house_data (house_id,year,month,day,windows,slice_num,avg) values (?,?,?,?,?,?,?) on duplicate key update avg=?", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement temp_sql = conn.prepareStatement("(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
                 temp_sql.setInt(1, data.getHouse_id());
                 temp_sql.setString(2, data.getYear());
                 temp_sql.setString(3, data.getMonth());
@@ -103,15 +103,17 @@ public class db_store {
                 temp_sql.setInt(5, data.getWindows());
                 temp_sql.setInt(6, data.getSlice_num());
                 temp_sql.setDouble(7, data.getValue());
-                temp_sql.setDouble(8, data.getValue());
-                temp_sql.executeUpdate();
-                result.push(data);
+                String statementText = temp_sql.toString();
+                sql+=statementText.substring( statementText.indexOf( ": " ) + 2 )+",";
             }
+            sql = sql.substring(0, sql.length()-1) + " on duplicate key update avg=VALUES(avg)";
+            stmt.executeUpdate(sql);
             conn.close();
-            return result;
+            System.out.printf("\nDB tooks %.2f s\n",(float)(System.currentTimeMillis()-start)/1000);
+            return true;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return result;
+            return false;
         }
     }
 
@@ -133,7 +135,7 @@ public class db_store {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for(DeviceData data : data_list){
-                PreparedStatement temp_sql = conn.prepareStatement("insert into device_data (house_id,household_id,device_id,year,month,day,windows,slice_num,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=?, count=?, avg=?", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement temp_sql = conn.prepareStatement("insert into device_data (house_id,household_id,device_id,year,month,day,windows,slice_num,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), count=VALUES(count), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
                 temp_sql.setInt(1, data.getHouse_id());
                 temp_sql.setInt(2, data.getHousehold_id());
                 temp_sql.setInt(3, data.getDevice_id());
@@ -174,7 +176,7 @@ public class db_store {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            PreparedStatement temp_sql = conn.prepareStatement("insert into device_data (house_id,household_id,device_id,year,month,day,windows,slice_num,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=?, count=?, avg=?", Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement temp_sql = conn.prepareStatement("insert into device_data (house_id,household_id,device_id,year,month,day,windows,slice_num,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), count=VALUES(count), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
             temp_sql.setInt(1, data.getHouse_id());
             temp_sql.setInt(2, data.getHousehold_id());
             temp_sql.setInt(3, data.getDevice_id());
