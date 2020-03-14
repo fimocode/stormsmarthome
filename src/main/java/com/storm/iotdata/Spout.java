@@ -68,6 +68,9 @@ public class Spout extends BaseRichSpout {
         // }
         try {
             int temp = 0;
+            int speed = 0;
+            long time = 0;
+            long last = System.currentTimeMillis();
             BufferedReader br = new BufferedReader(
                     new FileReader(new File("/home/hiiamlala/Documents/sorted100M.csv")));
             while (br.ready()) {
@@ -77,7 +80,14 @@ public class Spout extends BaseRichSpout {
                     _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6],
                             Long.valueOf(0)));
                     total++;
-                    if (++temp > 300) {
+                    speed++;
+                    time = System.currentTimeMillis()-last;
+                    if(time>2000){
+                        System.out.printf("\r\t\t\t\tCurrent speed %.2f", (float)speed*1000/time);
+                        last=System.currentTimeMillis();
+                        speed=0;
+                    }
+                    if (++temp > 1000) {
                         try {
                             Thread.sleep(10);
                             temp=0;
