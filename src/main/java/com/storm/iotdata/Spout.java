@@ -70,6 +70,8 @@ public class Spout extends BaseRichSpout {
             int temp = 0;
 	        int controller = 1600;
             int expected = 30000;
+            int init_sp= 30000;
+            int last_process_speed=0;
             int process_speed = 0;
             int speed = 0;
             long time = 0;
@@ -91,17 +93,23 @@ public class Spout extends BaseRichSpout {
                     time = System.currentTimeMillis()-last;
                     if(time>2000){
                         System.out.printf("\r\t\t\t\tCurrent speed %.2f\t(%d)", (float)speed*1000/time, controller);
-            if(sp_file.ready()){
-                process_speed = Integer.parseInt(sp_file.readLine());
-                sp_file = new BufferedReader(new FileReader(new File("process_speed")));
-            }
-            if(process_speed!=0&&process_speed<expected)  expected=process_speed;
-			if((speed*1000/time)<expected){
-			    controller+=(expected-speed*1000/time)/10;
-			}
-			else{
-			    controller+=(expected-speed*1000/time)/5;
-			}
+                    if(sp_file.ready()){
+                        process_speed = Integer.parseInt(sp_file.readLine());
+                        sp_file = new BufferedReader(new FileReader(new File("process_speed")));
+                    }
+                    if(process_speed!=last_process_speed){
+                        last_process_speed=process_speed;
+                        if(process_speed<expected-1000){
+                            expected=process_speed;
+                        }
+                        else expected+=1000;
+                    }
+                    if((speed*1000/time)<expected){
+                        controller+=(expected-speed*1000/time)/10;
+                    }
+                    else{
+                        controller+=(expected-speed*1000/time)/5;
+                    }
                         last=System.currentTimeMillis();
                         speed=0;
                     }
