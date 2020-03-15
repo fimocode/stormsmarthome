@@ -97,7 +97,7 @@ public class Spout extends BaseRichSpout {
                         process_speed = Integer.parseInt(sp_file.readLine());
                         sp_file = new BufferedReader(new FileReader(new File("process_speed")));
                     }
-                    if(process_speed!=last_process_speed){
+                    if(process_speed!=0 && process_speed!=last_process_speed){
                         last_process_speed=process_speed;
                         if(process_speed<expected-1000){
                             expected=process_speed;
