@@ -146,6 +146,9 @@ class Bolt_sum extends BaseRichBolt {
                     }
                     if(lastProcessed!=processed){
                         bw.write(String.format("\nTemporal process speed,%.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+                        BufferedWriter sp_file = new BufferedWriter(new FileWriter(new File("process_speed"),false));
+                        sp_file.write(String.valueOf(((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+                        sp_file.close();
                         lastChange = new Date();
                         lastProcessed = processed;
                     }
