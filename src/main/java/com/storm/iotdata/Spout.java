@@ -76,6 +76,9 @@ public class Spout extends BaseRichSpout {
             long last = System.currentTimeMillis();
             BufferedReader br = new BufferedReader(
                     new FileReader(new File("/root/bigdata/sorted.csv")));
+            if(!new File("process_speed").exists()){
+                new File("process_speed").createNewFile();
+            }
             BufferedReader sp_file = new BufferedReader(new FileReader(new File("process_speed")));
             while (br.ready()) {
                 String message = br.readLine();
@@ -90,8 +93,9 @@ public class Spout extends BaseRichSpout {
                         System.out.printf("\r\t\t\t\tCurrent speed %.2f\t(%d)", (float)speed*1000/time, controller);
             if(sp_file.ready()){
                 process_speed = Integer.parseInt(sp_file.readLine());
+                sp_file = new BufferedReader(new FileReader(new File("process_speed")));
             }
-            if(process_speed<expected)  expected=process_speed;
+            if(process_speed!=0&&process_speed<expected)  expected=process_speed;
 			if((speed*1000/time)<expected){
 			    controller+=(expected-speed*1000/time)/10;
 			}
