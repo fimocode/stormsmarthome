@@ -305,6 +305,7 @@ public class db_store {
             while(rs.next()){
                 result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"), rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
             }
+            conn.close();
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -345,6 +346,7 @@ public class db_store {
                 }
                 result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"), rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
             }
+            conn.close();
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
