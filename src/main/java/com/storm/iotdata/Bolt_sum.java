@@ -22,6 +22,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 
 /**
  *
@@ -45,7 +46,7 @@ class Bolt_sum extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","slice","value"));
+        declarer.declare(new Fields("house_id","year","month","day","windows","slice_num","value"));
     }
 
     @Override
@@ -194,7 +195,7 @@ class Bolt_sum extends BaseRichBolt {
             house_data.put(slice_name, slice_data);
             data_list.put(house_id, house_data);
             processed++;
-
+            _collector.emit(new Values(house_id,year,month,day,windows,slice_num,avg));
 
             // HashMap<String, HashMap<String, Double>> data_house = data.getOrDefault(house_id, new HashMap<String, HashMap<String, Double>>());
             // HashMap<String, Double> data_slice = data_house.getOrDefault(slice_name, new HashMap<String, Double>());

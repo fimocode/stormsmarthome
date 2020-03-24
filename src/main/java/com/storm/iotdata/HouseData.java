@@ -208,4 +208,9 @@ public class HouseData implements Serializable{
     public String getSliceName(){
         return year + "/" + month + "/" + day + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
     }
+
+    // public HouseData forecast(){
+    //     if(db_store.forecast(this));
+    //     return this;
+    // }
 }

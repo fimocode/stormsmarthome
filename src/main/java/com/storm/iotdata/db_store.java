@@ -70,6 +70,7 @@ public class db_store {
             stmt.execute("use iot_data");
             stmt.executeUpdate("create table device_data (house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, device_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL, windows INT NOT NULL, slice_num INT NOT NULL, value DOUBLE UNSIGNED NOT NULL, count DOUBLE UNSIGNED NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, household_id, device_id, year, month, day, windows, slice_num))");
             stmt.executeUpdate("create table house_data(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
+            stmt.executeUpdate("create table house_data_forecast(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -94,6 +95,45 @@ public class db_store {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             String sql = "insert into house_data (house_id,year,month,day,windows,slice_num,avg) values ";
+            for(HouseData data : data_list){
+                PreparedStatement temp_sql = conn.prepareStatement("(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+                temp_sql.setInt(1, data.getHouse_id());
+                temp_sql.setString(2, data.getYear());
+                temp_sql.setString(3, data.getMonth());
+                temp_sql.setString(4, data.getDay());
+                temp_sql.setInt(5, data.getWindows());
+                temp_sql.setInt(6, data.getSlice_num());
+                temp_sql.setDouble(7, data.getValue());
+                String statementText = temp_sql.toString();
+                sql+=statementText.substring( statementText.indexOf( ": " ) + 2 )+",";
+            }
+            sql = sql.substring(0, sql.length()-1) + " on duplicate key update avg=VALUES(avg)";
+            stmt.executeUpdate(sql);
+            conn.close();
+            System.out.printf("\nDB tooks %.2f s\n",(float)(System.currentTimeMillis()-start)/1000);
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean pushForecastHouseData(Stack<HouseData> data_list){
+        try{
+            //Init connection
+            Yaml yaml = new Yaml();
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://"+obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            //Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            String sql = "insert into house_data_forecast (house_id,year,month,day,windows,slice_num,avg) values ";
             for(HouseData data : data_list){
                 PreparedStatement temp_sql = conn.prepareStatement("(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
                 temp_sql.setInt(1, data.getHouse_id());
@@ -199,6 +239,118 @@ public class db_store {
             return false;
         }
     };
+
+    // public static Double forecast(HouseData data){
+    //     try{
+    //         //Init connection
+    //         Yaml yaml = new Yaml();
+    //         FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+    //         Map<String, Object> obj = yaml.load(inputStream);
+    //         String dbURL = "jdbc:mysql://"+obj.get("db_url");
+    //         String userName = (String) obj.get("db_user");
+    //         String password = (String) obj.get("db_pass");
+    //         Class.forName("com.mysql.jdbc.Driver");
+    //         Connection conn = DriverManager.getConnection(dbURL, userName, password);
+    //         Statement stmt = conn.createStatement();
+    //         stmt.execute("use iot_data");
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //         return (double) -1;
+    //     }
+    // }
+
+    public static Stack<HouseData> query(int house_id, String year, String month, String day, int windows, int slice_num){
+        Stack<HouseData> result = new Stack<HouseData>();
+        try{
+            //Init connection
+            Yaml yaml = new Yaml();
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://"+obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            //Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            String sql = "SELECT * FROM house_data WHERE ";
+            Boolean condition = false;
+            if(house_id != -1){
+                sql+="house_id="+house_id+" AND ";
+                condition = true;
+            }
+            if(year.length()!=0){
+                sql+="year=\""+year+"\" AND ";
+                condition = true;
+            }
+            if(month.length()!=0){
+                sql+="month=\""+month+"\" AND ";
+                condition = true;
+            }
+            if(day.length()!=0){
+                sql+="day=\""+day+"\" AND ";
+                condition = true;
+            }
+            if(house_id != -1){
+                sql+="windows="+windows+" AND ";
+                condition = true;
+            }
+            if(slice_num != -1){
+                sql+="slice_num="+slice_num+" AND ";
+                condition = true;
+            }
+            ResultSet rs = stmt.executeQuery(sql.substring(0, sql.length()-(condition?5:7)));
+            while(rs.next()){
+                result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"), rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+            }
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return result;
+        }
+    }
+
+    public static Stack<HouseData> queryBefore(int house_id, String year, String month, String day, int windows, int slice_num){
+        Stack<HouseData> result = new Stack<HouseData>();
+        try{
+            //Init connection
+            Yaml yaml = new Yaml();
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://"+obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            //Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            Boolean condition = false;
+            if(house_id<0 && year.length()==0 && month.length()==0 && day.length()==0 && windows<0 && slice_num<0){
+                return new Stack<>();
+            }
+            String sql = "SELECT * FROM house_data WHERE house_id="+house_id+" AND year=\""+year+"\" AND month=\""+month+"\" AND day=\""+day+"\" AND windows="+windows;
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()){
+                if(new Date(Integer.valueOf(rs.getString("year"))-1900, Integer.valueOf(rs.getString("month")), Integer.valueOf(rs.getString("day"))).after(new Date(Integer.valueOf(year)-1900, Integer.valueOf(month), Integer.valueOf(day)))){
+                    break;
+                }
+                else if(new Date(Integer.valueOf(rs.getString("year"))-1900, Integer.valueOf(rs.getString("month")), Integer.valueOf(rs.getString("day"))).equals(new Date(Integer.valueOf(year)-1900, Integer.valueOf(month), Integer.valueOf(day)))){
+                    if(rs.getInt("slice_num")>slice_num){
+                        break;
+                    }
+                }
+                result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"), rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+            }
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return result;
+        }
+    }
 
     public static Connection getConnection(String dbURL, String userName, String password) {
         Connection conn = null;
