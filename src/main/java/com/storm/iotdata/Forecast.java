@@ -8,10 +8,15 @@ import java.util.Stack;
 /**
  * Forecast
  */
-public class Forecast {
+public class Forecast implements Runnable{
+    public int house_id;
+    public Date start;
+    public int windows;
 
-    public static void main(String[] args) {
-        Forecast.forecast(0, new Date(113,9,8), 120);
+    public Forecast(int house_id, Date start, int windows){
+        this.house_id = house_id;
+        this.start = start;
+        this.windows = windows;
     }
 
     public static void forecast(int house_id, Date start, int windows){
@@ -72,5 +77,12 @@ public class Forecast {
            median = (double) data_list.get(totalElements / 2);
      }
      return median;
+    }
+
+    @Override
+    public void run() {
+        System.out.printf("\n[Forecast] Started threads for { house_id: %d | start: %s | windows: %d }\n", house_id, start.toGMTString(), windows);
+        forecast(house_id, start, windows);
+        System.out.printf("\n[Forecast] Done{ house_id: %d | start: %s | windows: %d }\n", house_id, start.toGMTString(), windows);
     }
 }
