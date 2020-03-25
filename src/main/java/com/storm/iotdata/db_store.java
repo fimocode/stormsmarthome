@@ -182,7 +182,8 @@ public class db_store {
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
+            System.out.println("Trying again");
+            return pushForecastHouseData(data);
         }
     }
 
@@ -333,7 +334,8 @@ public class db_store {
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return result;
+            System.out.println("Trying again");
+            return query(house_id, year, month, day, windows, slice_num);
         }
     }
 
@@ -370,7 +372,8 @@ public class db_store {
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return result;
+            System.out.println("Trying again");
+            return queryBefore(house_id, year, month, day, windows, slice_num);
         }
     }
 
