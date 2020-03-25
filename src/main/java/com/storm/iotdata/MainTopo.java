@@ -25,12 +25,12 @@ public class MainTopo {
         if (!new File("cred.yaml").exists()) {
             System.out.println("Credential file not found!");
         } else {
-            int[] window_list = { 5, 10, 15, 20, 30, 60, 120 };
+            int[] window_list = { 120, 60, 30, 20, 15, 10, 5 };
             HashMap<Integer, HashMap<Integer, Forecast>> threads = new HashMap<Integer, HashMap<Integer, Forecast>>();
             for (int windows : window_list) {
                 HashMap<Integer, Forecast> windows_thread = threads.getOrDefault(windows, new HashMap<Integer, Forecast>());
                 IntStream.range(0, 40).forEachOrdered(n -> {
-                    windows_thread.put(n, new Forecast(n, new Date(113, 9, 8), windows));
+                    windows_thread.put(n, new Forecast(n, new Date(113, 8, 8), windows));
                     windows_thread.get(n).start();
                 });
                 threads.put(windows, windows_thread);

@@ -358,13 +358,13 @@ public class db_store {
                     + "\" AND month=\"" + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month")),
+                if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
                         Integer.valueOf(rs.getString("day"))).after(
-                                new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month), Integer.valueOf(day)))) {
+                                new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
                     break;
                 } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
-                        Integer.valueOf(rs.getString("month")), Integer.valueOf(rs.getString("day"))).equals(
-                                new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month), Integer.valueOf(day)))) {
+                        Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
+                                new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
                     if (rs.getInt("slice_num") > slice_num) {
                         break;
                     }
