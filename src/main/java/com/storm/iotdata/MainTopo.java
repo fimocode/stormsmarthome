@@ -34,8 +34,9 @@ public class MainTopo {
                     house_thread.get(windows).start();
                 }
                 threads.put(n, house_thread);
+                int temp = 0;
                 while (true) {
-                    int temp = 0;
+                    temp = 0;
                     boolean done = true;
                     for (int windows : window_list) {
                         if (house_thread.get(windows).isAlive()) {
@@ -44,6 +45,7 @@ public class MainTopo {
                             house_thread.get(windows).speed = 0;
                         }
                     }
+                    System.out.printf("\rForecaste: %.2f", (float) temp/2);
                     if (done) {
                         break;
                     }
