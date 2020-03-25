@@ -21,29 +21,37 @@ import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
 
 public class MainTopo {
-    public static void main(String[] args) throws Exception{
-        if(!new File("cred.yaml").exists()){
+    public static void main(String[] args) throws Exception {
+        if (!new File("cred.yaml").exists()) {
             System.out.println("Credential file not found!");
-        }
-        else{
-            int[] window_list = {5,10,15,20,30,60,120};
-            HashMap<Integer,HashMap<Integer,Forecast> > threads = new HashMap<Integer,HashMap<Integer,Forecast> > ();
+        } else {
+            int[] window_list = { 5, 10, 15, 20, 30, 60, 120 };
+            HashMap<Integer, HashMap<Integer, Forecast>> threads = new HashMap<Integer, HashMap<Integer, Forecast>>();
             IntStream.range(0, 40).forEachOrdered(n -> {
-                HashMap<Integer,Forecast> house_thread = threads.getOrDefault(n, new HashMap<Integer,Forecast>());
-                for(int windows : window_list){
-                    house_thread.put(windows, new Forecast(n, new Date(113,9,8), windows));
+                HashMap<Integer, Forecast> house_thread = threads.getOrDefault(n, new HashMap<Integer, Forecast>());
+                for (int windows : window_list) {
+                    house_thread.put(windows, new Forecast(n, new Date(113, 9, 8), windows));
                     house_thread.get(windows).start();
                 }
                 threads.put(n, house_thread);
-                while(true){
+                while (true) {
+                    int temp = 0;
                     boolean done = true;
-                    for(int windows : window_list){
-                        if(house_thread.get(windows).isAlive()){
-                            done=false;
+                    for (int windows : window_list) {
+                        if (house_thread.get(windows).isAlive()) {
+                            done = false;
+                            temp += house_thread.get(windows).speed;
+                            house_thread.get(windows).speed = 0;
                         }
                     }
-                    if(done){
+                    if (done) {
                         break;
+                    }
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
                     }
                 }
             });

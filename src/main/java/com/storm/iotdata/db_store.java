@@ -183,6 +183,7 @@ public class db_store {
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("Trying again");
+            this.reConnect();
             return pushForecastHouseData(data);
         }
     }
@@ -334,6 +335,7 @@ public class db_store {
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
+            this.reConnect();
             System.out.println("Trying again");
             return query(house_id, year, month, day, windows, slice_num);
         }
@@ -373,20 +375,28 @@ public class db_store {
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("Trying again");
+            this.reConnect();
             return queryBefore(house_id, year, month, day, windows, slice_num);
         }
     }
 
-    public static Connection getConnection(String dbURL, String userName, String password) {
-        Connection conn = null;
+    public void reConnect() {
         try {
+            this.close();
+            // Init connection
+            Yaml yaml = new Yaml();
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://" + obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
             Class.forName("com.mysql.jdbc.Driver");
-            conn = DriverManager.getConnection(dbURL, userName, password);
+            this.conn = DriverManager.getConnection(dbURL, userName, password);
         } catch (Exception ex) {
-            System.out.println("connect failure!");
+            System.out.println("connect failure! Retrying...");
+            this.reConnect();
             ex.printStackTrace();
         }
-        return conn;
     }
 
     public void close() {

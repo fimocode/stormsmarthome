@@ -11,6 +11,7 @@ import com.mysql.jdbc.Connection;
  * Forecast
  */
 public class Forecast extends Thread{
+    public int speed = 0;
     public int house_id;
     public Date begin;
     public int windows;
@@ -46,13 +47,11 @@ public class Forecast extends Thread{
                     Calendar temp = Calendar.getInstance();
                     temp.setTime(now.getTime());
                     temp.add(Calendar.DAY_OF_YEAR, 1);
-                    forecasted.push(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
+                    conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
                 }
                 else{
-                    forecasted.push(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
+                    conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
                 }
-                // System.out.println(forecasted);
-                conn.pushForecastHouseData(forecasted);
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
                     index = (index+1)%total_slice;
@@ -64,6 +63,7 @@ public class Forecast extends Thread{
             else{
                 end=true;
             }
+            speed++;
         }
     }
 
