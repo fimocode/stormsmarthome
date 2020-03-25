@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Stack;
 
+import com.mysql.jdbc.Connection;
+
 /**
  * Forecast
  */
@@ -12,6 +14,7 @@ public class Forecast extends Thread{
     public int house_id;
     public Date begin;
     public int windows;
+    public Connection conn;
 
     public Forecast(int house_id, Date begin, int windows){
         this.house_id = house_id;
@@ -19,18 +22,19 @@ public class Forecast extends Thread{
         this.windows = windows;
     }
 
-    public static void forecast(int house_id, Date begin, int windows){
+    public void forecast(int house_id, Date begin, int windows){
+        db_store conn = new db_store();
         boolean end = false;
         Calendar now = Calendar.getInstance();
         now.setTime(begin);
         int index = 0;
         int total_slice = (int) 24*60/windows;
         while(!end){
-            Stack<HouseData> current = db_store.query(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), windows, index);
+            Stack<HouseData> current = conn.query(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), windows, index);
             if(current.size()==1){
                 Double current_avg = current.get(0).getValue();
                 Stack<Double> data_list = new Stack<Double>();
-                for(HouseData data : db_store.queryBefore(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), windows, index)){
+                for(HouseData data : conn.queryBefore(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), windows, index)){
                     data_list.add(data.getValue());
                 }
                 if(data_list.size()==0){
@@ -48,7 +52,7 @@ public class Forecast extends Thread{
                     forecasted.push(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
                 }
                 // System.out.println(forecasted);
-                db_store.pushForecastHouseData(forecasted);
+                conn.pushForecastHouseData(forecasted);
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
                     index = (index+1)%total_slice;

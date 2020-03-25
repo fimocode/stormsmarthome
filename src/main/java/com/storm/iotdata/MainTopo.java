@@ -28,10 +28,10 @@ public class MainTopo {
         else{
             int[] window_list = {5,10,15,20,30,60,120};
             HashMap<Integer,HashMap<Integer,Forecast> > threads = new HashMap<Integer,HashMap<Integer,Forecast> > ();
-            IntStream.range(0, 39).forEachOrdered(n -> {
+            IntStream.range(0, 40).forEachOrdered(n -> {
                 HashMap<Integer,Forecast> house_thread = threads.getOrDefault(n, new HashMap<Integer,Forecast>());
                 for(int windows : window_list){
-                    house_thread.put(windows, new Forecast(n, new Date(113,9,30), windows));
+                    house_thread.put(windows, new Forecast(n, new Date(113,9,8), windows));
                     house_thread.get(windows).start();
                 }
                 threads.put(n, house_thread);
