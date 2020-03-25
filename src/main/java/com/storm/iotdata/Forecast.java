@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Stack;
 
-import com.mysql.jdbc.Connection;
-
 /**
  * Forecast
  */
@@ -15,16 +13,16 @@ public class Forecast extends Thread{
     public int house_id;
     public Date begin;
     public int windows;
-    public Connection conn;
+    public db_store conn;
 
     public Forecast(int house_id, Date begin, int windows){
         this.house_id = house_id;
         this.begin = begin;
         this.windows = windows;
+        this.conn = new db_store();
     }
 
     public void forecast(int house_id, Date begin, int windows){
-        db_store conn = new db_store();
         boolean end = false;
         Calendar now = Calendar.getInstance();
         now.setTime(begin);
@@ -42,16 +40,27 @@ public class Forecast extends Thread{
                     continue;
                 }
                 Double forecast_value = (Double) (current_avg + median(data_list))/2;
-                Stack<HouseData> forecasted = new Stack<HouseData>();
                 if(index+2>=total_slice){
                     Calendar temp = Calendar.getInstance();
                     temp.setTime(now.getTime());
                     temp.add(Calendar.DAY_OF_YEAR, 1);
                     conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
+                    // System.out.println(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
                 }
                 else{
                     conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
+                    // System.out.println(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
                 }
+                if(index+1>=total_slice){
+                    now.add(Calendar.DAY_OF_YEAR, 1);
+                    index = (index+1)%total_slice;
+                }
+                else{
+                    index++;
+                }
+            }
+            else if(now.getTime().before(new Date(113,9,31))){
+                System.out.println("Missing slice: " + index + " | windows: " + windows + " | date: " + now.getTime().toGMTString());
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
                     index = (index+1)%total_slice;

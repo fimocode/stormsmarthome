@@ -10,6 +10,7 @@ import org.apache.storm.generated.DistributedRPCInvocations.AsyncProcessor.resul
 import org.yaml.snakeyaml.Yaml;
 
 public class db_store {
+
     private Connection conn;
 
     public db_store() {
