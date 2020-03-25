@@ -27,24 +27,24 @@ public class MainTopo {
         } else {
             int[] window_list = { 5, 10, 15, 20, 30, 60, 120 };
             HashMap<Integer, HashMap<Integer, Forecast>> threads = new HashMap<Integer, HashMap<Integer, Forecast>>();
-            IntStream.range(0, 40).forEachOrdered(n -> {
-                HashMap<Integer, Forecast> house_thread = threads.getOrDefault(n, new HashMap<Integer, Forecast>());
-                for (int windows : window_list) {
-                    house_thread.put(windows, new Forecast(n, new Date(113, 9, 8), windows));
-                    house_thread.get(windows).start();
-                }
-                threads.put(n, house_thread);
+            for (int windows : window_list) {
+                HashMap<Integer, Forecast> windows_thread = threads.getOrDefault(windows, new HashMap<Integer, Forecast>());
+                IntStream.range(0, 40).forEachOrdered(n -> {
+                    windows_thread.put(n, new Forecast(n, new Date(113, 9, 8), windows));
+                    windows_thread.get(n).start();
+                });
+                threads.put(windows, windows_thread);
                 int temp = 0;
                 while (true) {
                     temp = 0;
                     boolean done = true;
-                    for (int windows : window_list) {
-                        if (house_thread.get(windows).isAlive()) {
+                    for(int i = 0; i<40; i++) {
+                        if (windows_thread.get(i).isAlive()) {
                             done = false;
-                            temp += house_thread.get(windows).speed;
-                            house_thread.get(windows).speed = 0;
+                            temp += windows_thread.get(i).speed;
+                            windows_thread.get(i).speed = 0;
                         }
-                    }
+                    };
                     System.out.printf("\rForecaste: %.2f", (float) temp/2);
                     if (done) {
                         break;
@@ -56,7 +56,7 @@ public class MainTopo {
                         e.printStackTrace();
                     }
                 }
-            });
+            };
 
             // try {
             //     Scanner sc = new Scanner(System.in);
