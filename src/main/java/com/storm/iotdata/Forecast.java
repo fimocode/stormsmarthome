@@ -73,7 +73,8 @@ public class Forecast extends Thread{
             else{
                 end=true;
             }
-            speed++;
+            this.speed++;
+            System.gc();
         }
     }
 
@@ -93,19 +94,18 @@ public class Forecast extends Thread{
                 for(HouseData data : conn.queryBeforeV2(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)+1), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), windows, index)){
                     data_list.add(data.getValue());
                 }
-                if(data_list.size()==0){
-                    continue;
-                }
-                if(index+2>=total_slice){
-                    temp = Calendar.getInstance();
-                    temp.setTime(now.getTime());
-                    temp.add(Calendar.DAY_OF_YEAR, 1);
-                    conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)+1), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, (Double) (current.get(0).getValue() + median(data_list))/2),"house_data_forecast_v2");
-                    // System.out.println(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
-                }
-                else{
-                    conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)+1), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, (Double) (current.get(0).getValue() + median(data_list))/2),"house_data_forecast_v2");
-                    // System.out.println(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
+                if(data_list.size()!=0){
+                    if(index+2>=total_slice){
+                        temp = Calendar.getInstance();
+                        temp.setTime(now.getTime());
+                        temp.add(Calendar.DAY_OF_YEAR, 1);
+                        conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)+1), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, (Double) (current.get(0).getValue() + median(data_list))/2),"house_data_forecast_v2");
+                        // System.out.println(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
+                    }
+                    else{
+                        conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)+1), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, (Double) (current.get(0).getValue() + median(data_list))/2),"house_data_forecast_v2");
+                        // System.out.println(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
+                    }
                 }
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
@@ -113,6 +113,7 @@ public class Forecast extends Thread{
                 }
                 else{
                     index++;
+                    break;
                 }
             }
             else if(now.getTime().before(new Date(113,8,31))){
@@ -128,7 +129,8 @@ public class Forecast extends Thread{
             else{
                 end=true;
             }
-            speed++;
+            this.speed++;
+            System.gc();
         }
     }
 
