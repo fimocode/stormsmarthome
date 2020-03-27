@@ -3,6 +3,7 @@ package com.storm.iotdata;
 import java.io.File;
 import java.io.FileInputStream;
 import java.sql.*;
+import java.util.Calendar;
 import java.util.Map;
 import java.util.Stack;
 
@@ -72,6 +73,29 @@ public class db_store {
                     "create table house_data(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
             stmt.executeUpdate(
                     "create table house_data_forecast(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
+            conn.close();
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean initForecastTable(String table) {
+        try {
+            Yaml yaml = new Yaml();
+            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            Map<String, Object> obj = yaml.load(inputStream);
+            String dbURL = "jdbc:mysql://" + obj.get("db_url");
+            String userName = (String) obj.get("db_user");
+            String password = (String) obj.get("db_pass");
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            stmt.execute("drop table if exist" + table);
+            stmt.executeUpdate(
+                    "create table "+ table +"(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -159,13 +183,13 @@ public class db_store {
         }
     }
 
-    public boolean pushForecastHouseData(HouseData data) {
+    public boolean pushForecastHouseData(HouseData data, String table) {
         try {
             // Init SQL
             Long start = System.currentTimeMillis();
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
-            String sql = "insert into house_data_forecast (house_id,year,month,day,windows,slice_num,avg) values ";
+            String sql = "insert into " + table + " (house_id,year,month,day,windows,slice_num,avg) values ";
             PreparedStatement temp_sql = this.conn.prepareStatement("(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
             temp_sql.setInt(1, data.getHouse_id());
             temp_sql.setString(2, data.getYear());
@@ -185,7 +209,7 @@ public class db_store {
             ex.printStackTrace();
             System.out.println("Trying again");
             this.reConnect();
-            return pushForecastHouseData(data);
+            return pushForecastHouseData(data,table);
         }
     }
 
@@ -299,7 +323,6 @@ public class db_store {
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
         try {
-            Long start = System.currentTimeMillis();
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
             String sql = "SELECT * FROM house_data WHERE ";
@@ -346,16 +369,13 @@ public class db_store {
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
         try {
-            Long start = System.currentTimeMillis();
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
-            Boolean condition = false;
             if (house_id < 0 && year.length() == 0 && month.length() == 0 && day.length() == 0 && windows < 0
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\"" + year
-                    + "\" AND month=\"" + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
+            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND windows=" + windows;
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
@@ -371,6 +391,40 @@ public class db_store {
                 }
                 result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
                         rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+            }
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Trying again");
+            this.reConnect();
+            return queryBefore(house_id, year, month, day, windows, slice_num);
+        }
+    }
+
+    public Stack<HouseData> queryBeforeV2(int house_id, String year, String month, String day, int windows,
+            int slice_num) {
+        Stack<HouseData> result = new Stack<HouseData>();
+        try {
+            Long start = System.currentTimeMillis();
+            Statement stmt = this.conn.createStatement();
+            stmt.execute("use iot_data");
+            Boolean condition = false;
+            if (house_id < 0 && year.length() == 0 && month.length() == 0 && day.length() == 0 && windows < 0
+                    && slice_num < 0) {
+                return new Stack<>();
+            }
+            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND windows=" + windows;
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                Calendar result_cal = Calendar.getInstance();
+                result_cal.setTime(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)));
+                Calendar query_cal = Calendar.getInstance();
+                query_cal.setTime(new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,Integer.valueOf(rs.getString("day"))));
+                if(result_cal.after(query_cal) || result_cal.equals(query_cal) ) break;
+                if(result_cal.get(Calendar.DAY_OF_WEEK)==query_cal.get(Calendar.DAY_OF_WEEK) || rs.getInt("slice_num")==slice_num){
+                    result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
+                        rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+                }
             }
             return result;
         } catch (Exception ex) {

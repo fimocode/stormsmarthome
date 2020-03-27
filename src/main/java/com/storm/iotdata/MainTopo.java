@@ -25,12 +25,14 @@ public class MainTopo {
         if (!new File("cred.yaml").exists()) {
             System.out.println("Credential file not found!");
         } else {
+            db_store.initForecastTable("house_data_forecast_v1");
+            db_store.initForecastTable("house_data_forecast_v2");
             int[] window_list = { 120, 60, 30, 20, 15, 10, 5 };
             HashMap<Integer, HashMap<Integer, Forecast>> threads = new HashMap<Integer, HashMap<Integer, Forecast>>();
             for (int windows : window_list) {
                 HashMap<Integer, Forecast> windows_thread = threads.getOrDefault(windows, new HashMap<Integer, Forecast>());
                 IntStream.range(0, 40).forEachOrdered(n -> {
-                    windows_thread.put(n, new Forecast(n, new Date(113, 8, 8), windows));
+                    windows_thread.put(n, new Forecast(n, new Date(113, 8, 1), windows));
                     windows_thread.get(n).start();
                 });
                 threads.put(windows, windows_thread);
