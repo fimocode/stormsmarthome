@@ -93,7 +93,7 @@ public class db_store {
             Connection conn = DriverManager.getConnection(dbURL, userName, password);
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            stmt.execute("drop table if exist " + table);
+            stmt.execute("drop table if exists " + table);
             stmt.executeUpdate(
                     "create table "+ table +"(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
             conn.close();
