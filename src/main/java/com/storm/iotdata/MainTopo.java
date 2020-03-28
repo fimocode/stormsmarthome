@@ -41,7 +41,7 @@ public class MainTopo {
                     temp = 0;
                     boolean done = true;
                     for(int i = 0; i<40; i++) {
-                        if (windows_thread.get(i).isAlive()) {
+                        if (windows_thread.get(i)!=null && windows_thread.get(i).isAlive()) {
                             done = false;
                             temp += windows_thread.get(i).speed;
                             windows_thread.get(i).speed = 0;
