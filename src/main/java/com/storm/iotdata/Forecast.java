@@ -23,7 +23,6 @@ public class Forecast extends Thread{
     }
 
     public void forecast(int house_id, Date begin, int windows){
-        System.out.println("Start forecast V1");
         boolean end = false;
         Calendar now = Calendar.getInstance();
         now.setTime(begin);
@@ -79,7 +78,6 @@ public class Forecast extends Thread{
     }
 
     public void forecastv2(int house_id, Date begin, int windows){
-        System.out.println("Start forecast V2");
         boolean end = false;
         Calendar now = Calendar.getInstance();
         now.setTime(begin);

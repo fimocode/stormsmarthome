@@ -46,6 +46,9 @@ public class MainTopo {
                             temp += windows_thread.get(i).speed;
                             windows_thread.get(i).speed = 0;
                         }
+                        else{
+                            windows_thread.remove(i);
+                        }
                     };
                     System.out.printf("\rForecaste: %.2f", (float) temp/2);
                     if (done) {
