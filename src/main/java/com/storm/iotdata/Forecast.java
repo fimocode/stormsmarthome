@@ -74,6 +74,9 @@ public class Forecast extends Thread{
                 end=true;
             }
             this.speed++;
+            current = null;
+            data_list = null;
+            temp = null;
         }
     }
 
@@ -128,6 +131,9 @@ public class Forecast extends Thread{
                 end=true;
             }
             this.speed++;
+            current = null;
+            data_list = null;
+            temp = null;
         }
     }
 

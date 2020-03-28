@@ -351,13 +351,13 @@ public class db_store {
                 sql += "slice_num=" + slice_num + " AND ";
                 condition = true;
             }
-            ResultSet rs = stmt.executeQuery(sql.substring(0, sql.length() - (condition ? 5 : 7)));
-            while (rs.next()) {
-                result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
-                        rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+            try(ResultSet rs = stmt.executeQuery(sql.substring(0, sql.length() - (condition ? 5 : 7)))){
+                while (rs.next()) {
+                    result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
+                            rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+                }
+                return result;
             }
-            rs = null;
-            return result;
         } catch (Exception ex) {
             ex.printStackTrace();
             this.reConnect();
@@ -377,24 +377,25 @@ public class db_store {
                 return new Stack<>();
             }
             String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND windows=" + windows;
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
-                        Integer.valueOf(rs.getString("day"))).after(
-                                new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
-                    break;
-                } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
-                        Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
-                                new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
-                    if (rs.getInt("slice_num") > slice_num) {
+            try(ResultSet rs = stmt.executeQuery(sql)){
+                while (rs.next()) {
+                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
+                            Integer.valueOf(rs.getString("day"))).after(
+                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
                         break;
+                    } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
+                            Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
+                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                        if (rs.getInt("slice_num") > slice_num) {
+                            break;
+                        }
                     }
+                    result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
+                            rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
                 }
-                result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
-                        rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+                return result;
             }
-            rs = null;
-            return result;
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("Trying again");
@@ -414,23 +415,21 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND windows=" + windows;
-            ResultSet rs = stmt.executeQuery(sql);
             Calendar query_cal = Calendar.getInstance();
             query_cal.setTime(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)));
             do{
                 query_cal.add(Calendar.WEEK_OF_YEAR, -1);
-                rs = stmt.executeQuery("SELECT * FROM house_data WHERE house_id="+ house_id +" AND year=\"" + query_cal.get(Calendar.YEAR) + "\" AND month=\"" + String.format("%02d",(query_cal.get(Calendar.MONTH)+1)) + "\" AND day=\"" + String.format("%02d",query_cal.get(Calendar.DAY_OF_MONTH)) + "\" AND windows=" + windows + " AND slice_num="+slice_num);
-                if(rs.next()){
-                    result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
-                    rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
-                }
-                else{
-                    end=true;
+                try(ResultSet rs = stmt.executeQuery("SELECT * FROM house_data WHERE house_id="+ house_id +" AND year=\"" + query_cal.get(Calendar.YEAR) + "\" AND month=\"" + String.format("%02d",(query_cal.get(Calendar.MONTH)+1)) + "\" AND day=\"" + String.format("%02d",query_cal.get(Calendar.DAY_OF_MONTH)) + "\" AND windows=" + windows + " AND slice_num="+slice_num)){
+                    if(rs.next()){
+                        result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
+                        rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+                    }
+                    else{
+                        end=true;
+                    }
                 }
             }
             while(!end);
-            rs = null;
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
