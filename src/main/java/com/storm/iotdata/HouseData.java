@@ -48,7 +48,7 @@ public class HouseData implements Serializable{
         this.day = day;
         this.slice_num = slice_num;
         this.windows = windows;
-        this.value = new Double(0);
+        this.value = (double) 0;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }

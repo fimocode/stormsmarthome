@@ -47,8 +47,8 @@ public class DeviceData implements Serializable{
         this.day = day;
         this.slice_num = slice_num;
         this.windows = windows;
-        this.value = new Double(0);
-        this.count = new Double(0);
+        this.value = (double) 0;
+        this.count = (double) 0;
         this.lastUpdate = System.currentTimeMillis();
         this.saved=false;
     }
@@ -169,7 +169,7 @@ public class DeviceData implements Serializable{
 
     public Double getAvg() {
         if(this.count==0){
-            return new Double(0);
+            return (double) 0;
         }
         return this.value/this.count;
     }

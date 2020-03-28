@@ -7,7 +7,6 @@ package com.storm.iotdata;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
@@ -18,10 +17,10 @@ import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import static org.eclipse.paho.client.mqttv3.MqttClient.generateClientId;
+// import org.eclipse.paho.client.mqttv3.MqttMessage;
+// import org.eclipse.paho.client.mqttv3.MqttCallback;
+// import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+// import static org.eclipse.paho.client.mqttv3.MqttClient.generateClientId;
 
 public class Spout extends BaseRichSpout {
 
@@ -78,7 +77,6 @@ public class Spout extends BaseRichSpout {
             if(!new File("process_speed").exists()){
                 new File("process_speed").createNewFile();
             }
-            BufferedReader sp_file = new BufferedReader(new FileReader(new File("process_speed")));
             while (br.ready()) {
                 String message = br.readLine();
                 String[] metric = message.toString().split(",");
