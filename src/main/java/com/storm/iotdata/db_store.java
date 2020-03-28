@@ -155,7 +155,6 @@ public class db_store {
             Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(dbURL, userName, password);
             // Init SQL
-            Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             String sql = "insert into house_data_forecast (house_id,year,month,day,windows,slice_num,avg) values ";
@@ -186,7 +185,6 @@ public class db_store {
     public boolean pushForecastHouseData(HouseData data, String table) {
         try {
             // Init SQL
-            Long start = System.currentTimeMillis();
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
             String sql = "insert into " + table + " (house_id,year,month,day,windows,slice_num,avg) values ";
@@ -227,7 +225,6 @@ public class db_store {
             Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(dbURL, userName, password);
             // Init SQL
-            Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for (DeviceData data : data_list) {
@@ -271,7 +268,6 @@ public class db_store {
             Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(dbURL, userName, password);
             // Init SQL
-            Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             PreparedStatement temp_sql = conn.prepareStatement(
@@ -366,7 +362,46 @@ public class db_store {
         }
     }
 
-    public Stack<HouseData> queryBefore(int house_id, String year, String month, String day, int windows,
+    public Stack<HouseData> queryBeforeV0(int house_id, String year, String month, String day, int windows,
+            int slice_num) {
+        Stack<HouseData> result = new Stack<HouseData>();
+        try {
+            Statement stmt = this.conn.createStatement();
+            stmt.execute("use iot_data");
+            if (house_id < 0 && year.length() == 0 && month.length() == 0 && day.length() == 0 && windows < 0
+                    && slice_num < 0) {
+                return new Stack<>();
+            }
+            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\"" + year
+            + "\" AND month=\"" + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
+            try(ResultSet rs = stmt.executeQuery(sql)){
+                while (rs.next()) {
+                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
+                            Integer.valueOf(rs.getString("day"))).after(
+                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                        break;
+                    } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
+                            Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
+                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                        if (rs.getInt("slice_num") > slice_num) {
+                            break;
+                        }
+                    }
+                    result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
+                            rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
+                }
+                return result;
+            }
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("Trying again");
+            this.reConnect();
+            return queryBeforeV1(house_id, year, month, day, windows, slice_num);
+        }
+    }
+
+    public Stack<HouseData> queryBeforeV1(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
         try {
@@ -400,7 +435,7 @@ public class db_store {
             ex.printStackTrace();
             System.out.println("Trying again");
             this.reConnect();
-            return queryBefore(house_id, year, month, day, windows, slice_num);
+            return queryBeforeV1(house_id, year, month, day, windows, slice_num);
         }
     }
 
@@ -435,7 +470,7 @@ public class db_store {
             ex.printStackTrace();
             System.out.println("Trying again");
             this.reConnect();
-            return queryBefore(house_id, year, month, day, windows, slice_num);
+            return queryBeforeV2(house_id, year, month, day, windows, slice_num);
         }
     }
 
@@ -473,7 +508,7 @@ public class db_store {
             ex.printStackTrace();
             System.out.println("Trying again");
             this.reConnect();
-            return queryBefore(house_id, year, month, day, windows, slice_num);
+            return queryBeforeV3(house_id, year, month, day, windows, slice_num);
         }
     }
 
