@@ -74,7 +74,6 @@ public class Forecast extends Thread{
                 end=true;
             }
             this.speed++;
-            System.gc();
         }
     }
 
@@ -130,7 +129,6 @@ public class Forecast extends Thread{
                 end=true;
             }
             this.speed++;
-            System.gc();
         }
     }
 
