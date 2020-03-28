@@ -397,7 +397,7 @@ public class db_store {
             ex.printStackTrace();
             System.out.println("Trying again");
             this.reConnect();
-            return queryBeforeV1(house_id, year, month, day, windows, slice_num);
+            return queryBeforeV0(house_id, year, month, day, windows, slice_num);
         }
     }
 
