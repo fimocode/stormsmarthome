@@ -23,6 +23,7 @@ public class Forecast extends Thread{
     }
 
     public void forecast(int house_id, Date begin, int windows){
+        System.out.println("Start forecast V1");
         boolean end = false;
         Calendar now = Calendar.getInstance();
         now.setTime(begin);
@@ -78,6 +79,7 @@ public class Forecast extends Thread{
     }
 
     public void forecastv2(int house_id, Date begin, int windows){
+        System.out.println("Start forecast V2");
         boolean end = false;
         Calendar now = Calendar.getInstance();
         now.setTime(begin);
@@ -99,11 +101,11 @@ public class Forecast extends Thread{
                         temp.setTime(now.getTime());
                         temp.add(Calendar.DAY_OF_YEAR, 1);
                         conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)+1), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, (Double) (current.get(0).getValue() + median(data_list))/2),"house_data_forecast_v2");
-                        // System.out.println(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, forecast_value));
+                        // System.out.println(new HouseData(house_id, String.format("%d", temp.get(Calendar.YEAR)), String.format("%02d", temp.get(Calendar.MONTH)), String.format("%02d", temp.get(Calendar.DAY_OF_MONTH)), (int)(index+2)%total_slice, windows, (Double) (current.get(0).getValue() + median(data_list))/2));
                     }
                     else{
                         conn.pushForecastHouseData(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)+1), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, (Double) (current.get(0).getValue() + median(data_list))/2),"house_data_forecast_v2");
-                        // System.out.println(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, forecast_value));
+                        // System.out.println(new HouseData(house_id, String.format("%d", now.get(Calendar.YEAR)), String.format("%02d", now.get(Calendar.MONTH)), String.format("%02d", now.get(Calendar.DAY_OF_MONTH)), index+2, windows, (Double) (current.get(0).getValue() + median(data_list))/2));
                     }
                 }
                 if(index+1>=total_slice){
@@ -112,7 +114,6 @@ public class Forecast extends Thread{
                 }
                 else{
                     index++;
-                    break;
                 }
             }
             else if(now.getTime().before(new Date(113,8,31))){
