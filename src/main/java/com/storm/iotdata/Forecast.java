@@ -13,6 +13,7 @@ public class Forecast extends Thread{
     public int house_id;
     public Date begin;
     public int windows;
+    public Date endDate = new Date(113,8,31);
     public db_store conn;
 
     public Forecast(int house_id, Date begin, int windows){
@@ -60,7 +61,7 @@ public class Forecast extends Thread{
                     index++;
                 }
             }
-            else if(now.getTime().before(new Date(113,9,5))){
+            else if(now.getTime().before(endDate)){
                 System.out.println("Missing slice: " + index + " | windows: " + windows + " | date: " + now.getTime().toGMTString());
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
@@ -118,7 +119,7 @@ public class Forecast extends Thread{
                     index++;
                 }
             }
-            else if(now.getTime().before(new Date(113,9,5))){
+            else if(now.getTime().before(endDate)){
                 System.out.println("Missing slice: " + index + " | windows: " + windows + " | date: " + now.getTime().toGMTString());
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
@@ -175,7 +176,7 @@ public class Forecast extends Thread{
                     index++;
                 }
             }
-            else if(now.getTime().before(new Date(113,8,31))){
+            else if(now.getTime().before(endDate)){
                 System.out.println("Missing slice: " + index + " | windows: " + windows + " | date: " + now.getTime().toGMTString());
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
@@ -232,7 +233,7 @@ public class Forecast extends Thread{
                     index++;
                 }
             }
-            else if(now.getTime().before(new Date(113,8,31))){
+            else if(now.getTime().before(endDate)){
                 System.out.println("Missing slice: " + index + " | windows: " + windows + " | date: " + now.getTime().toGMTString());
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
