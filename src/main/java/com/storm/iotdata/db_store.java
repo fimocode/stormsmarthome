@@ -479,7 +479,7 @@ public class db_store {
     public Stack<HouseData> queryBeforeV3(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
-        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND slice_num=" + slice_num +" windows=" + windows;
+        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND slice_num=" + slice_num +" AND windows=" + windows;
         try {
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
