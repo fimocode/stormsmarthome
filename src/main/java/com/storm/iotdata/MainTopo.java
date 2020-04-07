@@ -30,7 +30,7 @@ public class MainTopo {
             for (int windows : window_list) {
                 HashMap<Integer, Forecast> windows_thread = threads.getOrDefault(windows, new HashMap<Integer, Forecast>());
                 IntStream.range(0, 40).forEachOrdered(n -> {
-                    windows_thread.put(n, new Forecast(n, new Date(113, 8, 1), windows));
+                    windows_thread.put(n, new Forecast(n, new Date(113, 9, 31), windows));
                     windows_thread.get(n).start();
                 });
                 threads.put(windows, windows_thread);
