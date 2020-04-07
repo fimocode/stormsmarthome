@@ -6,8 +6,6 @@ import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Stack;
-
-import org.apache.storm.generated.DistributedRPCInvocations.AsyncProcessor.result;
 import org.yaml.snakeyaml.Yaml;
 
 public class db_store {
@@ -207,7 +205,7 @@ public class db_store {
         } catch (Exception ex) {
             System.out.println(sql);
             ex.printStackTrace();
-            System.out.println("Trying again");
+            System.out.println("[ERROR] " + sql);
             this.reConnect();
             return pushForecastHouseData(data,table);
         }
@@ -320,10 +318,10 @@ public class db_store {
     public Stack<HouseData> query(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
+        String sql = "SELECT * FROM house_data WHERE ";
         try {
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
-            String sql = "SELECT * FROM house_data WHERE ";
             Boolean condition = false;
             if (house_id != -1) {
                 sql += "house_id=" + house_id + " AND ";
@@ -359,7 +357,7 @@ public class db_store {
         } catch (Exception ex) {
             ex.printStackTrace();
             this.reConnect();
-            System.out.println("Trying again");
+            System.out.println("[ERROR] " + sql);
             return query(house_id, year, month, day, windows, slice_num);
         }
     }
@@ -367,6 +365,8 @@ public class db_store {
     public Stack<HouseData> queryBeforeV0(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
+        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\"" + year
+            + "\" AND month=\"" + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
         try {
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
@@ -374,8 +374,6 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\"" + year
-            + "\" AND month=\"" + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
             try(ResultSet rs = stmt.executeQuery(sql)){
                 while (rs.next()) {
                     if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
@@ -397,7 +395,7 @@ public class db_store {
             
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("Trying again");
+            System.out.println("[ERROR] " + sql);
             this.reConnect();
             return queryBeforeV0(house_id, year, month, day, windows, slice_num);
         }
@@ -405,6 +403,7 @@ public class db_store {
 
     public Stack<HouseData> queryBeforeV1(int house_id, String year, String month, String day, int windows,
             int slice_num) {
+        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND windows=" + windows;
         Stack<HouseData> result = new Stack<HouseData>();
         try {
             Statement stmt = this.conn.createStatement();
@@ -413,7 +412,6 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND windows=" + windows;
             try(ResultSet rs = stmt.executeQuery(sql)){
                 while (rs.next()) {
                     if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
@@ -435,7 +433,7 @@ public class db_store {
             
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("Trying again");
+            System.out.println("[ERROR] " + sql);
             this.reConnect();
             return queryBeforeV1(house_id, year, month, day, windows, slice_num);
         }
@@ -444,6 +442,7 @@ public class db_store {
     public Stack<HouseData> queryBeforeV2(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
+        String sql = "";
         try {
             Boolean end = false;
             Statement stmt = this.conn.createStatement();
@@ -455,8 +454,9 @@ public class db_store {
             Calendar query_cal = Calendar.getInstance();
             query_cal.setTime(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)));
             do{
+                sql = "SELECT * FROM house_data WHERE house_id="+ house_id +" AND year=\"" + query_cal.get(Calendar.YEAR) + "\" AND month=\"" + String.format("%02d",(query_cal.get(Calendar.MONTH)+1)) + "\" AND day=\"" + String.format("%02d",query_cal.get(Calendar.DAY_OF_MONTH)) + "\" AND windows=" + windows + " AND slice_num="+slice_num;
                 query_cal.add(Calendar.WEEK_OF_YEAR, -1);
-                try(ResultSet rs = stmt.executeQuery("SELECT * FROM house_data WHERE house_id="+ house_id +" AND year=\"" + query_cal.get(Calendar.YEAR) + "\" AND month=\"" + String.format("%02d",(query_cal.get(Calendar.MONTH)+1)) + "\" AND day=\"" + String.format("%02d",query_cal.get(Calendar.DAY_OF_MONTH)) + "\" AND windows=" + windows + " AND slice_num="+slice_num)){
+                try(ResultSet rs = stmt.executeQuery(sql)){
                     if(rs.next()){
                         result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
                         rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
@@ -470,7 +470,7 @@ public class db_store {
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("Trying again");
+            System.out.println("[ERROR] " + sql);
             this.reConnect();
             return queryBeforeV2(house_id, year, month, day, windows, slice_num);
         }
@@ -479,6 +479,7 @@ public class db_store {
     public Stack<HouseData> queryBeforeV3(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
+        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND slice_num=" + slice_num +" windows=" + windows;
         try {
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
@@ -486,7 +487,6 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND slice_num=" + slice_num +" windows=" + windows;
             try(ResultSet rs = stmt.executeQuery(sql)){
                 while (rs.next()) {
                     if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
@@ -508,7 +508,7 @@ public class db_store {
             
         } catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("Trying again");
+            System.out.println("[ERROR] " + sql);
             this.reConnect();
             return queryBeforeV3(house_id, year, month, day, windows, slice_num);
         }
