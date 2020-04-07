@@ -276,6 +276,8 @@ public class Forecast extends Thread{
     public void run() {
         System.out.printf("\n[Forecast] Started threads for { house_id: %d | begin: %s | windows: %d }\n", house_id, begin.toGMTString(), windows);
         forecastv0(house_id, begin, windows);
+        forecastv1(house_id, begin, windows);
+        forecastv2(house_id, begin, windows);
         forecastv3(house_id, begin, windows);
         this.conn.close();
         System.out.printf("\n[Forecast] Done{ house_id: %d | begin: %s | windows: %d }\n", house_id, begin.toGMTString(), windows);
