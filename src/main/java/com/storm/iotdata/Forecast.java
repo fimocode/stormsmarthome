@@ -13,7 +13,7 @@ public class Forecast extends Thread{
     public int house_id;
     public Date begin;
     public int windows;
-    public Date endDate = new Date(113,8,31);
+    public Date endDate = new Date(113,9,5);
     public db_store conn;
 
     public Forecast(int house_id, Date begin, int windows){
