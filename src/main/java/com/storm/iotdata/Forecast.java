@@ -60,7 +60,7 @@ public class Forecast extends Thread{
                     index++;
                 }
             }
-            else if(now.getTime().before(new Date(113,8,31))){
+            else if(now.getTime().before(new Date(113,9,5))){
                 System.out.println("Missing slice: " + index + " | windows: " + windows + " | date: " + now.getTime().toGMTString());
                 if(index+1>=total_slice){
                     now.add(Calendar.DAY_OF_YEAR, 1);
