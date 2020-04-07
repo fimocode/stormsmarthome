@@ -184,12 +184,11 @@ public class db_store {
     }
 
     public boolean pushForecastHouseData(HouseData data, String table) {
-        String sql;
+        String sql = "insert into " + table + " (house_id,year,month,day,windows,slice_num,avg) values ";
         try {
             // Init SQL
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
-            sql = "insert into " + table + " (house_id,year,month,day,windows,slice_num,avg) values ";
             PreparedStatement temp_sql = this.conn.prepareStatement("(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
             temp_sql.setInt(1, data.getHouse_id());
             temp_sql.setString(2, data.getYear());
