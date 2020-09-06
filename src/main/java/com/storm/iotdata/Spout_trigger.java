@@ -1,6 +1,14 @@
 package com.storm.iotdata;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map;
+
+import com.esotericsoftware.minlog.Log;
+
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -14,7 +22,7 @@ public class Spout_trigger extends BaseRichSpout {
     private long start = System.currentTimeMillis();
     public int interval = 1;
 
-    public Spout_trigger(int interval){
+    public Spout_trigger(int interval) {
         this.interval = interval;
         this.start = System.currentTimeMillis();
     }
@@ -27,8 +35,29 @@ public class Spout_trigger extends BaseRichSpout {
     @Override
     public void nextTuple() {
         try {
-            Thread.sleep(interval*1000);
-            _collector.emit(new Values(start)); // Trigger signal to write data to file after 1 min
+            Thread.sleep(interval * 1000);
+            File tempFolder = new File("./tmp");
+            File[] spoutLogs = tempFolder.listFiles();
+            Long speed = Long.valueOf(0), load = Long.valueOf(0), total = Long.valueOf(0);
+            for (File Log : spoutLogs) {
+                try {
+                    BufferedReader logReader = new BufferedReader(new FileReader(Log));
+                    String[] datas = logReader.readLine().split("|");
+                    if(datas.length == 3){
+                        speed+=Long.valueOf(datas[0]);
+                        load+=Long.valueOf(datas[1]);
+                        total+=Long.valueOf(datas[2]);
+                    }
+                } catch (FileNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            
+            _collector.emit(new Values(start, speed, load, total)); // Trigger signal to write data to file after 1 min
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -37,6 +66,6 @@ public class Spout_trigger extends BaseRichSpout {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("end"));
+        declarer.declare(new Fields("trigger", "spout-speed", "spout-load", "spout-total"));
     }
 }

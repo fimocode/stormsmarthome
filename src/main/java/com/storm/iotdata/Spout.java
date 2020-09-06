@@ -5,28 +5,36 @@
  */
 package com.storm.iotdata;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.IRichSpout;
 import org.apache.storm.topology.OutputFieldsDeclarer;
-import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import static org.eclipse.paho.client.mqttv3.MqttClient.generateClientId;
 
-public class Spout extends BaseRichSpout {
+public class Spout implements MqttCallback, IRichSpout {
 
     private SpoutOutputCollector _collector;
-    Long total = new Long("0");
+    ConcurrentLinkedQueue<String> messages;
+    Long total = Long.valueOf(0);
+    Long speed = Long.valueOf(0);
+    Long load = Long.valueOf(0);
+    Long last = System.currentTimeMillis();
     String brokerUrl = "localhost";
     String clientId = "";
     MqttClient client;
@@ -36,71 +44,86 @@ public class Spout extends BaseRichSpout {
     public Spout(String broker_url, String topic) {
         this.brokerUrl = broker_url;
         this.topic = topic;
+        messages = new ConcurrentLinkedQueue<String>();
     }
 
-    @Override
-    public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-        _collector = collector;
-        // this.clientId = generateClientId();
-        // try {
-        //     client = new MqttClient(brokerUrl, clientId);
-        //     client.setCallback(new MqttCallback() {
-        //         public void connectionLost(Throwable cause) {
-        //             System.out.println("Lost connection with MQTT Server.");
-        //         }
+	public void messageArrived(String topic, MqttMessage message)
+			throws Exception {
+        messages.add(message.toString());
+        total++;
+	}
 
-        //         public void messageArrived(String topic, MqttMessage message) throws Exception {
-        //             String[] metric = message.toString().split(",");
-        //             if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-        //                 _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6],
-        //                         new Long("0")));
-        //                 total++;
-        //             }
-        //             // System.out.print("\rReceived: "+ total);
-        //         }
+	public void connectionLost(Throwable cause) {
+	}
 
-        //         public void deliveryComplete(IMqttDeliveryToken token) {
-        //         }
-        //     });
-        //     client.connect();
-        //     client.subscribe(topic);
-        // } catch (Exception e) {
-        //     System.out.println(e.toString());
-        // }
+	public void deliveryComplete(IMqttDeliveryToken token) {
+	}
 
-        
-    }
+	public void open(Map conf, TopologyContext context,
+			SpoutOutputCollector collector) {
+		_collector = collector;
 
-    @Override
-    /*
-     * emits a new tuple into the topology or simply returns if there are no new
-     * tuples to emit
-     */
-    public void nextTuple() {
-        if(!done){
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(new File("/root/bigdata/sorted.csv")));
-                while(br.ready()){
-                    String message = br.readLine();
-                    String[] metric = message.toString().split(",");
-                    if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                        _collector.emit(
-                                new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6], Long.valueOf(0)));
-                        total++;
-                        System.out.printf("\rReaded: %d", total);
-                    }
+		try {
+			client = new MqttClient(brokerUrl, clientId);
+			client.connect();
+			client.setCallback(this);
+			client.subscribe(topic);
+
+		} catch (MqttException e) {
+			e.printStackTrace();
+        }
+	}
+
+	public void close() {
+	}
+
+	public void activate() {
+	}
+
+	public void deactivate() {
+	}
+
+	public void nextTuple() {
+		while (!messages.isEmpty()) {
+			String[] metric = messages.poll().split(",");
+            if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+                _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]));
+                load++;
+            }
+            speed++;
+            if(speed>10000){
+                try {
+                    FileWriter log = new FileWriter(new File("./tmp/spout_log_"+ topic +".tmp"), false);
+                    PrintWriter pwOb = new PrintWriter(log , false);
+                    pwOb.flush();
+                    log.write(speed*1000/(System.currentTimeMillis()-last)+"|"+load*1000/(System.currentTimeMillis()-last)+"|"+total+"|"+messages.size());
+                    pwOb.close();
+                    log.close();
+                    speed = Long.valueOf(0);
+                    load = Long.valueOf(0);
+                    last=System.currentTimeMillis();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-                done = true;
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("Data file not found");
             }
         }
-    }
+        
+	}
+
+	public void ack(Object msgId) {
+	}
+
+	public void fail(Object msgId) {
+	}
+
+	public Map<String, Object> getComponentConfiguration() {
+		return null;
+	}
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         /* uses default stream id */
-        declarer.declare(new Fields("timestamp", "value", "property", "plug_id","household_id", "house_id", "end"));
+        declarer.declare(new Fields("timestamp", "value", "property", "plug_id","household_id", "house_id"));
     }    
 }

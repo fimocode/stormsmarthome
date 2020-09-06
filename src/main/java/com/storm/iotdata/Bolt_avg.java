@@ -7,6 +7,8 @@ package com.storm.iotdata;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
+
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -20,16 +22,15 @@ import org.apache.storm.tuple.Values;
  * @author kulz0
  */
 class Bolt_avg extends BaseRichBolt {
-    private int windows = 0;
-    
-    public Bolt_avg(int i, HashMap <Integer, HashMap<String, HashMap<Long, HashMap<String, Double > > > > map_house) {
-        this.windows = i;
-        this.map_house = map_house;
+    public int windows = 0;
+    public Double total = Double.valueOf(0);
+    public HashMap<String, DeviceData> data_list = new HashMap<String, DeviceData>();
+
+    public Bolt_avg(int windows) {
+        this.windows = windows;
     }
     
     private OutputCollector _collector;
-    
-    public HashMap <Integer, HashMap<String, HashMap<Long, HashMap<String, Double > > > > map_house;
 
     @Override
     public void prepare(Map<String, Object> map, TopologyContext tc, OutputCollector oc) {
@@ -38,43 +39,55 @@ class Bolt_avg extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        Integer house_id     = (Integer) tuple.getValueByField("house_id");
-        Double  value        = (Double) tuple.getValueByField("value");
-        String household_deviceid = (String)tuple.getValueByField("household_deviceid");
-        String date = (String)tuple.getValueByField("date");
-        Long slice_num = (Long) tuple.getValueByField("slice_num");
-        String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
-        if((Long)tuple.getValueByField("end")!=0){
-            _collector.emit(new Values(house_id, household_deviceid, slice_name, new Double("0"), (Long)tuple.getValueByField("end")));
+        if(tuple.contains("trigger")){
+            Long startTime = (Long) tuple.getValueByField("trigger");
+            Long spoutSpeed = (Long) tuple.getValueByField("spout-speed");
+            Long spoutLoad = (Long) tuple.getValueByField("spout-load");
+            Long spoutTotal = (Long) tuple.getValueByField("spout-total");
+
+            Stack<String> needClean = new Stack<String>();
+            int newSave = 0;
+            Stack<DeviceData> needSave = new Stack<DeviceData>();
+            for(String key : data_list.keySet()){
+                DeviceData data = data_list.get(key);
+                if(!data.isSaved()){
+                    needSave.push(data);
+                }
+                else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*windows)){
+                    needClean.push(key);
+                }
+            }
+            for(DeviceData data : needSave){
+                data_list.put(data.getUniqueID(), data.saved());
+                newSave++;
+            }
+            // for(String key : db_store.pushDeviceData(needSave)){
+            //     data_list.put(key, data_list.get(key).saved());
+            //     newSave++;
+            // }
+            for(String key : needClean){
+                data_list.remove(key);
+            }
+            System.out.printf("\n[Bolt_avg_%-3d] Total: %-15d | Already saved: %-15d | Need save: %-15d | Saved: %-15d | Need clean: %-15d\n",windows, data_list.size(), data_list.size()-needClean.size()-needSave.size(), needSave.size(), newSave, needClean.size());
         }
         else{
-            Double val = new Double(String.valueOf(0));
-            Double avg =  new Double(String.valueOf(0));
-
-            //Store data sample
-            HashMap<String, HashMap<Long, HashMap<String, Double > > > house;
-            HashMap<Long, HashMap<String, Double > > device;
-            HashMap<String, Double> slice;
-
-            house = map_house.getOrDefault(house_id, new HashMap<String, HashMap<Long, HashMap<String, Double>>>());
-            device = house.getOrDefault(household_deviceid, new HashMap<Long, HashMap<String, Double>>());
-            slice = device.getOrDefault(slice_num, new HashMap<String, Double>());
-            slice.put("value", slice.getOrDefault("value", new Double("0")) + value);
-            slice.put("sampleNum", slice.getOrDefault("sampleNum", new Double("0")) + 1);
-            device.put(slice_num, slice);
-            house.put(household_deviceid, device);
-            map_house.put(house_id, house);
-
-            //Cal avg
-            avg = slice.get("value")/slice.get("sampleNum");
-
-            _collector.emit(new Values(house_id, household_deviceid, slice_name, avg, (Long)tuple.getValueByField("end")));
+            Integer house_id        = (Integer) tuple.getValueByField("house_id");
+            Integer household_id    = (Integer)tuple.getValueByField("household_id");
+            Integer device_id       = (Integer)tuple.getValueByField("device_id");
+            String year             = (String)tuple.getValueByField("year");
+            String month            = (String)tuple.getValueByField("month");
+            String day              = (String)tuple.getValueByField("day");
+            Integer slice_num       = (Integer) tuple.getValueByField("slice_num");
+            Double  value           = (Double) tuple.getValueByField("value");
+            String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
+            data_list.put(unique_id, data_list.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).increaseValue(value));
+            _collector.emit(new Values(house_id, household_id, device_id, year, month, day, slice_num, data_list.get(unique_id).getAvg()));
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","household_deviceid","slice_name","value","end"));
+        declarer.declare(new Fields("house_id","household_id","device_id","year","month","day","slice_num","avg"));
     }
     
 }
