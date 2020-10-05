@@ -5,6 +5,7 @@
  */
 package com.storm.iotdata;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -25,9 +26,11 @@ class Bolt_avg extends BaseRichBolt {
     public int windows = 0;
     public Double total = Double.valueOf(0);
     public HashMap<String, DeviceData> data_list = new HashMap<String, DeviceData>();
+    private db_store db;
 
     public Bolt_avg(int windows) {
         this.windows = windows;
+        this.db = new db_store();
     }
     
     private OutputCollector _collector;
@@ -57,14 +60,12 @@ class Bolt_avg extends BaseRichBolt {
                     needClean.push(key);
                 }
             }
-            for(DeviceData data : needSave){
-                data_list.put(data.getUniqueID(), data.saved());
-                newSave++;
+            if(db.pushDeviceData(needSave, new File("./tmp/device2db-" + windows + ".lck"))){
+                for(DeviceData data : needSave){
+                    data_list.put(data.getUniqueID(), data.saved());
+                    newSave++;
+                }
             }
-            // for(String key : db_store.pushDeviceData(needSave)){
-            //     data_list.put(key, data_list.get(key).saved());
-            //     newSave++;
-            // }
             for(String key : needClean){
                 data_list.remove(key);
             }

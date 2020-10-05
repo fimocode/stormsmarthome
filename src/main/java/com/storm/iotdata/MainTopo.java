@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.Date;
 import java.util.HashMap;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.topology.BoltDeclarer;
@@ -24,6 +26,9 @@ public class MainTopo {
             }
             if(!(new File("tmp").isDirectory())){
                 new File("tmp").mkdir();
+            }
+            else{
+                FileUtils.cleanDirectory(new File("tmp"));
             }
 
             String brokerURL = "tcp://mqtt-broker:1883";
@@ -45,10 +50,10 @@ public class MainTopo {
             
             for(String topic : topic_list){
                 //Spout
-                builder.setSpout("spout" + topic, new Spout(brokerURL, topic), 1);
+                builder.setSpout("spout-" + topic, new Spout(brokerURL, topic), 1);
             }
 
-            // builder.setSpout("spout", new Spout(brokerURL, "iot-data"), 1);
+            // builder.setSpout("spout-", new Spout(brokerURL, "iot-data"), 1);
 
             HashMap<String,BoltDeclarer> split_list = new HashMap<String,BoltDeclarer>();
             HashMap<String,BoltDeclarer> avg_list = new HashMap<String,BoltDeclarer>();
@@ -61,9 +66,9 @@ public class MainTopo {
             
             for(int window_size : window_list){
                 for(String topic : topic_list){
-                    split_list.get("split" + window_size).shuffleGrouping("spout" + topic);
+                    split_list.get("split" + window_size).shuffleGrouping("spout-" + topic);
                 }
-                // split_list.get("split" + window_size).shuffleGrouping("spout");
+                // split_list.get("split" + window_size).shuffleGrouping("spout-");
                 avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
                 avg_list.get("avg" + window_size).shuffleGrouping("trigger");
                 sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);

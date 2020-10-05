@@ -12,6 +12,17 @@ public class db_store {
 
     private Connection conn;
 
+    // public initConnection(){
+    // Yaml yaml = new Yaml();
+    // FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+    // Map<String, Object> obj = yaml.load(inputStream);
+    // String dbURL = "jdbc:mysql://" + obj.get("db_url");
+    // String userName = (String) obj.get("db_user");
+    // String password = (String) obj.get("db_pass");
+    // Class.forName("com.mysql.jdbc.Driver");
+    // this.conn = DriverManager.getConnection(dbURL, userName, password);
+    // }
+
     public db_store() {
         try {
             Yaml yaml = new Yaml();
@@ -22,7 +33,7 @@ public class db_store {
             String password = (String) obj.get("db_pass");
             Class.forName("com.mysql.jdbc.Driver");
             conn = DriverManager.getConnection(dbURL, userName, password);
-        } catch(SQLException sql){
+        } catch (SQLException sql) {
             System.out.println("SQLException: " + sql.getMessage());
             System.out.println("SQLState: " + sql.getSQLState());
             System.out.println("Erro: " + sql.getErrorCode());
@@ -76,7 +87,8 @@ public class db_store {
                     "create table house_data(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
             stmt.executeUpdate(
                     "create table house_data_forecast(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
-            stmt.executeUpdate("create table forecast_meta_data(version VARCHAR(4) NOT NULL, windows INT NOT NULL, count INT UNSIGNED DEFAULT 0, mean DOUBLE UNSIGNED DEFAULT 0, variance DOUBLE UNSIGNED DEFAULT 0, standart_deviation DOUBLE UNSIGNED DEFAULT 0, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(windows, version))");
+            stmt.executeUpdate(
+                    "create table forecast_meta_data(version VARCHAR(4) NOT NULL, windows INT NOT NULL, count INT UNSIGNED DEFAULT 0, mean DOUBLE UNSIGNED DEFAULT 0, variance DOUBLE UNSIGNED DEFAULT 0, standart_deviation DOUBLE UNSIGNED DEFAULT 0, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(windows, version))");
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -98,8 +110,8 @@ public class db_store {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             stmt.execute("drop table if exists " + table);
-            stmt.executeUpdate(
-                    "create table "+ table +"(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
+            stmt.executeUpdate("create table " + table
+                    + "(house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,windows INT NOT NULL, slice_num INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, windows, slice_num))");
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -108,56 +120,22 @@ public class db_store {
         }
     }
 
-    public static boolean pushHouseData(Stack<HouseData> data_list) {
+    public boolean pushHouseData(Stack<HouseData> data_list, File locker) {
         try {
-            // Init connection
-            Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(dbURL, userName, password);
-            // Init SQL
-            Long start = System.currentTimeMillis();
-            Statement stmt = conn.createStatement();
-            stmt.execute("use iot_data");
-            String sql = "insert into house_data (house_id,year,month,day,windows,slice_num,avg) values ";
-            for (HouseData data : data_list) {
-                PreparedStatement temp_sql = conn.prepareStatement("(?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-                temp_sql.setInt(1, data.getHouse_id());
-                temp_sql.setString(2, data.getYear());
-                temp_sql.setString(3, data.getMonth());
-                temp_sql.setString(4, data.getDay());
-                temp_sql.setInt(5, data.getWindows());
-                temp_sql.setInt(6, data.getSlice_num());
-                temp_sql.setDouble(7, data.getValue());
-                String statementText = temp_sql.toString();
-                sql += statementText.substring(statementText.indexOf(": ") + 2) + ",";
+            if (locker.exists() || data_list.isEmpty()) {
+                return false;
+            } else {
+                new HouseData2DB(this.conn, data_list, locker).start();
+                return true;
             }
-            sql = sql.substring(0, sql.length() - 1) + " on duplicate key update avg=VALUES(avg)";
-            stmt.executeUpdate(sql);
-            conn.close();
-            System.out.printf("\n[HOUSE] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-            return true;
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
 
-    public static boolean pushForecastHouseData(Stack<HouseData> data_list) {
+    public boolean pushForecastHouseData(Stack<HouseData> data_list) {
         try {
-            // Init connection
-            Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(dbURL, userName, password);
             // Init SQL
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
@@ -212,64 +190,26 @@ public class db_store {
             ex.printStackTrace();
             System.out.println("[ERROR] " + sql);
             this.reConnect();
-            return pushForecastHouseData(data,table);
+            return pushForecastHouseData(data, table);
         }
     }
 
-    public static Stack<String> pushDeviceData(Stack<DeviceData> data_list) {
-        Stack<String> result = new Stack<String>();
+    public boolean pushDeviceData(Stack<DeviceData> data_list, File locker) {
         try {
-            // Init connection
-            Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
-            Long start = System.currentTimeMillis();
-            Connection conn = DriverManager.getConnection(dbURL, userName, password);
-            // Init SQL
-            Statement stmt = conn.createStatement();
-            stmt.execute("use iot_data");
-            for (DeviceData data : data_list) {
-                PreparedStatement temp_sql = conn.prepareStatement(
-                        "insert into device_data (house_id,household_id,device_id,year,month,day,windows,slice_num,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), count=VALUES(count), avg=VALUES(avg)",
-                        Statement.RETURN_GENERATED_KEYS);
-                temp_sql.setInt(1, data.getHouse_id());
-                temp_sql.setInt(2, data.getHousehold_id());
-                temp_sql.setInt(3, data.getDevice_id());
-                temp_sql.setString(4, data.getYear());
-                temp_sql.setString(5, data.getMonth());
-                temp_sql.setString(6, data.getDay());
-                temp_sql.setInt(7, data.getWindows());
-                temp_sql.setInt(8, data.getSlice_num());
-                temp_sql.setDouble(9, data.getValue());
-                temp_sql.setDouble(10, data.getCount());
-                temp_sql.setDouble(11, data.getAvg());
-                temp_sql.executeUpdate();
-                result.push(data.getUniqueID());
+            if (locker.exists() || data_list.isEmpty()) {
+                return false;
+            } else {
+                new DeviceData2DB(this.conn, data_list, locker).start();
+                return true;
             }
-            System.out.printf("\n[DEVICE] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-            conn.close();
-            return result;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
-    public static boolean saveData(DeviceData data) {
+    public boolean saveData(DeviceData data) {
         try {
-            // Init connection
-            Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(dbURL, userName, password);
             // Init SQL
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
@@ -315,8 +255,7 @@ public class db_store {
     // }
     // }
 
-    public Stack<HouseData> query(int house_id, String year, String month, String day, int windows,
-            int slice_num) {
+    public Stack<HouseData> query(int house_id, String year, String month, String day, int windows, int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
         String sql = "SELECT * FROM house_data WHERE ";
         try {
@@ -347,7 +286,7 @@ public class db_store {
                 sql += "slice_num=" + slice_num + " AND ";
                 condition = true;
             }
-            try(ResultSet rs = stmt.executeQuery(sql.substring(0, sql.length() - (condition ? 5 : 7)))){
+            try (ResultSet rs = stmt.executeQuery(sql.substring(0, sql.length() - (condition ? 5 : 7)))) {
                 while (rs.next()) {
                     result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
                             rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
@@ -365,8 +304,8 @@ public class db_store {
     public Stack<HouseData> queryBeforeV0(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
-        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\"" + year
-            + "\" AND month=\"" + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
+        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\"" + year + "\" AND month=\""
+                + month + "\" AND day=\"" + day + "\" AND windows=" + windows;
         try {
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
@@ -374,15 +313,17 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            try(ResultSet rs = stmt.executeQuery(sql)){
+            try (ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
-                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
-                            Integer.valueOf(rs.getString("day"))).after(
-                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
+                            Integer.valueOf(rs.getString("month")) - 1, Integer.valueOf(rs.getString("day")))
+                                    .after(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1,
+                                            Integer.valueOf(day)))) {
                         break;
                     } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
-                            Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
-                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                            Integer.valueOf(rs.getString("month")) - 1, Integer.valueOf(rs.getString("day")))
+                                    .equals(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1,
+                                            Integer.valueOf(day)))) {
                         if (rs.getInt("slice_num") > slice_num) {
                             break;
                         }
@@ -392,7 +333,7 @@ public class db_store {
                 }
                 return result;
             }
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("[ERROR] " + sql);
@@ -412,15 +353,17 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            try(ResultSet rs = stmt.executeQuery(sql)){
+            try (ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
-                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
-                            Integer.valueOf(rs.getString("day"))).after(
-                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
+                            Integer.valueOf(rs.getString("month")) - 1, Integer.valueOf(rs.getString("day")))
+                                    .after(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1,
+                                            Integer.valueOf(day)))) {
                         break;
                     } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
-                            Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
-                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                            Integer.valueOf(rs.getString("month")) - 1, Integer.valueOf(rs.getString("day")))
+                                    .equals(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1,
+                                            Integer.valueOf(day)))) {
                         if (rs.getInt("slice_num") > slice_num) {
                             break;
                         }
@@ -430,7 +373,7 @@ public class db_store {
                 }
                 return result;
             }
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("[ERROR] " + sql);
@@ -452,21 +395,24 @@ public class db_store {
                 return new Stack<>();
             }
             Calendar query_cal = Calendar.getInstance();
-            query_cal.setTime(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)));
-            do{
-                sql = "SELECT * FROM house_data WHERE house_id="+ house_id +" AND year=\"" + query_cal.get(Calendar.YEAR) + "\" AND month=\"" + String.format("%02d",(query_cal.get(Calendar.MONTH)+1)) + "\" AND day=\"" + String.format("%02d",query_cal.get(Calendar.DAY_OF_MONTH)) + "\" AND windows=" + windows + " AND slice_num="+slice_num;
+            query_cal.setTime(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1, Integer.valueOf(day)));
+            do {
+                sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND year=\""
+                        + query_cal.get(Calendar.YEAR) + "\" AND month=\""
+                        + String.format("%02d", (query_cal.get(Calendar.MONTH) + 1)) + "\" AND day=\""
+                        + String.format("%02d", query_cal.get(Calendar.DAY_OF_MONTH)) + "\" AND windows=" + windows
+                        + " AND slice_num=" + slice_num;
                 query_cal.add(Calendar.WEEK_OF_YEAR, -1);
-                try(ResultSet rs = stmt.executeQuery(sql)){
-                    if(rs.next()){
+                try (ResultSet rs = stmt.executeQuery(sql)) {
+                    if (rs.next()) {
                         result.push(new HouseData(rs.getInt("house_id"), rs.getString("year"), rs.getString("month"),
-                        rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"), rs.getDouble("avg")));
-                    }
-                    else{
-                        end=true;
+                                rs.getString("day"), rs.getInt("slice_num"), rs.getInt("windows"),
+                                rs.getDouble("avg")));
+                    } else {
+                        end = true;
                     }
                 }
-            }
-            while(!end);
+            } while (!end);
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -479,7 +425,8 @@ public class db_store {
     public Stack<HouseData> queryBeforeV3(int house_id, String year, String month, String day, int windows,
             int slice_num) {
         Stack<HouseData> result = new Stack<HouseData>();
-        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND slice_num=" + slice_num +" AND windows=" + windows;
+        String sql = "SELECT * FROM house_data WHERE house_id=" + house_id + " AND slice_num=" + slice_num
+                + " AND windows=" + windows;
         try {
             Statement stmt = this.conn.createStatement();
             stmt.execute("use iot_data");
@@ -487,15 +434,17 @@ public class db_store {
                     && slice_num < 0) {
                 return new Stack<>();
             }
-            try(ResultSet rs = stmt.executeQuery(sql)){
+            try (ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
-                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900, Integer.valueOf(rs.getString("month"))-1,
-                            Integer.valueOf(rs.getString("day"))).after(
-                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                    if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
+                            Integer.valueOf(rs.getString("month")) - 1, Integer.valueOf(rs.getString("day")))
+                                    .after(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1,
+                                            Integer.valueOf(day)))) {
                         break;
                     } else if (new Date(Integer.valueOf(rs.getString("year")) - 1900,
-                            Integer.valueOf(rs.getString("month"))-1, Integer.valueOf(rs.getString("day"))).equals(
-                                    new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month)-1, Integer.valueOf(day)))) {
+                            Integer.valueOf(rs.getString("month")) - 1, Integer.valueOf(rs.getString("day")))
+                                    .equals(new Date(Integer.valueOf(year) - 1900, Integer.valueOf(month) - 1,
+                                            Integer.valueOf(day)))) {
                         if (rs.getInt("slice_num") > slice_num) {
                             break;
                         }
@@ -505,7 +454,7 @@ public class db_store {
                 }
                 return result;
             }
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
             System.out.println("[ERROR] " + sql);
@@ -516,7 +465,7 @@ public class db_store {
 
     public void reConnect() {
         try {
-            this.close();
+            this.conn.close();
             // Init connection
             Yaml yaml = new Yaml();
             FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
@@ -528,6 +477,12 @@ public class db_store {
             this.conn = DriverManager.getConnection(dbURL, userName, password);
         } catch (Exception ex) {
             System.out.println("connect failure! Retrying...");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             this.reConnect();
             ex.printStackTrace();
         }
@@ -539,6 +494,96 @@ public class db_store {
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+}
+
+class DeviceData2DB extends Thread {
+    private Stack<DeviceData> data_list;
+    private File locker;
+    private Connection conn;
+    
+    public DeviceData2DB(Connection connection, Stack<DeviceData> data_list, File locker){
+        this.data_list=data_list;
+        this.locker = locker;
+        this.conn = connection;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (DeviceData data : data_list) {
+                PreparedStatement temp_sql = conn.prepareStatement(
+                        "insert into device_data (house_id,household_id,device_id,year,month,day,windows,slice_num,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), count=VALUES(count), avg=VALUES(avg)",
+                        Statement.RETURN_GENERATED_KEYS);
+                temp_sql.setInt(1, data.getHouse_id());
+                temp_sql.setInt(2, data.getHousehold_id());
+                temp_sql.setInt(3, data.getDevice_id());
+                temp_sql.setString(4, data.getYear());
+                temp_sql.setString(5, data.getMonth());
+                temp_sql.setString(6, data.getDay());
+                temp_sql.setInt(7, data.getWindows());
+                temp_sql.setInt(8, data.getSlice_num());
+                temp_sql.setDouble(9, data.getValue());
+                temp_sql.setDouble(10, data.getCount());
+                temp_sql.setDouble(11, data.getAvg());
+                temp_sql.executeUpdate();
+            }
+            System.out.printf("\n[DEVICE] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            conn.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
+        }
+    }
+}
+
+class HouseData2DB extends Thread {
+    private Stack<HouseData> data_list;
+    private File locker;
+    private Connection conn;
+    
+    public HouseData2DB(Connection connection,Stack<HouseData> data_list, File locker){
+        this.data_list = data_list;
+        this.locker = locker;
+        this.conn = connection;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (HouseData data : data_list) {
+                PreparedStatement temp_sql = conn.prepareStatement("insert into house_data (house_id,year,month,day,windows,slice_num,avg) values (?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                temp_sql.setInt(1, data.getHouse_id());
+                temp_sql.setString(2, data.getYear());
+                temp_sql.setString(3, data.getMonth());
+                temp_sql.setString(4, data.getDay());
+                temp_sql.setInt(5, data.getWindows());
+                temp_sql.setInt(6, data.getSlice_num());
+                temp_sql.setDouble(7, data.getValue());
+                temp_sql.executeUpdate();
+                // String statementText = temp_sql.toString();
+                // sql += statementText.substring(statementText.indexOf(": ") + 2) + ",";
+            }
+            // sql = sql.substring(0, sql.length() - 1) + "";
+            // stmt.executeUpdate(sql);
+            conn.close();
+            System.out.printf("\n[HOUSE] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
         }
     }
 }

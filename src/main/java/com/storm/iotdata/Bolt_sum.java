@@ -7,15 +7,10 @@ package com.storm.iotdata;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -29,7 +24,6 @@ import org.apache.storm.tuple.Values;
  * @author kulz0
  */
 class Bolt_sum extends BaseRichBolt {
-    String last = "";
     public int windows;
     private OutputCollector _collector;
     public long processed = Long.valueOf(0);
@@ -38,11 +32,12 @@ class Bolt_sum extends BaseRichBolt {
     public HashMap < Integer, HashMap <String, HouseData> > final_data = new HashMap< Integer, HashMap <String, HouseData> >();
     public Date lastChange = new Date();
     private Long lastProcessed = Long.valueOf(0);
-    Stack<HouseData> needSave = new Stack<HouseData>();
+    private db_store db;
     
     public Bolt_sum(int windows ,File output) {
         this.windows = windows;
         this.output = output;
+        this.db = new db_store();
     }
 
     @Override
@@ -65,6 +60,7 @@ class Bolt_sum extends BaseRichBolt {
             Long spoutTotal = (Long) tuple.getValueByField("spout-total");
             int clean = 0;
             int data_size = 0;
+            Stack<HouseData> needSave = new Stack<HouseData>();
             for(Integer house_id : data_list.keySet()){
                 Stack<String> sliceNeedClean = new Stack<String>();
                 HashMap<String, HashMap<String, DeviceData> >house_data = data_list.get(house_id);
@@ -119,13 +115,12 @@ class Bolt_sum extends BaseRichBolt {
             }
             System.out.printf("\n[Bolt_sum_%d] Need save to DB %d queries",windows,needSave.size());
             if(needSave.size()!=0){
-                if(db_store.pushHouseData(needSave)){
+                if(this.db.pushHouseData(needSave, new File("./tmp/house2db-" + windows + ".lck"))){
                     for(HouseData data : needSave){
                         HashMap <String,HouseData> slice_data = final_data.get(data.getHouse_id());
                         slice_data.put(data.getSliceName(),data.saved());
                         final_data.put(data.getHouse_id(), slice_data);
                     }
-                    needSave.clear();
                 }
             }
 
@@ -180,8 +175,7 @@ class Bolt_sum extends BaseRichBolt {
             // } catch (IOException ex) {
             //     Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);
             // }
-            System.out.println(last);
-            System.out.println(String.format("\nTemporal process speed,%.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+            System.out.println(String.format("\n[Bolt_sum_"+ windows +"]Temporal process speed,%.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
         }
         else{
             Integer house_id        = (Integer) tuple.getValueByField("house_id");
@@ -196,7 +190,6 @@ class Bolt_sum extends BaseRichBolt {
             String household_deviceid = house_id+"_"+device_id;
             String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
             String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
-            last=slice_name;
             HashMap<String,HashMap<String, DeviceData> > house_data = data_list.getOrDefault(house_id, new HashMap<String,HashMap<String, DeviceData> >());
             HashMap<String, DeviceData> slice_data = house_data.getOrDefault(slice_name, new  HashMap<String, DeviceData>());
             slice_data.put(unique_id, slice_data.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).avg(avg));
