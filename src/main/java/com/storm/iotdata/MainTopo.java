@@ -19,7 +19,7 @@ import org.apache.storm.topology.TopologyBuilder;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception{
-        db_store.initData();
+        DB_store.purgeData();
         try {
             if(!(new File("Result").isDirectory())){
                 new File("Result").mkdir();
@@ -43,7 +43,7 @@ public class MainTopo {
             topic_list = new String[]{"iot-data"};
 
             // int[] window_list = {5,10,15,20,30,60,120};
-            int[] window_list = {1};
+            int[] window_list = {1,5,10,15,20,30,60,120};
 
             TopologyBuilder builder = new TopologyBuilder();
             builder.setSpout("trigger", new Spout_trigger(30), 1);
@@ -79,10 +79,10 @@ public class MainTopo {
             // conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 50000);
             LocalCluster cluster = new LocalCluster(); // create the local cluster
             cluster.submitTopology("smarthome", conf, builder.createTopology()); // define the name of mylocal cluster, my configuration object, and my topology
-
+            
         } catch (Exception e) {
             BufferedWriter log = new BufferedWriter(new FileWriter(new File("Error.log"),true));
-            log.write(new Date().toString() + "|" + e.toString());
+            log.write(new Date().toString() + "|" + e.toString() + "\n");
             log.close();
         }
     }
