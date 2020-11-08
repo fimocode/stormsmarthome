@@ -55,5 +55,6 @@ public class Bolt_split extends BaseRichBolt {
         Long time = (date.getTime()%86400000);
         int slice_num = (int) Math.floorDiv(time,(windows*60000));
         _collector.emit(new Values(house_id, household_id, plug_id, year, month, day, slice_num, value));
+        _collector.ack(tuple);
     }
 }

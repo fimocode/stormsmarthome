@@ -9,12 +9,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichSpout;
@@ -22,6 +20,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -45,6 +44,20 @@ public class Spout implements MqttCallback, IRichSpout {
         this.brokerUrl = broker_url;
         this.topic = topic;
         messages = new ConcurrentLinkedQueue<String>();
+        if(!(new File("Result").isDirectory())){
+            new File("Result").mkdir();
+        }
+        if(!(new File("tmp").isDirectory())){
+            new File("tmp").mkdir();
+        }
+        else{
+            try {
+                FileUtils.cleanDirectory(new File("tmp"));
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
     }
 
 	public void messageArrived(String topic, MqttMessage message)
@@ -64,8 +77,11 @@ public class Spout implements MqttCallback, IRichSpout {
 		_collector = collector;
 
 		try {
-			client = new MqttClient(brokerUrl, clientId);
-			client.connect();
+            client = new MqttClient(brokerUrl, clientId);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true);
+            options.setConnectionTimeout(10);
+			client.connect(options);
 			client.setCallback(this);
 			client.subscribe(topic);
 
