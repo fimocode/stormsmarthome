@@ -7,5 +7,5 @@
 .project
 paho*
 tmp/
-cred.yaml
+src/main/resources/config/cred.yaml
 Error.log

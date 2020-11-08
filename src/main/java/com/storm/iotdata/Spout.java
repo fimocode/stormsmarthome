@@ -44,9 +44,6 @@ public class Spout implements MqttCallback, IRichSpout {
         this.brokerUrl = broker_url;
         this.topic = topic;
         messages = new ConcurrentLinkedQueue<String>();
-        if(!(new File("Result").isDirectory())){
-            new File("Result").mkdir();
-        }
         if(!(new File("tmp").isDirectory())){
             new File("tmp").mkdir();
         }

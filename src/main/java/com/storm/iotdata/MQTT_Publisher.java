@@ -15,7 +15,7 @@ public class MQTT_Publisher {
 }
 
 class NotificationPublisher extends Thread {
-    String brokerUrl = "tcp://mqtt-broker:1883";
+    String brokerURL = "tcp://mqtt-broker:1883";
     String global_topic = "iot-notification";
     Stack<DeviceNotification> data_list;
 
@@ -23,12 +23,17 @@ class NotificationPublisher extends Thread {
         this.data_list = data_list;
     }
 
+    public NotificationPublisher(Stack<DeviceNotification> data_list, String brokerURL) {
+        this.data_list = data_list;
+        this.brokerURL = brokerURL;
+    }
+
     @Override
     public void run() {
         Long start = System.currentTimeMillis();
         String publisherId = UUID.randomUUID().toString();
         try {
-            IMqttClient publisher = new MqttClient(brokerUrl, publisherId);
+            IMqttClient publisher = new MqttClient(brokerURL, publisherId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
             options.setCleanSession(true);
@@ -39,8 +44,14 @@ class NotificationPublisher extends Thread {
                 byte[] payload = deviceNotification.toString().getBytes();
                 MqttMessage msg = new MqttMessage(payload);
                 msg.setQos(0);
-                msg.setRetained(true);
+                msg.setRetained(false);
+                //Publish to house topic
+                publisher.publish(String.format("house-%d-notification",deviceNotification.getHouse_id()), msg);
+                //Publish to household topic
+                publisher.publish(String.format("household-%d-notification",deviceNotification.getHousehold_id()), msg);
+                //Publish to global
                 publisher.publish(global_topic, msg);
+                
             }
             publisher.close();
             System.out.printf("\n[Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
@@ -50,3 +61,5 @@ class NotificationPublisher extends Thread {
         }
     }
 }
+
+

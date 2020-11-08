@@ -21,22 +21,22 @@ import org.apache.storm.tuple.Values;
 
 /**
  *
- * @author kulz0
+ * @author hiiamlala
  */
 class Bolt_sum extends BaseRichBolt {
+    private StormConfig config;
     public int windows;
     public int trigger_windows = 0;
     private OutputCollector _collector;
     public long processed = Long.valueOf(0);
-    public File output;
     public HashMap<Integer,HashMap<String,HashMap<String, DeviceData> > > data_list = new HashMap<Integer,HashMap<String,HashMap<String, DeviceData> > >();
     public HashMap < Integer, HashMap <String, HouseData> > final_data = new HashMap< Integer, HashMap <String, HouseData> >();
     public Date lastChange = new Date();
     private Long lastProcessed = Long.valueOf(0);
     
-    public Bolt_sum(int windows ,File output) {
+    public Bolt_sum(int windows, StormConfig config) {
         this.windows = windows;
-        this.output = output;
+        this.config = config;
     }
 
     @Override

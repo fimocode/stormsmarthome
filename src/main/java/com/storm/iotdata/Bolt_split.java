@@ -18,12 +18,14 @@ import org.apache.storm.tuple.Values;
 
 /**
  *
- * @author kulz0
+ * @author hiiamlala
  */
 public class Bolt_split extends BaseRichBolt {
+    private StormConfig config;
     private int windows = 5;
-    public Bolt_split(int windows) {
+    public Bolt_split(int windows, StormConfig config) {
         this.windows = windows;
+        this.config = config;
     }
 
     // output collector

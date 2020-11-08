@@ -8,6 +8,7 @@ package com.storm.iotdata;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -25,6 +26,7 @@ import org.apache.storm.topology.TopologyBuilder;
 
 public class MainTopo {
     public static void main(String[] args) throws Exception {
+        StormConfig config = new StormConfig();
         try {
             Options options = new Options();
             Option opt_purge = new Option("p", "purge", false, "Purge data in DB");
@@ -45,73 +47,66 @@ public class MainTopo {
             try {
                 cmd = parser.parse(options, args);
 
-                if(cmd.hasOption("purge")){
+                if(cmd.hasOption("purge") || config.isCleanDatabase()){
                     DB_store.purgeData();
                 }
-                else if(cmd.hasOption("i")){
+                else{
                     DB_store.initData();
                 }
                 
                 // Init Broker URL
-                String brokerURL = "tcp://mqtt-broker:1883";
-
                 if(cmd.hasOption("broker")){
-                    brokerURL = "tcp://" + cmd.getOptionValue("broker");
+                    config.setSpoutBrokerURL("tcp://" + cmd.getOptionValue("broker"));
                 }
 
                 // Init topic list
-                String[] topic_list;
                 if(cmd.hasOption("topic")){
-                    topic_list = cmd.getOptionValue("topic").split(",");
-                }
-                else{
-                    topic_list = new String[] { "iot-data" };
+                    config.setSpoutTopicList(Arrays.asList(cmd.getOptionValue("topic").split(",")));
                 }
 
                 // Init windows list
-                int[] window_list = new int[20];
+                
                 if(cmd.hasOption("windows")){
+                    Integer[] windowList = new Integer[100];
                     String[] tmp = cmd.getOptionValue("windows").split(",");
                     for(int i = 0; i < tmp.length; i++) {
-                        window_list[i] = Integer.parseInt(tmp[i]);
+                        windowList[i] = Integer.parseInt(tmp[i]);
                     }
-                }
-                else{
-                    window_list = new int[] { 1, 5, 10, 15, 20, 30, 60, 120 };
+                    config.setWindowList(Arrays.asList(windowList));
                 }
 
                 TopologyBuilder builder = new TopologyBuilder();
                 builder.setSpout("trigger", new Spout_trigger(30), 1);
 
-                for (String topic : topic_list) {
+                for (String topic : config.getSpoutTopicList()) {
                     // Spout
-                    builder.setSpout("spout-" + topic, new Spout(brokerURL, topic), 1);
+                    builder.setSpout("spout-" + topic, new Spout(config.getSpoutBrokerURL(), topic), 1);
                 }
 
                 // builder.setSpout("spout-", new Spout(brokerURL, "iot-data"), 1);
 
-                HashMap<String, BoltDeclarer> split_list = new HashMap<String, BoltDeclarer>();
-                HashMap<String, BoltDeclarer> avg_list = new HashMap<String, BoltDeclarer>();
-                HashMap<String, BoltDeclarer> sum_list = new HashMap<String, BoltDeclarer>();
-                for (int window_size : window_list) {
-                    split_list.put("split" + window_size,
-                            builder.setBolt("split" + window_size, new Bolt_split(window_size), 1));
-                    avg_list.put("avg" + window_size,
-                            builder.setBolt("avg" + window_size, new Bolt_avg(window_size), 1));
-                    sum_list.put("sum" + window_size, builder.setBolt("sum" + window_size,
-                            new Bolt_sum(window_size, new File("Result/output_windows_" + window_size + "_min.csv")),
+                HashMap<String, BoltDeclarer> splitList = new HashMap<String, BoltDeclarer>();
+                HashMap<String, BoltDeclarer> avgList = new HashMap<String, BoltDeclarer>();
+                HashMap<String, BoltDeclarer> sumList = new HashMap<String, BoltDeclarer>();
+                for (Integer windowSize : config.getWindowList()) {
+                    splitList.put("split" + windowSize,
+                            builder.setBolt("split" + windowSize, new Bolt_split(windowSize, config), 1));
+                    avgList.put("avg" + windowSize,
+                            builder.setBolt("avg" + windowSize, new Bolt_avg(windowSize, config), 1));
+                    sumList.put("sum" + windowSize, builder.setBolt("sum" + windowSize,
+                            new Bolt_sum(windowSize, config),
                             1));
                 }
 
-                for (int window_size : window_list) {
-                    for (String topic : topic_list) {
-                        split_list.get("split" + window_size).shuffleGrouping("spout-" + topic);
+                for (Integer windowSize : config.getWindowList()) {
+                    for (String topic : config.getSpoutTopicList()){
+                        splitList.get("split" + windowSize).shuffleGrouping("spout-" + topic);
                     }
                     // split_list.get("split" + window_size).shuffleGrouping("spout-");
-                    avg_list.get("avg" + window_size).shuffleGrouping("split" + window_size);
-                    avg_list.get("avg" + window_size).shuffleGrouping("trigger");
-                    sum_list.get("sum" + window_size).shuffleGrouping("avg" + window_size);
-                    sum_list.get("sum" + window_size).shuffleGrouping("trigger");
+                    avgList.get("avg" + windowSize).shuffleGrouping("split" + windowSize);
+                    avgList.get("avg" + windowSize).shuffleGrouping("trigger");
+                    sumList.get("sum" + windowSize).shuffleGrouping("avg" + windowSize);
+                    sumList.get("sum" + windowSize).shuffleGrouping("trigger");
                 }
 
                 Config conf = new Config();
@@ -120,16 +115,18 @@ public class MainTopo {
                 // conf.setNumWorkers(1);
                 // LocalCluster cluster = new LocalCluster(); // create the local cluster
                 System.out.println("Sending Topo....");
-                StormSubmitter.submitTopology("iot-smarthome", conf, builder.createTopology()); // define the name of
+                StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
                                                                                                 // mylocal cluster, my
                                                                                                 // configuration object,
                                                                                                 // and my topology
+                System.out.println("Sent");
             } catch (ParseException e) {
                 System.out.println(e.getMessage());
                 formatter.printHelp("utility-name", options);
                 System.exit(1);
             }
         } catch (Exception e) {
+            System.out.println(e.toString());
             BufferedWriter log = new BufferedWriter(new FileWriter(new File("Error.log"), true));
             log.write(new Date().toString() + "|" + e.toString() + "\n");
             log.close();

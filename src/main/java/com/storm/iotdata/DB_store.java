@@ -3,7 +3,6 @@ package com.storm.iotdata;
 import java.io.File;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
