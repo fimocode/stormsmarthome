@@ -200,5 +200,6 @@ class Bolt_sum extends BaseRichBolt {
             processed++;
             _collector.emit(new Values(house_id,year,month,day,windows,slice_num,avg));
         }
+        _collector.ack(tuple);
     }
 }

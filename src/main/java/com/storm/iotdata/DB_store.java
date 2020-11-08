@@ -1,41 +1,46 @@
 package com.storm.iotdata;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Stack;
-import org.yaml.snakeyaml.Yaml;
 
-import clojure.lang.IFn.D;
+import org.yaml.snakeyaml.Yaml;
 
 public class DB_store {
 
     private Connection conn;
 
+    private static InputStream getConfig() {
+        return DB_store.class.getClassLoader().getResourceAsStream("config/cred.yaml");
+    }
+
     public static Connection initConnection() throws ClassNotFoundException, SQLException, FileNotFoundException {
         Connection conn;
         Yaml yaml = new Yaml();
-        FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+        InputStream inputStream = getConfig();
         Map<String, Object> obj = yaml.load(inputStream);
         String dbURL = "jdbc:mysql://" + obj.get("db_url");
+        System.out.println("DB_URL: " + dbURL);
         String userName = (String) obj.get("db_user");
         String password = (String) obj.get("db_pass");
-        Class.forName("com.mysql.jdbc.Driver");
+        Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection(dbURL, userName, password);
     }
 
     public DB_store() {
         try {
             Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            InputStream inputStream = getConfig();
             Map<String, Object> obj = yaml.load(inputStream);
             String dbURL = "jdbc:mysql://" + obj.get("db_url");
             String userName = (String) obj.get("db_user");
             String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(dbURL, userName, password);
         } catch (SQLException sql) {
             System.out.println("SQLException: " + sql.getMessage());
@@ -50,14 +55,7 @@ public class DB_store {
 
     public static boolean purgeData() {
         try {
-            Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            Connection conn =  DB_store.initConnection();
             Statement stmt = conn.createStatement();
             int rs = stmt.executeUpdate("drop database iot_data");
             conn.close();
@@ -74,14 +72,7 @@ public class DB_store {
 
     public static boolean initData() {
         try {
-            Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(dbURL, userName, password);
+            Connection conn =  DB_store.initConnection();
             Statement stmt = conn.createStatement();
             stmt.executeUpdate("create database iot_data");
             stmt.execute("use iot_data");
@@ -108,12 +99,12 @@ public class DB_store {
     public static boolean initForecastTable(String table) {
         try {
             Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            InputStream inputStream = getConfig();
             Map<String, Object> obj = yaml.load(inputStream);
             String dbURL = "jdbc:mysql://" + obj.get("db_url");
             String userName = (String) obj.get("db_user");
             String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             Connection conn = DriverManager.getConnection(dbURL, userName, password);
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
@@ -262,12 +253,12 @@ public class DB_store {
     // try{
     // //Init connection
     // Yaml yaml = new Yaml();
-    // FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+    // InputStream inputStream = getConfig();
     // Map<String, Object> obj = yaml.load(inputStream);
     // String dbURL = "jdbc:mysql://"+obj.get("db_url");
     // String userName = (String) obj.get("db_user");
     // String password = (String) obj.get("db_pass");
-    // Class.forName("com.mysql.jdbc.Driver");
+    // Class.forName("com.mysql.cj.jdbc.Driver");
     // Connection conn = DriverManager.getConnection(dbURL, userName, password);
     // Statement stmt = conn.createStatement();
     // stmt.execute("use iot_data");
@@ -490,12 +481,12 @@ public class DB_store {
             this.conn.close();
             // Init connection
             Yaml yaml = new Yaml();
-            FileInputStream inputStream = new FileInputStream(new File("cred.yaml"));
+            InputStream inputStream = getConfig();
             Map<String, Object> obj = yaml.load(inputStream);
             String dbURL = "jdbc:mysql://" + obj.get("db_url");
             String userName = (String) obj.get("db_user");
             String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             this.conn = DriverManager.getConnection(dbURL, userName, password);
         } catch (Exception ex) {
             System.out.println("connect failure! Retrying...");

@@ -100,8 +100,11 @@ class Bolt_avg extends BaseRichBolt {
                 System.out.printf("\n[Bolt_avg_%d] Noti list: %-15d\n", windows, noti_list.size());
 
                 //Push Noti
+                MQTT_Publisher.notificationsPublish(noti_list);
+                //Save Noti
                 if(DB_store.pushDeviceNotification(noti_list, new File("./tmp/devicenoti2db-" + windows + ".lck"))){
-                    //Noti pushed
+                    //Noti saved
+                    System.out.printf("\n[Bolt_avg_%d] Saved to DB %-15d notifications\n", windows, noti_list.size());
                 }
 
                 //Clean unchanged data
@@ -124,6 +127,7 @@ class Bolt_avg extends BaseRichBolt {
             data_list.put(unique_id, data_list.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).increaseValue(value));
             _collector.emit(new Values(house_id, household_id, device_id, year, month, day, slice_num, data_list.get(unique_id).getAvg()));
         }
+        _collector.ack(tuple);
     }
 
     @Override

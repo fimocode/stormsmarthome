@@ -1,5 +1,7 @@
 package com.storm.iotdata;
 
+import com.google.gson.Gson;
+
 public class DeviceNotification {
     public int type;
     public int house_id;
@@ -98,5 +100,8 @@ public class DeviceNotification {
         return this.saved;
     }
 
-
+    public String toString() {
+        Gson gson = new Gson();    
+        return gson.toJson(this);
+    }
 }
