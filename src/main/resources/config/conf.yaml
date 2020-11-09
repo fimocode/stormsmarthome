@@ -6,12 +6,12 @@ storm.windowList: [1, 5, 10, 15, 20, 30, 60, 120]
 notification.publishMQTT: true
 notification.brokerURL: "tcp://mqtt-broker:1883"
 
-notification.house.logGap: 30
+notification.house.logGap: 20
 notification.house.checkMin: false
 notification.house.checkAvg: true
 notification.house.checkMax: true
 
-notification.household.logGap: 30
+notification.household.logGap: 20
 notification.household.checkMin: false
 notification.household.checkAvg: true
 notification.household.checkMax: true
