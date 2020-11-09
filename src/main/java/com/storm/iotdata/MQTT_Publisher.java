@@ -51,8 +51,8 @@ class NotificationPublisher extends Thread {
                 publisher.publish(String.format("household-%d-notification",deviceNotification.getHousehold_id()), msg);
                 //Publish to global
                 publisher.publish(global_topic, msg);
-                
             }
+            publisher.disconnect();
             publisher.close();
             System.out.printf("\n[Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {

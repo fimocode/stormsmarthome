@@ -27,6 +27,7 @@ import org.apache.storm.topology.TopologyBuilder;
 public class MainTopo {
     public static void main(String[] args) throws Exception {
         StormConfig config = new StormConfig();
+        System.out.println(config.toString());
         try {
             Options options = new Options();
             Option opt_purge = new Option("p", "purge", false, "Purge data in DB");
@@ -113,7 +114,11 @@ public class MainTopo {
                 // conf.setDebug(true);
                 // conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 10000);
                 // conf.setNumWorkers(1);
+
+                // Local Cluster Test
                 // LocalCluster cluster = new LocalCluster(); // create the local cluster
+                // cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
+
                 System.out.println("Sending Topo....");
                 StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
                                                                                                 // mylocal cluster, my

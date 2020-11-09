@@ -81,15 +81,15 @@ class Bolt_avg extends BaseRichBolt {
                 for(DeviceData data : needSave){
                     String data_prop_unique_id = String.format("%d_%d_%d", data.house_id, data.household_id, data.device_id);
                     DeviceProp data_prop = data_prop_list.getOrDefault(data_prop_unique_id, new DeviceProp(data.house_id, data.household_id, data.device_id, this.windows, data.getAvg(), data.getAvg(), data.getAvg()));
-                    if(config.getHouseholdCheckMax() && data_prop.getMax()!=0 && (data.getAvg()-data_prop.getMax())>=(data_prop.getMax()*config.getHouseholdLogGap()/100)){
+                    if(config.isHouseholdCheckMax() && data_prop.getMax()!=0 && (data.getAvg()-data_prop.getMax())>=(data_prop.getMax()*config.getHouseholdLogGap()/100)){
                         //Check over Max
                         noti_list.push(new DeviceNotification(1, data, data_prop));
                     }
-                    if(config.getHouseholdCheckAvg() && data_prop.getAvg()!=0 && (data.getAvg()-data_prop.getAvg())>=(data_prop.getAvg()*config.getHouseholdLogGap()/100)){
+                    if(config.isHouseholdCheckAvg() && data_prop.getAvg()!=0 && (data.getAvg()-data_prop.getAvg())>=(data_prop.getAvg()*config.getHouseholdLogGap()/100)){
                         //Check over Avg
                         noti_list.push(new DeviceNotification(0, data, data_prop));
                     }
-                    if(config.getHouseholdCheckMin() && data_prop.getMin()!=0 && (data_prop.getMin()-data.getAvg())<=(data_prop.getMin()*config.getHouseholdLogGap()/100)){
+                    if(config.isHouseholdCheckMin() && data_prop.getMin()!=0 && (data_prop.getMin()-data.getAvg())<=(data_prop.getMin()*config.getHouseholdLogGap()/100)){
                         //Check under Min
                         noti_list.push(new DeviceNotification(-1, data, data_prop));
                     }
