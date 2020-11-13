@@ -1,10 +1,13 @@
 database.clean: false
-storm.brokerURL: "tcp://mqtt-broker:1883"
-storm.topicList: ["iot-data"]
-storm.windowList: [1, 5, 10, 15, 20, 30, 60, 120]
+storm.topologyName: "iot-smarthome"
+spout.brokerURL: "tcp://mqtt-broker:1883"
+spout.topicList: ["iot-data"]
+spout.triggerInterval: 1000
+iot analytics.windowList: [1, 5, 10, 15, 20, 30, 60, 120]
 
 notification.publishMQTT: true
 notification.brokerURL: "tcp://mqtt-broker:1883"
+notification.topicPrefix: "beta-"
 
 notification.house.logGap: 20
 notification.house.checkMin: false
@@ -15,3 +18,8 @@ notification.household.logGap: 20
 notification.household.checkMin: false
 notification.household.checkAvg: true
 notification.household.checkMax: true
+
+notification.device.logGap: 20
+notification.device.checkMin: false
+notification.device.checkAvg: true
+notification.device.checkMax: true
