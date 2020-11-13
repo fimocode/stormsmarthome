@@ -1,4 +1,5 @@
 database.clean: false
+database.updateInterval: 60
 storm.topologyName: "iot-smarthome"
 spout.brokerURL: "tcp://mqtt-broker:1883"
 spout.topicList: ["iot-data"]

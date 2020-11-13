@@ -32,6 +32,7 @@ public class Spout_trigger extends BaseRichSpout {
     @Override
     public void nextTuple() {
         try {
+            System.out.println("[Spout-trigger] Sleeping for "+interval+" minute(s)");
             Thread.sleep(interval * 1000);
             File tempFolder = new File("./tmp");
             File[] spoutLogs = tempFolder.listFiles();

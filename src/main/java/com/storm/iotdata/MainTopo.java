@@ -52,7 +52,7 @@ public class MainTopo {
                     DB_store.purgeData();
                 }
                 else{
-                    DB_store.initData();
+                    //DB_store.initData();
                 }
                 
                 // Init Broker URL
@@ -75,39 +75,34 @@ public class MainTopo {
                     }
                     config.setWindowList(Arrays.asList(windowList));
                 }
-
+                
                 TopologyBuilder builder = new TopologyBuilder();
-                builder.setSpout("trigger", new Spout_trigger(30), 1);
+                builder.setSpout("spout-trigger", new Spout_trigger(30), 1);
 
                 for (String topic : config.getSpoutTopicList()) {
-                    // Spout
-                    builder.setSpout("spout-" + topic, new Spout(config.getSpoutBrokerURL(), topic), 1);
+                    builder.setSpout("spout-data-" + topic, new Spout_data(config.getSpoutBrokerURL(), topic), 1);
                 }
-
-                // builder.setSpout("spout-", new Spout(brokerURL, "iot-data"), 1);
 
                 HashMap<String, BoltDeclarer> splitList = new HashMap<String, BoltDeclarer>();
                 HashMap<String, BoltDeclarer> avgList = new HashMap<String, BoltDeclarer>();
                 HashMap<String, BoltDeclarer> sumList = new HashMap<String, BoltDeclarer>();
                 for (Integer windowSize : config.getWindowList()) {
-                    splitList.put("split" + windowSize,
-                            builder.setBolt("split" + windowSize, new Bolt_split(windowSize, config), 1));
-                    avgList.put("avg" + windowSize,
-                            builder.setBolt("avg" + windowSize, new Bolt_avg(windowSize, config), 1));
-                    sumList.put("sum" + windowSize, builder.setBolt("sum" + windowSize,
-                            new Bolt_sum(windowSize, config),
-                            1));
+                    splitList.put("split-" + windowSize,
+                            builder.setBolt("split-" + windowSize, new Bolt_split(windowSize, config), 1));
+                    avgList.put("avg-" + windowSize,
+                            builder.setBolt("avg-" + windowSize, new Bolt_avg(windowSize, config), 1));
+                    sumList.put("sum-" + windowSize,
+                            builder.setBolt("sum-" + windowSize, new Bolt_sum(windowSize, config),1));
                 }
-
+                
                 for (Integer windowSize : config.getWindowList()) {
                     for (String topic : config.getSpoutTopicList()){
-                        splitList.get("split" + windowSize).shuffleGrouping("spout-" + topic);
+                        splitList.get("split-" + windowSize).shuffleGrouping("spout-data-" + topic);
                     }
-                    // split_list.get("split" + window_size).shuffleGrouping("spout-");
-                    avgList.get("avg" + windowSize).shuffleGrouping("split" + windowSize);
-                    avgList.get("avg" + windowSize).shuffleGrouping("trigger");
-                    sumList.get("sum" + windowSize).shuffleGrouping("avg" + windowSize);
-                    sumList.get("sum" + windowSize).shuffleGrouping("trigger");
+                    avgList.get("avg-" + windowSize).shuffleGrouping("split-" + windowSize);
+                    avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger");
+                    sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize);
+                    sumList.get("sum-" + windowSize).shuffleGrouping("spout-trigger");
                 }
 
                 Config conf = new Config();
