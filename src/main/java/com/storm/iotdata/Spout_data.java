@@ -154,7 +154,7 @@ public class Spout_data implements MqttCallback, IRichSpout {
         if(++count>10000){
             count=0;
             try {
-                FileWriter log = new FileWriter(new File("tmp/spout_log_"+ topic +".tmp"), false);
+                FileWriter log = new FileWriter(new File("tmp/spout_data_log_"+ topic +".tmp"), false);
                 PrintWriter pwOb = new PrintWriter(log , false);
                 pwOb.flush();
                 log.write(speed*1000/(System.currentTimeMillis()-last)+"|"+load*1000/(System.currentTimeMillis()-last)+"|"+total+"|"+messages.size()+"|"+success+"|"+fail);

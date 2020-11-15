@@ -193,6 +193,8 @@ class Bolt_sum extends BaseRichBolt {
                             HashMap<String, HouseData> tempFinalHouseData = finalHouseData.get(data.getHouseId());
                             HouseData tempHouseData = tempFinalHouseData.get(data.getSliceId());
                             tempHouseData.save();
+                            tempFinalHouseData.put(tempHouseData.getSliceId(), tempHouseData);
+                            finalHouseData.put(tempHouseData.getHouseId(), tempFinalHouseData);
                         }
                     }
                 }
@@ -200,8 +202,10 @@ class Bolt_sum extends BaseRichBolt {
                     if(DB_store.pushHouseHoldData(householdDataNeedSave, new File("./tmp/household2db-" + gap + ".lck"))){
                         for(HouseholdData data : householdDataNeedSave){
                             HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.get(data.getHouseholdId());
-                            HouseholdData tempHouseData = tempFinalHouseholdData.get(data.getSliceId());
-                            tempHouseData.save();
+                            HouseholdData tempHouseholdData = tempFinalHouseholdData.get(data.getSliceId());
+                            tempHouseholdData.save();
+                            tempFinalHouseholdData.put(tempHouseholdData.getSliceId(), tempHouseholdData);
+                            finalHouseholdData.put(tempHouseholdData.getHouseId(), tempFinalHouseholdData);
                         }
                     }
                 }

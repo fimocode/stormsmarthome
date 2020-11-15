@@ -39,14 +39,16 @@ public class Spout_trigger extends BaseRichSpout {
             Long speed = Long.valueOf(0), load = Long.valueOf(0), total = Long.valueOf(0);
             for (File Log : spoutLogs) {
                 try {
-                    BufferedReader logReader = new BufferedReader(new FileReader(Log));
-                    String[] datas = logReader.readLine().split("|");
-                    if(datas.length >= 3){
-                        speed+=Long.valueOf(datas[0]);
-                        load+=Long.valueOf(datas[1]);
-                        total+=Long.valueOf(datas[2]);
+                    if(Log.getName().contains("spout_data_log_")){
+                        BufferedReader logReader = new BufferedReader(new FileReader(Log));
+                        String[] datas = logReader.readLine().split("|");
+                        if(datas.length >= 3){
+                            speed+=Long.valueOf(datas[0]);
+                            load+=Long.valueOf(datas[1]);
+                            total+=Long.valueOf(datas[2]);
+                        }
+                        logReader.close();
                     }
-                    logReader.close();
                 } catch (FileNotFoundException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
