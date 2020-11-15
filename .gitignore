@@ -9,3 +9,4 @@ paho*
 tmp/
 src/main/resources/config/cred.yaml
 Error.log
+*tcp*/

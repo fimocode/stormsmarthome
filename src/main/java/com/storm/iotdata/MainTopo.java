@@ -20,7 +20,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.storm.Config;
-import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
@@ -116,11 +115,11 @@ public class MainTopo {
                 // conf.setNumWorkers(1);
 
                 // Local Cluster Test
-                LocalCluster cluster = new LocalCluster(); // create the local cluster
-                cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
+                // LocalCluster cluster = new LocalCluster(); // create the local cluster
+                // cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
 
-                // System.out.println("Sending Topo....");
-                // StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
+                System.out.println("Sending Topo....");
+                StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
                                                                                                 // mylocal cluster, my
                                                                                                 // configuration object,
                                                                                                 // and my topology
