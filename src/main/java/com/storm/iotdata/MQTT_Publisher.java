@@ -46,9 +46,9 @@ class NotificationPublisher extends Thread {
                 msg.setQos(0);
                 msg.setRetained(false);
                 //Publish to house topic
-                publisher.publish(String.format("house-%d-notification",deviceNotification.getHouse_id()), msg);
+                publisher.publish(String.format("house-%d-notification",deviceNotification.getHouseId()), msg);
                 //Publish to household topic
-                publisher.publish(String.format("household-%d-notification",deviceNotification.getHousehold_id()), msg);
+                publisher.publish(String.format("household-%d-notification",deviceNotification.getHouseholdId()), msg);
                 //Publish to global
                 publisher.publish(global_topic, msg);
             }

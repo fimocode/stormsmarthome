@@ -7,6 +7,9 @@ package com.storm.iotdata;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +21,7 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+import org.rocksdb.Slice;
 
 /**
  *
@@ -25,23 +29,25 @@ import org.apache.storm.tuple.Values;
  */
 class Bolt_sum extends BaseRichBolt {
     private StormConfig config;
-    public int windows;
-    public int trigger_windows = 0;
+    public Integer gap;
+    public Integer triggerCount = 0;
     private OutputCollector _collector;
     public long processed = Long.valueOf(0);
-    public HashMap<Integer,HashMap<String,HashMap<String, DeviceData> > > data_list = new HashMap<Integer,HashMap<String,HashMap<String, DeviceData> > >();
-    public HashMap < Integer, HashMap <String, HouseData> > final_data = new HashMap< Integer, HashMap <String, HouseData> >();
+    public HashMap<String, HashMap<Integer, HashMap<Integer, HashMap<String, DeviceData> > > > allData = new HashMap<String, HashMap<Integer,HashMap<Integer,HashMap<String, DeviceData> > > >();
+    public HashMap <Integer, HashMap<String, HouseData> > finalHouseData = new HashMap <Integer, HashMap<String, HouseData> >();
+    public HashMap <Integer, HashMap<String, HouseholdData> > finalHouseholdData = new HashMap <Integer, HashMap<String, HouseholdData> >();
     public Date lastChange = new Date();
+    public Integer dataSize = 0;
     private Long lastProcessed = Long.valueOf(0);
     
-    public Bolt_sum(int windows, StormConfig config) {
-        this.windows = windows;
+    public Bolt_sum(int gap, StormConfig config) {
+        this.gap = gap;
         this.config = config;
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","year","month","day","windows","slice_num","value"));
+        declarer.declare(new Fields("houseId", "year", "month", "day", "index", "value"));
     }
 
     @Override
@@ -51,154 +57,178 @@ class Bolt_sum extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        BufferedWriter bw     = null;
         if(tuple.contains("trigger")){
-            if(((++trigger_windows)%windows)==0){
-                trigger_windows = 0;
+            if(((++triggerCount)%gap)==0){
+                triggerCount = 0;
                 Long startTime = (Long) tuple.getValueByField("trigger");
-                Long spoutSpeed = (Long) tuple.getValueByField("spout-speed");
-                Long spoutLoad = (Long) tuple.getValueByField("spout-load");
-                Long spoutTotal = (Long) tuple.getValueByField("spout-total");
-                int clean = 0;
-                int data_size = 0;
-                Stack<HouseData> needSave = new Stack<HouseData>();
-                for(Integer house_id : data_list.keySet()){
-                    Stack<String> sliceNeedClean = new Stack<String>();
-                    HashMap<String, HashMap<String, DeviceData> >house_data = data_list.get(house_id);
-                    for(String slice_name : house_data.keySet()){
-                        Stack<String> dataNeedClean = new Stack<String>();
-                        HashMap<String,DeviceData> slice_data = house_data.get(slice_name);
-                        for(String unique_id : slice_data.keySet()){
-                            DeviceData data = slice_data.get(unique_id);
-                            if((System.currentTimeMillis()-data.getLastUpdate())>(60000*windows)){
-                                dataNeedClean.push(unique_id);
+                Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
+                Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
+                Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
+                Stack<HouseData> houseDataNeedSave = new Stack<HouseData>();
+                Stack<HouseholdData> householdDataNeedSave = new Stack<HouseholdData>();
+                Stack<HouseData> houseDataNeedClean = new Stack<HouseData>();
+                Stack<HouseholdData> householdDataNeedClean = new Stack<HouseholdData>();
+                Stack<DeviceData> deviceDataNeedClean = new Stack<DeviceData>();
+                
+                
+                // for(Integer houseId : allData.keySet()){
+                //     Stack<String> sliceNeedClean = new Stack<String>();
+                //     HashMap<String, HashMap<String, DeviceData> > houseData = allData.get(houseId);
+                //     for(String sliceName : houseData.keySet()){
+                //         Stack<String> dataNeedClean = new Stack<String>();
+                //         HashMap<String,DeviceData> deviceData = houseData.get(sliceName);
+                //         for(String uniqueId : deviceData.keySet()){
+                //             DeviceData data = deviceData.get(uniqueId);
+                //             if((System.currentTimeMillis()-data.getLastUpdate())>(60000*gap)){
+                //                 dataNeedClean.push(uniqueId);
+                //             }
+                //         }
+                //         for(String uniqueId : dataNeedClean){
+                //             deviceData.remove(uniqueId);
+                //             clean++;
+                //         }
+                //         houseData.put(sliceName, deviceData);
+                //         if(deviceData.isEmpty()){
+                //             sliceNeedClean.push(sliceName);
+                //         }
+                //     }
+                //     for(String sliceName : sliceNeedClean){
+                //         houseData.remove(sliceName);
+                //         System.out.printf("\n[Bolt_sum_%d] Clean slice %s",gap, sliceName);
+                //     }
+                //     allData.put(houseId, houseData);
+                //     dataSize+=houseData.size();
+                // }
+                // System.out.printf("\n[Bolt_sum_%d] Data size %d | Cleaned %d objects", gap, dataSize, clean);
+                // //Calculate sum
+                // for(Integer houseId : allData.keySet()){
+                //     HashMap<Integer, HashMap<String, DeviceData> > houseData = allData.get(houseId);
+                //     for(String sliceName : houseData.keySet()){
+                //         HashMap<String,DeviceData> sliceData = houseData.get(sliceName);
+                //         Double sum = Double.valueOf(0);
+                //         DeviceData temp = sliceData.get(sliceData.keySet().toArray()[0]);
+                //         String year = temp.getYear();
+                //         String month = temp.getMonth();
+                //         String day = temp.getDay();
+                //         Integer sliceNum = temp.getSliceNumber();
+                //         for(String uniqueId : sliceData.keySet()){
+                //             sum += sliceData.get(uniqueId).avg;
+                //         }
+                //         HashMap<String, HouseData> result_house = finalHouseData.getOrDefault(houseId, new HashMap<String, HouseData>());
+                //         HouseData h_data = result_house.getOrDefault(sliceName, new HouseData(houseId, year, month, day, sliceNum, gap));
+                //         if(!h_data.isSaved()||!h_data.getValue().equals(sum)){
+                //             result_house.put(sliceName, h_data.value(sum));
+                //             finalHouseData.put(houseId, result_house);
+                //             needSave.push(new HouseData(houseId, year, month, day, sliceNum, gap, sum));
+                //         }
+                //     }
+                // }
+
+                // Init data
+                for(String timeslice : allData.keySet()){
+                    HashMap<Integer, HashMap<Integer, HashMap<String, DeviceData> > > sliceData = allData.get(timeslice);
+                    for(Integer houseId : sliceData.keySet()) {
+                        Double houseValue = Double.valueOf(0);
+                        HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.get(houseId);
+                        for(Integer householdId : houseData.keySet()) {
+                            Double householdValue = Double.valueOf(0);
+                            HashMap<String, DeviceData> householdData = houseData.get(householdId);
+                            for(String dataId : householdData.keySet()) {
+                                DeviceData data = householdData.get(dataId);
+                                if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate()>(2*gap*1000))) {
+                                    deviceDataNeedClean.push(data);
+                                }
+                                houseValue+=data.getAvg();
+                                householdValue+=data.getAvg();
                             }
+                            HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.getOrDefault(householdId, new HashMap<String, HouseholdData>());
+                            HouseholdData tempHouseholdData = tempFinalHouseholdData.getOrDefault(timeslice, new HouseholdData(houseId, householdId, timeslice, householdValue));
+                            tempHouseholdData.setValue(householdValue);
+                            if(!tempHouseholdData.isSaved()){
+                                householdDataNeedSave.push(tempHouseholdData);
+                            }
+                            else if((System.currentTimeMillis()-tempHouseholdData.getLastUpdate())>(2*gap*1000)){
+                                householdDataNeedClean.push(tempHouseholdData);
+                            }
+                            tempFinalHouseholdData.put(timeslice, tempHouseholdData);
+                            finalHouseholdData.put(householdId, tempFinalHouseholdData);
                         }
-                        for(String unique_id : dataNeedClean){
-                            slice_data.remove(unique_id);
-                            clean++;
+                        HashMap<String, HouseData> tempFinalHouseData = finalHouseData.getOrDefault(houseId, new HashMap<String, HouseData>());
+                        HouseData tempHouseData = tempFinalHouseData.getOrDefault(timeslice, new HouseData(houseId, timeslice, houseValue));
+                        tempHouseData.setValue(houseValue);
+                        if(!tempHouseData.isSaved()){
+                            houseDataNeedSave.push(tempHouseData);
                         }
-                        house_data.put(slice_name, slice_data);
-                        if(slice_data.isEmpty()){
-                            sliceNeedClean.push(slice_name);
+                        else if((System.currentTimeMillis()-tempHouseData.getLastUpdate())>(2*gap*1000)){
+                            houseDataNeedClean.push(tempHouseData);
                         }
-                    }
-                    for(String slice_name : sliceNeedClean){
-                        house_data.remove(slice_name);
-                        System.out.printf("\n[Bolt_sum_%d] Clean slice %s",windows, slice_name);
-                    }
-                    data_list.put(house_id, house_data);
-                    data_size+=house_data.size();
-                }
-                System.out.printf("\n[Bolt_sum_%d] Data size %d | Cleaned %d objects",windows,data_size,clean);
-                //Calculate sum
-                for(Integer house_id : data_list.keySet()){
-                    HashMap<String, HashMap<String, DeviceData> >house_data = data_list.get(house_id);
-                    for(String slice_name : house_data.keySet()){
-                        HashMap<String,DeviceData> slice_data = house_data.get(slice_name);
-                        Double sum = Double.valueOf(0);
-                        DeviceData temp = slice_data.get(slice_data.keySet().toArray()[0]);
-                        String year = temp.getYear();
-                        String month = temp.getMonth();
-                        String day = temp.getDay();
-                        Integer slice_num = temp.getSlice_num();
-                        for(String unique_id : slice_data.keySet()){
-                            sum += slice_data.get(unique_id).avg;
-                        }
-                        HashMap<String, HouseData> result_house = final_data.getOrDefault(house_id, new HashMap<String, HouseData>());
-                        HouseData h_data = result_house.getOrDefault(slice_name, new HouseData(house_id, year, month, day, slice_num, windows));
-                        if(!h_data.isSaved()||!h_data.getValue().equals(sum)){
-                            result_house.put(slice_name, h_data.value(sum));
-                            final_data.put(house_id, result_house);
-                            needSave.push(new HouseData(house_id, year, month, day, slice_num, windows, sum));
-                        }
+                        tempFinalHouseData.put(timeslice, tempHouseData);
+                        finalHouseData.put(houseId, tempFinalHouseData);
                     }
                 }
-                System.out.printf("\n[Bolt_sum_%d] Need save to DB %d queries",windows,needSave.size());
-                if(needSave.size()!=0){
-                    if(DB_store.pushHouseData(needSave, new File("./tmp/house2db-" + windows + ".lck"))){
-                        for(HouseData data : needSave){
-                            HashMap <String,HouseData> slice_data = final_data.get(data.getHouse_id());
-                            slice_data.put(data.getSliceName(),data.saved());
-                            final_data.put(data.getHouse_id(), slice_data);
+
+                for(DeviceData deviceData : deviceDataNeedClean){
+                    allData.get(deviceData.getSliceId());
+                }
+
+                System.out.printf("\n[Bolt_sum_%3d] Need save %10d HouseData | %10d HouseholdData.", gap, houseDataNeedSave.size(), householdDataNeedSave.size());
+                System.out.printf("\n[Bolt_sum_%3d] Cleaned %10d HouseData | %10d HouseholdData | %10d DeviceData", gap, houseDataNeedClean.size(), householdDataNeedClean.size(), deviceDataNeedClean.size());
+
+                try {
+                    FileWriter log = new FileWriter(new File("tmp/bolt_sum_"+ gap +".tmp"), false);
+                    PrintWriter pwOb = new PrintWriter(log , false);
+                    pwOb.flush();
+                    log.write(String.format("[Bolt_sum_%3d] Need save %10d HouseData | %10d HouseholdData | Cleaned %10d HouseData | %10d HouseholdData | %10d DeviceData",gap, houseDataNeedSave.size(), householdDataNeedSave.size(),  houseDataNeedClean.size(), householdDataNeedClean.size(), deviceDataNeedClean.size()));
+                    pwOb.close();
+                    log.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                
+                // DB Store
+                if(houseDataNeedSave.size()!=0){
+                    if(DB_store.pushHouseData(houseDataNeedSave, new File("./tmp/house2db-" + gap + ".lck"))){
+                        for(HouseData data : houseDataNeedSave){
+                            HashMap<String, HouseData> tempFinalHouseData = finalHouseData.get(data.getHouseId());
+                            HouseData tempHouseData = tempFinalHouseData.get(data.getSliceId());
+                            tempHouseData.save();
+                        }
+                    }
+                }
+                if(householdDataNeedSave.size()!=0){
+                    if(DB_store.pushHouseHoldData(householdDataNeedSave, new File("./tmp/household2db-" + gap + ".lck"))){
+                        for(HouseholdData data : householdDataNeedSave){
+                            HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.get(data.getHouseholdId());
+                            HouseholdData tempHouseData = tempFinalHouseholdData.get(data.getSliceId());
+                            tempHouseData.save();
                         }
                     }
                 }
 
-                //Save to file
-                // try {
-                //     if(final_data.size()==0){
-                //         System.out.println("No data recorded");
-                //     }
-                //     else{
-                //         System.out.println("\nWriting to " + output.getAbsolutePath());
-                //         Object[] keySet = final_data.get(final_data.keySet().toArray()[0]).keySet().toArray();
-                //         Arrays.sort(keySet);
-                //         bw = new BufferedWriter(new FileWriter(output,false));
-                //         bw.write("House");
-                //         for(Object slice: keySet){
-                //             bw.write(","+slice);
-                //         }
-                //         bw.write('\n');
-                //         for(Integer house : final_data.keySet()){
-                //             bw.write(String.valueOf(house));
-                //             HashMap <String, HouseData> house_data = final_data.get(house);
-                //             for(Object slice : keySet){
-                //                 bw.write(","+ house_data.getOrDefault(slice,new HouseData(house, "", "", "", 0, windows)).getValue());
-                //             }
-                //             bw.write('\n');
-                //         }
-                //         Long duration = System.currentTimeMillis() - startTime;
-                //         if(duration>=3600000){
-                //             bw.write(String.format("\nTotal time,%d hours %d minutes %d seconds,,Total messages,%d", Math.floorDiv(duration,3600000), Math.floorDiv(duration%3600000,60000), ((duration%3600000)%60000)/1000, processed));
-                //         }
-                //         else if(duration>=60000){
-                //             bw.write(String.format("\nTotal time,%d minutes %d seconds,,Total messages,%d", Math.floorDiv(duration,60000), (duration%60000)/1000, processed ));
-                //         }
-                //         else{
-                //             bw.write(String.format("\nTotal time,%d seconds,,Total messages,%d", duration/1000, processed));
-                //         }
-                //         if(lastProcessed!=processed){
-                //             bw.write(String.format("\nTemporal process speed,%.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
-                //             // BufferedWriter sp_file = new BufferedWriter(new FileWriter(new File("process_speed"),false));
-                //             // sp_file.write(String.valueOf(((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
-                //             // sp_file.close();
-                //             lastChange = new Date();
-                //             lastProcessed = processed;
-                //         }
-                //         else{
-                //             bw.write("\nTemporal process speed,0 (mess/s),Not received any messages");
-                //         }
-                //         bw.write("\nLast update,"+ new Date().toGMTString());
-                //         bw.write("\nLast change,"+ lastChange.toGMTString());
-                //         bw.close();
-                //     }
-                // } catch (IOException ex) {
-                //     Logger.getLogger(Bolt_sum.class.getName()).log(Level.SEVERE, null, ex);
-                // }
-                System.out.println(String.format("\n[Bolt_sum_"+ windows +"]Temporal process speed,%.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+                System.out.println(String.format("\n[Bolt_sum_"+ gap +"] Temporal process speed %.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
             }
         }
         else{
-            Integer house_id        = (Integer) tuple.getValueByField("house_id");
-            Double  avg           = (Double) tuple.getValueByField("avg");
-            Integer household_id    = (Integer)tuple.getValueByField("household_id");
-            Integer device_id       = (Integer)tuple.getValueByField("device_id");
-            Integer slice_num       = (Integer)tuple.getValueByField("slice_num");
+            Integer houseId         = (Integer) tuple.getValueByField("houseId");
+            Double  avg             = (Double) tuple.getValueByField("avg");
+            Integer householdId     = (Integer)tuple.getValueByField("householdId");
+            Integer deviceId        = (Integer)tuple.getValueByField("deviceId");
+            Integer index     = (Integer)tuple.getValueByField("index");
             String year             = (String)tuple.getValueByField("year");
             String month            = (String)tuple.getValueByField("month");
             String day              = (String)tuple.getValueByField("day");
-            String date             = year + "/" + month + "/" + day;
-            String household_deviceid = house_id+"_"+device_id;
-            String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
-            String slice_name = date + " " +  String.format("%02d", Math.floorDiv((slice_num*windows),60)) + ":" +  String.format("%02d", (slice_num*windows)%60) + "->" +  String.format("%02d", Math.floorDiv(((slice_num+1)*windows),60)) + ":" +  String.format("%02d", ((slice_num+1)*windows)%60) ;
-            HashMap<String,HashMap<String, DeviceData> > house_data = data_list.getOrDefault(house_id, new HashMap<String,HashMap<String, DeviceData> >());
-            HashMap<String, DeviceData> slice_data = house_data.getOrDefault(slice_name, new  HashMap<String, DeviceData>());
-            slice_data.put(unique_id, slice_data.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).avg(avg));
-            house_data.put(slice_name, slice_data);
-            data_list.put(house_id, house_data);
+            DeviceData tempData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap).avg(avg).saved();
+            Timeslice timeslice = new Timeslice(year, month, day, index, gap);
+
+            HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > > sliceData = allData.getOrDefault(timeslice.getSliceId(), new HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > >());
+            HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.getOrDefault(houseId, new HashMap<Integer,HashMap<String, DeviceData> >());
+            HashMap<String, DeviceData> householdData = houseData.getOrDefault(householdId, new HashMap<String, DeviceData>());
+            householdData.put(tempData.getUniqueID(), tempData);
+            houseData.put(householdId, householdData);
+            sliceData.put(houseId, houseData);
+            allData.put(timeslice.getSliceId(), sliceData);
             processed++;
-            _collector.emit(new Values(house_id,year,month,day,windows,slice_num,avg));
         }
         _collector.ack(tuple);
     }

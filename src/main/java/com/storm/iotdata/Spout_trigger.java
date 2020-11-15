@@ -17,9 +17,9 @@ public class Spout_trigger extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
     private long start = System.currentTimeMillis();
-    public int interval = 1;
+    public Integer interval = 1;
 
-    public Spout_trigger(int interval) {
+    public Spout_trigger(Integer interval) {
         this.interval = interval;
         this.start = System.currentTimeMillis();
     }
@@ -32,7 +32,7 @@ public class Spout_trigger extends BaseRichSpout {
     @Override
     public void nextTuple() {
         try {
-            System.out.println("[Spout-trigger] Sleeping for "+interval+" minute(s)");
+            System.out.println("[Spout-trigger] Sleeping for "+interval+" second(s)");
             Thread.sleep(interval * 1000);
             File tempFolder = new File("./tmp");
             File[] spoutLogs = tempFolder.listFiles();
@@ -67,6 +67,6 @@ public class Spout_trigger extends BaseRichSpout {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("trigger", "spout-speed", "spout-load", "spout-total"));
+        declarer.declare(new Fields("trigger", "spoutSpeed", "spoutLoad", "spoutTotal"));
     }
 }

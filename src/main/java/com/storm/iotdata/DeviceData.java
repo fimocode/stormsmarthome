@@ -7,140 +7,95 @@ import java.util.Objects;
  * DeviceData
  */
 
-public class DeviceData implements Serializable{
+public class DeviceData extends Timeslice implements Serializable{
 
-    public int house_id;
-    public int household_id;
-    public int device_id;
-    public String year;
-    public String month;
-    public String day;
-    public int slice_num;
-    public int windows;
+    public Integer houseId;
+    public Integer householdId;
+    public Integer deviceId;
     public Double value;
     public Double count;
-    public Double avg;
     public Long lastUpdate;
-    public boolean saved = false;
+    public Boolean saved=false;
 
-    public DeviceData(int house_id, int household_id, int device_id, String year, String month, String day, int slice_num, int windows, Double value, Double count, Boolean saved) {
-        this.house_id = house_id;
-        this.household_id = household_id;
-        this.device_id = device_id;
-        this.year = year;
-        this.month = month;
-        this.day = day;
-        this.slice_num = slice_num;
-        this.windows = windows;
-        this.value = value;
-        this.count = count;
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved = saved;
-    }
-
-    public DeviceData(int house_id, int household_id, int device_id, String year, String month, String day, int slice_num, int windows) {
-        this.house_id = house_id;
-        this.household_id = household_id;
-        this.device_id = device_id;
-        this.year = year;
-        this.month = month;
-        this.day = day;
-        this.slice_num = slice_num;
-        this.windows = windows;
-        this.value = new Double(0);
-        this.count = new Double(0);
-        this.lastUpdate = System.currentTimeMillis();
+    public DeviceData(Integer houseId, Integer householdId, Integer deviceId, Timeslice timeslice, Double value, Double count) {
+        super(timeslice);
+        this.houseId=houseId;
+        this.householdId=householdId;
+        this.deviceId=deviceId;
+        this.value=value;
+        this.count=count;
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
     }
 
-    public String getUniqueID(){
-        return String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
+    public DeviceData(Integer houseId, Integer householdId, Integer deviceId, Timeslice timeslice, Double value, Double count, Boolean saved) {
+        super(timeslice);
+        this.houseId=houseId;
+        this.householdId=householdId;
+        this.deviceId=deviceId;
+        this.value=value;
+        this.count=count;
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=saved;
     }
 
-    public int getHouse_id() {
-        return this.house_id;
+    public DeviceData(Integer houseId, Integer householdId, Integer deviceId, String year, String month, String day, Integer sliceIndex, Integer sliceGap, Double value, Double count, Boolean saved) {
+        super(year, month, day, sliceIndex, sliceGap);
+        this.houseId=houseId;
+        this.householdId=householdId;
+        this.deviceId=deviceId;
+        this.value=value;
+        this.count=count;
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=saved;
     }
 
-    public void setHouse_id(int house_id) {
-        this.lastUpdate = System.currentTimeMillis();
+    public DeviceData(Integer houseId, Integer householdId, Integer deviceId, String year, String month, String day, Integer sliceIndex, Integer sliceGap) {
+        super(year, month, day, sliceIndex, sliceGap);
+        this.houseId=houseId;
+        this.householdId=householdId;
+        this.deviceId=deviceId;
+        this.value=Double.valueOf(0);
+        this.count=Double.valueOf(0);
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.house_id = house_id;
     }
 
-    public int getHousehold_id() {
-        return this.household_id;
+    public Integer getHouseId() {
+        return this.houseId;
     }
 
-    public void setHousehold_id(int household_id) {
-        this.lastUpdate = System.currentTimeMillis();
+    public void setHouseId(Integer houseId) {
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.household_id = household_id;
+        this.houseId=houseId;
     }
 
-    public int getDevice_id() {
-        return this.device_id;
+    public Integer getHouseholdId() {
+        return this.householdId;
     }
 
-    public void setDevice_id(int device_id) {
-        this.lastUpdate = System.currentTimeMillis();
+    public void setHouseholdId(Integer householdId) {
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.device_id = device_id;
+        this.householdId=householdId;
     }
 
-    public String getYear() {
-        return this.year;
+    public Integer getDeviceId() {
+        return this.deviceId;
     }
 
-    public void setYear(String year) {
-        this.lastUpdate = System.currentTimeMillis();
+    public void setDeviceId(Integer deviceId) {
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.year = year;
+        this.deviceId=deviceId;
     }
 
     public DeviceData avg(Double avg) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.avg = avg;
+        this.lastUpdate=System.currentTimeMillis();
+        this.count=Double.valueOf(1);
+        this.value=avg;
         return this;
-    }
-
-    public String getMonth() {
-        return this.month;
-    }
-
-    public void setMonth(String month) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.month = month;
-    }
-
-    public String getDay() {
-        return this.day;
-    }
-
-    public void setDay(String day) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.day = day;
-    }
-
-    public int getSlice_num() {
-        return this.slice_num;
-    }
-
-    public void setSlice_num(int slice_num) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.slice_num = slice_num;
-    }
-
-    public int getWindows() {
-        return this.windows;
-    }
-
-    public void setWindows(int windows) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.windows = windows;
     }
 
     public Double getValue() {
@@ -148,9 +103,9 @@ public class DeviceData implements Serializable{
     }
 
     public void setValue(Double value) {
-        this.lastUpdate = System.currentTimeMillis();
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.value = value;
+        this.value=value;
     }
 
     public Double getCount() {
@@ -158,9 +113,9 @@ public class DeviceData implements Serializable{
     }
 
     public void setCount(Double count) {
-        this.lastUpdate = System.currentTimeMillis();
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.count = count;
+        this.count=count;
     }
 
     public long getLastUpdate() {
@@ -169,90 +124,55 @@ public class DeviceData implements Serializable{
 
     public Double getAvg() {
         if(this.count==0){
-            return new Double(0);
+            return  Double.valueOf(0);
         }
         return this.value/this.count;
     }
 
-    public DeviceData house_id(int house_id) {
-        this.lastUpdate = System.currentTimeMillis();
+    public DeviceData houseId(Integer houseId) {
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.house_id = house_id;
+        this.houseId=houseId;
         return this;
     }
 
-    public DeviceData household_id(int household_id) {
-        this.lastUpdate = System.currentTimeMillis();
+    public DeviceData householdId(Integer householdId) {
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.household_id = household_id;
+        this.householdId=householdId;
         return this;
     }
 
-    public DeviceData device_id(int device_id) {
-        this.lastUpdate = System.currentTimeMillis();
+    public DeviceData deviceId(Integer deviceId) {
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.device_id = device_id;
+        this.deviceId=deviceId;
         return this;
     }
 
-    public DeviceData year(String year) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.year = year;
+    public DeviceData saved(Boolean saved) {
+        this.saved=saved;
         return this;
     }
 
-    public DeviceData month(String month) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.month = month;
-        return this;
-    }
-
-    public DeviceData day(String day) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.day = day;
-        return this;
-    }
-
-    public DeviceData saved(boolean saved) {
-        this.saved = saved;
-        return this;
-    }
-
-    public boolean isSaved() {
+    public Boolean isSaved() {
         return this.saved;
     }
 
     public DeviceData saved() {
-        this.saved = true;
-        return this;
-    }
-
-    public DeviceData slice_num(int slice_num) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.slice_num = slice_num;
-        return this;
-    }
-
-    public DeviceData windows(int windows) {
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved=false;
-        this.windows = windows;
+        this.saved=true;
         return this;
     }
 
     public DeviceData value(Double value) {
-        this.lastUpdate = System.currentTimeMillis();
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.value = value;
+        this.value=value;
         return this;
     }
 
     public DeviceData increaseValue(Double value){
-        this.lastUpdate = System.currentTimeMillis();
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
         this.value+=value;
         this.count++;
@@ -260,33 +180,32 @@ public class DeviceData implements Serializable{
     }
 
     public DeviceData count(Double count) {
-        this.lastUpdate = System.currentTimeMillis();
+        this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
-        this.count = count;
+        this.count=count;
         return this;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(house_id, household_id, device_id, year, month, day, slice_num, windows, value, count, lastUpdate);
     }
 
     @Override
     public String toString() {
         return "{" +
-            " house_id='" + getHouse_id() + "'" +
-            ", household_id='" + getHousehold_id() + "'" +
-            ", device_id='" + getDevice_id() + "'" +
+            " houseId='" + getHouseId() + "'" +
+            ", householdId='" + getHouseholdId() + "'" +
+            ", deviceId='" + getDeviceId() + "'" +
             ", year='" + getYear() + "'" +
             ", month='" + getMonth() + "'" +
             ", day='" + getDay() + "'" +
-            ", slice_num='" + getSlice_num() + "'" +
-            ", windows='" + getWindows() + "'" +
+            ", sliceIndex='" + getIndex() + "'" +
+            ", sliceGap='" + getGap() + "'" +
             ", value='" + getValue() + "'" +
             ", count='" + getCount() + "'" +
             ", lastUpdate='" + getLastUpdate() + "'" +
             ", saved='" + isSaved() + "'" +
             "}";
+    }
+
+    public String getUniqueID(){
+        return String.format("%d-%d-%d-%s-%s-%s-%d", houseId, householdId, deviceId, year, month, day, sliceIndex);
     }
     
 }

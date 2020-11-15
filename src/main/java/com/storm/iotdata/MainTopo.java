@@ -20,6 +20,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.storm.Config;
+import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
@@ -52,7 +53,7 @@ public class MainTopo {
                     DB_store.purgeData();
                 }
                 else{
-                    //DB_store.initData();
+                    DB_store.initData();
                 }
                 
                 // Init Broker URL
@@ -77,7 +78,7 @@ public class MainTopo {
                 }
                 
                 TopologyBuilder builder = new TopologyBuilder();
-                builder.setSpout("spout-trigger", new Spout_trigger(30), 1);
+                builder.setSpout("spout-trigger", new Spout_trigger(60), 1);
 
                 for (String topic : config.getSpoutTopicList()) {
                     builder.setSpout("spout-data-" + topic, new Spout_data(config.getSpoutBrokerURL(), topic), 1);
@@ -86,13 +87,16 @@ public class MainTopo {
                 HashMap<String, BoltDeclarer> splitList = new HashMap<String, BoltDeclarer>();
                 HashMap<String, BoltDeclarer> avgList = new HashMap<String, BoltDeclarer>();
                 HashMap<String, BoltDeclarer> sumList = new HashMap<String, BoltDeclarer>();
+                HashMap<String, BoltDeclarer> forecastList = new HashMap<String, BoltDeclarer>();
                 for (Integer windowSize : config.getWindowList()) {
                     splitList.put("split-" + windowSize,
                             builder.setBolt("split-" + windowSize, new Bolt_split(windowSize, config), 1));
                     avgList.put("avg-" + windowSize,
                             builder.setBolt("avg-" + windowSize, new Bolt_avg(windowSize, config), 1));
                     sumList.put("sum-" + windowSize,
-                            builder.setBolt("sum-" + windowSize, new Bolt_sum(windowSize, config),1));
+                            builder.setBolt("sum-" + windowSize, new Bolt_sum(windowSize, config), 1));
+                    forecastList.put("forecast-" + windowSize,
+                            builder.setBolt("forecast-" + windowSize, new Bolt_forecast(windowSize, config), 1));
                 }
                 
                 for (Integer windowSize : config.getWindowList()) {
@@ -103,6 +107,7 @@ public class MainTopo {
                     avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger");
                     sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize);
                     sumList.get("sum-" + windowSize).shuffleGrouping("spout-trigger");
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("split-" + windowSize);
                 }
 
                 Config conf = new Config();
@@ -111,11 +116,11 @@ public class MainTopo {
                 // conf.setNumWorkers(1);
 
                 // Local Cluster Test
-                // LocalCluster cluster = new LocalCluster(); // create the local cluster
-                // cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
+                LocalCluster cluster = new LocalCluster(); // create the local cluster
+                cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
 
-                System.out.println("Sending Topo....");
-                StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
+                // System.out.println("Sending Topo....");
+                // StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
                                                                                                 // mylocal cluster, my
                                                                                                 // configuration object,
                                                                                                 // and my topology

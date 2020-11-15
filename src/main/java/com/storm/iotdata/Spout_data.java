@@ -185,6 +185,6 @@ public class Spout_data implements MqttCallback, IRichSpout {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         /* uses default stream id */
-        declarer.declare(new Fields("timestamp", "value", "property", "plug_id","household_id", "house_id"));
+        declarer.declare(new Fields("timestamp", "value", "property", "plugId","householdId", "houseId"));
     }    
 }

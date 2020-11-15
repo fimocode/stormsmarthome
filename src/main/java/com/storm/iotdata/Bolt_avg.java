@@ -6,6 +6,9 @@
 package com.storm.iotdata;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -24,15 +27,14 @@ import org.apache.storm.tuple.Values;
  */
 class Bolt_avg extends BaseRichBolt {
     private StormConfig config;
-    public int windows;
-    public int trigger_windows = 0;
+    public Integer gap;
+    public Integer trigger_windows = 0;
     public Double total = Double.valueOf(0);
     public HashMap<String, DeviceData> data_list = new HashMap<String, DeviceData>();
     public HashMap<String, DeviceProp> data_prop_list = new HashMap<String, DeviceProp>();
-    public Stack<DeviceNotification> noti_list = new Stack<DeviceNotification>();
 
-    public Bolt_avg(int windows, StormConfig config) {
-        this.windows = windows;
+    public Bolt_avg(Integer gap, StormConfig config) {
+        this.gap = gap;
         this.config = config;
     }
     
@@ -46,41 +48,46 @@ class Bolt_avg extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         if(tuple.contains("trigger")){
-            if(((++trigger_windows)%windows)==0){
+            if(((++trigger_windows)%gap)==0){
                 trigger_windows = 0;
                 Long startTime = (Long) tuple.getValueByField("trigger");
-                Long spoutSpeed = (Long) tuple.getValueByField("spout-speed");
-                Long spoutLoad = (Long) tuple.getValueByField("spout-load");
-                Long spoutTotal = (Long) tuple.getValueByField("spout-total");
+                Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
+                Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
+                Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
 
                 Stack<String> needClean = new Stack<String>();
-                int newSave = 0;
+                Integer newSave = 0;
                 Stack<DeviceData> needSave = new Stack<DeviceData>();
+                Stack<DeviceNotification> noti_list = new Stack<DeviceNotification>();
 
                 //Init data for save and clean procedure
                 for(String key : data_list.keySet()){
                     DeviceData data = data_list.get(key);
                     if(!data.isSaved()){
+                        _collector.emit(new Values(data.getHouseId(), data.getHouseholdId(), data.getDeviceId(), data.getYear(), data.getMonth(), data.getDay(), data.getIndex(), data.getAvg()));
                         needSave.push(data);
                     }
-                    else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*windows)){
+                    else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*gap)){
                         needClean.push(key);
                     }
                 }
 
                 //DB store
-                if(DB_store.pushDeviceData(needSave, new File("./tmp/device2db-" + windows + ".lck"))){
+                if(DB_store.pushDeviceData(needSave, new File("./tmp/device2db-" + gap + ".lck"))){
                     for(DeviceData data : needSave){
                         data_list.put(data.getUniqueID(), data.saved());
                         newSave++;
                     }
                 }
 
-                //Check over ceiling
-                
+                for(String key : needClean){
+                    data_list.remove(key);
+                }
+
+                //Check outlier
                 for(DeviceData data : needSave){
-                    String data_prop_unique_id = String.format("%d_%d_%d", data.house_id, data.household_id, data.device_id);
-                    DeviceProp data_prop = data_prop_list.getOrDefault(data_prop_unique_id, new DeviceProp(data.house_id, data.household_id, data.device_id, this.windows, data.getAvg(), data.getAvg(), data.getAvg()));
+                    String data_prop_uniqueId = String.format("%d_%d_%d", data.houseId, data.householdId, data.deviceId);
+                    DeviceProp data_prop = data_prop_list.getOrDefault(data_prop_uniqueId, new DeviceProp(data.houseId, data.householdId, data.deviceId, this.gap, data.getAvg(), data.getAvg(), data.getAvg()));
                     if(config.isDeviceCheckMax() && data_prop.getMax()!=0 && (data.getAvg()-data_prop.getMax())>=(data_prop.getMax()*config.getDeviceLogGap()/100)){
                         //Check over Max
                         noti_list.push(new DeviceNotification(1, data, data_prop));
@@ -94,45 +101,52 @@ class Bolt_avg extends BaseRichBolt {
                         noti_list.push(new DeviceNotification(-1, data, data_prop));
                     }
                     //Save data_prop
-                    data_prop_list.put(data_prop_unique_id, data_prop.addValue(data.getAvg()));
+                    data_prop_list.put(data_prop_uniqueId, data_prop.addValue(data.getAvg()));
                 }
 
-                System.out.printf("\n[Bolt_avg_%d] Noti list: %-15d\n", windows, noti_list.size());
+                System.out.printf("\n[Bolt_avg_%3d] Noti list: %-10d\n", gap, noti_list.size());
 
                 //Push Noti
                 MQTT_Publisher.notificationsPublish(noti_list);
                 //Save Noti
-                if(DB_store.pushDeviceNotification(noti_list, new File("./tmp/devicenoti2db-" + windows + ".lck"))){
+                if(DB_store.pushDeviceNotification(noti_list, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
                     //Noti saved
-                    System.out.printf("\n[Bolt_avg_%d] Saved to DB %-15d notifications\n", windows, noti_list.size());
+                    System.out.printf("\n[Bolt_avg_%3d] Saved to DB %-10d notifications\n", gap, noti_list.size());
                 }
 
-                //Clean unchanged data
-                for(String key : needClean){
-                    data_list.remove(key);
+                try {
+                    FileWriter log = new FileWriter(new File("tmp/bolt_avg_"+ gap +".tmp"), false);
+                    PrintWriter pwOb = new PrintWriter(log , false);
+                    pwOb.flush();
+                    log.write(String.format("[Bolt_avg_%3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d | Notification: %10d",gap, data_list.size(), data_list.size()-needSave.size(), needSave.size(), newSave, needClean.size(), noti_list.size()));
+                    pwOb.close();
+                    log.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-                System.out.printf("\n[Bolt_avg_%d] Total: %-15d | Already saved: %-15d | Need save: %-15d | Saved: %-15d | Need clean: %-15d\n",windows, data_list.size(), data_list.size()-needClean.size()-needSave.size(), needSave.size(), newSave, needClean.size());
+                
+                System.out.printf("\n[Bolt_avg_%3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, data_list.size(), data_list.size()-needSave.size(), needSave.size(), newSave, needClean.size());
             }
         }
         else{
-            Integer house_id        = (Integer) tuple.getValueByField("house_id");
-            Integer household_id    = (Integer)tuple.getValueByField("household_id");
-            Integer device_id       = (Integer)tuple.getValueByField("device_id");
+            Integer houseId        = (Integer) tuple.getValueByField("houseId");
+            Integer householdId    = (Integer)tuple.getValueByField("householdId");
+            Integer deviceId       = (Integer)tuple.getValueByField("deviceId");
             String year             = (String)tuple.getValueByField("year");
             String month            = (String)tuple.getValueByField("month");
             String day              = (String)tuple.getValueByField("day");
-            Integer slice_num       = (Integer) tuple.getValueByField("slice_num");
+            Integer index       = (Integer) tuple.getValueByField("index");
             Double  value           = (Double) tuple.getValueByField("value");
-            String unique_id = String.format("%d_%d_%d_%s_%s_%s_%d", house_id, household_id, device_id, year, month, day, slice_num);
-            data_list.put(unique_id, data_list.getOrDefault(unique_id, new DeviceData(house_id, household_id, device_id, year, month, day, slice_num, windows)).increaseValue(value));
-            _collector.emit(new Values(house_id, household_id, device_id, year, month, day, slice_num, data_list.get(unique_id).getAvg()));
+            String uniqueId = String.format("%d_%d_%d_%s_%s_%s_%d", houseId, householdId, deviceId, year, month, day, index);
+            data_list.put(uniqueId, data_list.getOrDefault(uniqueId, new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap)).increaseValue(value));
         }
         _collector.ack(tuple);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("house_id","household_id","device_id","year","month","day","slice_num","avg"));
+        declarer.declare(new Fields("houseId","householdId","deviceId","year","month","day","index","avg"));
     }
     
 }

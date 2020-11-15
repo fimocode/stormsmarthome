@@ -1,9 +1,9 @@
 package com.storm.iotdata;
 
 public class DeviceProp {
-    public int house_id;
-    public int household_id;
-    public int device_id;
+    public int houseId;
+    public int householdId;
+    public int deviceId;
     public int windows;
     public Double min;
     public Double max;
@@ -12,10 +12,10 @@ public class DeviceProp {
     public Long lastUpdate;
     public boolean saved = false;
 
-    public DeviceProp(int house_id, int household_id, int device_id, int windows, Double min, Double max, Long count, Double avg) {
-        this.house_id = house_id;
-        this.household_id = household_id;
-        this.device_id = device_id;
+    public DeviceProp(int houseId, int householdId, int deviceId, int windows, Double min, Double max, Long count, Double avg) {
+        this.houseId = houseId;
+        this.householdId = householdId;
+        this.deviceId = deviceId;
         this.windows = windows;
         this.min = min;
         this.max = max;
@@ -25,10 +25,10 @@ public class DeviceProp {
         this.saved = false;
     }
 
-    public DeviceProp(int house_id, int household_id, int device_id, int windows, Double min, Double max, Double avg) {
-        this.house_id = house_id;
-        this.household_id = household_id;
-        this.device_id = device_id;
+    public DeviceProp(int houseId, int householdId, int deviceId, int windows, Double min, Double max, Double avg) {
+        this.houseId = houseId;
+        this.householdId = householdId;
+        this.deviceId = deviceId;
         this.windows = windows;
         this.min = min;
         this.max = max;
@@ -38,38 +38,38 @@ public class DeviceProp {
         this.saved = false;
     }
 
-    public int getHouse_id() {
-        return this.house_id;
+    public int getHouseId() {
+        return this.houseId;
     }
 
-    public void setHouse_id(int house_id) {
-        this.house_id = house_id;
+    public void setHouseId(int houseId) {
+        this.houseId = houseId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
 
-    public int getHousehold_id() {
-        return this.household_id;
+    public int getHouseholdId() {
+        return this.householdId;
     }
 
-    public void setHousehold_id(int household_id) {
-        this.household_id = household_id;
+    public void setHouseholdId(int householdId) {
+        this.householdId = householdId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
 
-    public int getDevice_id() {
-        return this.device_id;
+    public int getDeviceId() {
+        return this.deviceId;
     }
 
-    public void setDevice_id(int device_id) {
-        this.device_id = device_id;
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
 
     public int getWindows() {
-        return this.device_id;
+        return this.deviceId;
     }
 
     public void setWindows(int windows) {
@@ -124,22 +124,22 @@ public class DeviceProp {
         this.saved = true;
     }
 
-    public DeviceProp house_id(int house_id) {
-        this.house_id = house_id;
+    public DeviceProp houseId(int houseId) {
+        this.houseId = houseId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp household_id(int household_id) {
-        this.household_id = household_id;
+    public DeviceProp householdId(int householdId) {
+        this.householdId = householdId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp device_id(int device_id) {
-        this.device_id = device_id;
+    public DeviceProp deviceId(int deviceId) {
+        this.deviceId = deviceId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
@@ -199,9 +199,9 @@ public class DeviceProp {
     @Override
     public String toString() {
         return "{" +
-            " house_id='" + getHouse_id() + "'" +
-            ", household_id='" + getHousehold_id() + "'" +
-            ", device_id='" + getDevice_id() + "'" +
+            " houseId='" + getHouseId() + "'" +
+            ", householdId='" + getHouseholdId() + "'" +
+            ", deviceId='" + getDeviceId() + "'" +
             ", min='" + getMin() + "'" +
             ", max='" + getMax() + "'" +
             ", avg='" + getAvg() + "'" +
@@ -211,6 +211,6 @@ public class DeviceProp {
     }
 
     public String getUniqueID(){
-        return String.format("%d_%d_%d", house_id, household_id, device_id);
+        return String.format("%d-%d-%d", houseId, householdId, deviceId);
     }
 }
