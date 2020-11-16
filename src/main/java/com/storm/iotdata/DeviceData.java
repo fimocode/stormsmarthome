@@ -159,7 +159,7 @@ public class DeviceData extends Timeslice implements Serializable{
         return this.saved;
     }
 
-    public DeviceData saved() {
+    public DeviceData save() {
         this.saved=true;
         return this;
     }
@@ -206,6 +206,14 @@ public class DeviceData extends Timeslice implements Serializable{
 
     public String getUniqueID(){
         return String.format("%d-%d-%d-%s-%s-%s-%d", houseId, householdId, deviceId, year, month, day, sliceIndex);
+    }
+
+	public String getDeviceUniqueId() {
+		return String.format("%d-%d-%d", houseId, householdId, deviceId);
+    }
+    
+    public String getHouseholdUniqueId() {
+        return String.format("%d-%d", houseId, householdId);
     }
     
 }

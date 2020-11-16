@@ -48,7 +48,7 @@ public class MainTopo {
 
             try {
                 cmd = parser.parse(options, args);
-
+                
                 if(cmd.hasOption("purge") || config.isCleanDatabase()){
                     DB_store.purgeData();
                 }
@@ -117,11 +117,11 @@ public class MainTopo {
                 // conf.setNumWorkers(1);
 
                 // Local Cluster Test
-                // LocalCluster cluster = new LocalCluster(); // create the local cluster
-                // cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
+                LocalCluster cluster = new LocalCluster(); // create the local cluster
+                cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
 
-                System.out.println("Sending Topo....");
-                StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
+                // System.out.println("Sending Topo....");
+                // StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
                                                                                                 // mylocal cluster, my
                                                                                                 // configuration object,
                                                                                                 // and my topology

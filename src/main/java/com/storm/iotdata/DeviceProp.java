@@ -4,19 +4,19 @@ public class DeviceProp {
     public int houseId;
     public int householdId;
     public int deviceId;
-    public int windows;
+    public int sliceGap;
     public Double min;
     public Double max;
     public Double avg;
-    public Long count;
+    public Double count;
     public Long lastUpdate;
     public boolean saved = false;
 
-    public DeviceProp(int houseId, int householdId, int deviceId, int windows, Double min, Double max, Long count, Double avg) {
+    public DeviceProp(int houseId, int householdId, int deviceId, int sliceGap, Double min, Double avg, Double max, Double count) {
         this.houseId = houseId;
         this.householdId = householdId;
         this.deviceId = deviceId;
-        this.windows = windows;
+        this.sliceGap = sliceGap;
         this.min = min;
         this.max = max;
         this.count = count;
@@ -25,15 +25,15 @@ public class DeviceProp {
         this.saved = false;
     }
 
-    public DeviceProp(int houseId, int householdId, int deviceId, int windows, Double min, Double max, Double avg) {
+    public DeviceProp(int houseId, int householdId, int deviceId, int sliceGap, Double min, Double avg, Double max) {
         this.houseId = houseId;
         this.householdId = householdId;
         this.deviceId = deviceId;
-        this.windows = windows;
+        this.sliceGap = sliceGap;
         this.min = min;
         this.max = max;
         this.avg = avg;
-        this.count = Long.valueOf(1);
+        this.count = Double.valueOf(1);
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
@@ -68,12 +68,12 @@ public class DeviceProp {
         this.saved = false;
     }
 
-    public int getWindows() {
+    public int getSliceGap() {
         return this.deviceId;
     }
 
-    public void setWindows(int windows) {
-        this.windows = windows;
+    public void setWindows(int sliceGap) {
+        this.sliceGap = sliceGap;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
@@ -106,6 +106,14 @@ public class DeviceProp {
         this.avg = avg;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
+    }
+
+    public Double getCount() {
+        return this.count;
+    }
+
+    public void setCount(Double count) {
+        this.count = count;
     }
 
     public Long getLastUpdate() {
@@ -145,8 +153,8 @@ public class DeviceProp {
         return this;
     }
 
-    public DeviceProp windows(int windows) {
-        this.windows = windows;
+    public DeviceProp sliceGap(int sliceGap) {
+        this.sliceGap = sliceGap;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
@@ -202,15 +210,21 @@ public class DeviceProp {
             " houseId='" + getHouseId() + "'" +
             ", householdId='" + getHouseholdId() + "'" +
             ", deviceId='" + getDeviceId() + "'" +
+            ", sliceGap='" + getSliceGap() + "'" +
             ", min='" + getMin() + "'" +
             ", max='" + getMax() + "'" +
             ", avg='" + getAvg() + "'" +
+            ", count='" + getCount() + "'" +
             ", lastUpdate='" + getLastUpdate() + "'" +
             ", saved='" + isSaved() + "'" +
             "}";
     }
 
     public String getUniqueID(){
+        return getDeviceUniqueID();
+    }
+
+    public String getDeviceUniqueID(){
         return String.format("%d-%d-%d", houseId, householdId, deviceId);
     }
 }

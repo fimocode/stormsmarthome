@@ -206,7 +206,7 @@ class Bolt_sum extends BaseRichBolt {
 
                 // DB Store
                 if(houseDataNeedSave.size()!=0){
-                    if(DB_store.pushHouseData(houseDataNeedSave, new File("./tmp/house2db-" + gap + ".lck"))){
+                    if(DB_store.pushHouseData(houseDataNeedSave, new File("./tmp/houseData2db-" + gap + ".lck"))){
                         for(HouseData data : houseDataNeedSave){
                             HashMap<String, HouseData> tempFinalHouseData = finalHouseData.get(data.getHouseId());
                             HouseData tempHouseData = tempFinalHouseData.get(data.getSliceId());
@@ -217,7 +217,7 @@ class Bolt_sum extends BaseRichBolt {
                     }
                 }
                 if(householdDataNeedSave.size()!=0){
-                    if(DB_store.pushHouseHoldData(householdDataNeedSave, new File("./tmp/household2db-" + gap + ".lck"))){
+                    if(DB_store.pushHouseHoldData(householdDataNeedSave, new File("./tmp/householdData2db-" + gap + ".lck"))){
                         for(HouseholdData data : householdDataNeedSave){
                             HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.get(data.getHouseholdId());
                             HouseholdData tempHouseholdData = tempFinalHouseholdData.get(data.getSliceId());
@@ -258,7 +258,7 @@ class Bolt_sum extends BaseRichBolt {
             String year             = (String)tuple.getValueByField("year");
             String month            = (String)tuple.getValueByField("month");
             String day              = (String)tuple.getValueByField("day");
-            DeviceData tempData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap).avg(avg).saved();
+            DeviceData tempData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap).avg(avg).save();
 
             HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > > sliceData = allData.getOrDefault(tempData.getSliceId(), new HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > >());
             HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.getOrDefault(houseId, new HashMap<Integer,HashMap<String, DeviceData> >());

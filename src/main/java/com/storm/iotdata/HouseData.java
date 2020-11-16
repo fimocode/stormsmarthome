@@ -135,8 +135,8 @@ public class HouseData extends Timeslice implements Serializable{
             "}";
     }
 
-    public String getUniqueId(){
-        return String.valueOf(this.houseId);
-    }
+    // public String getUniqueId() {
+    //     return String.format("%d-%s-%s-%s-%d", houseId, year, month, day, sliceIndex);
+    // }
 
 }

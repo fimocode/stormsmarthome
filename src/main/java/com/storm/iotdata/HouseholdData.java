@@ -148,8 +148,12 @@ public class HouseholdData extends Timeslice implements Serializable {
             "}";
     }
 
-    public String getUniqueId() {
-        return houseId + "-" +  householdId;
+    // public String getUniqueId() {
+    //     return String.format("%d-%d-%s-%s-%s-%d", houseId, householdId, year, month, day, sliceIndex);
+    // }
+
+    public String getHouseholdUniqueId() {
+        return String.format("%d-%d", houseId, householdId);
     }
 
 }
