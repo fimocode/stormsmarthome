@@ -613,14 +613,16 @@ class DeviceProp2DB extends Thread {
             stmt.execute("use iot_data");
             for (DeviceProp data : dataList) {
                 PreparedStatement tempSql = conn.prepareStatement(
-                        "insert into device_prop (house_id,household_id,device_id,min,avg,max) values (?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max)",
+                        "insert into device_prop (house_id,household_id,device_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
                         Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());
                 tempSql.setInt(3, data.getDeviceId());
-                tempSql.setDouble(4, data.getMin());
-                tempSql.setDouble(5, data.getAvg());
-                tempSql.setDouble(6, data.getMax());
+                tempSql.setInt(4, data.getSliceGap());
+                tempSql.setDouble(5, data.getMin());
+                tempSql.setDouble(6, data.getAvg());
+                tempSql.setDouble(7, data.getMax());
+                tempSql.setDouble(8, data.getCount());
                 tempSql.executeUpdate();
             }
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);

@@ -86,7 +86,7 @@ public class HouseData extends Timeslice implements Serializable{
     }
 
     public void setValue(Double value) {
-        if(this.value != value){
+        if(!this.value.equals(value)){
             this.setLastUpdate();
             this.saved = false;
             this.value = value;
