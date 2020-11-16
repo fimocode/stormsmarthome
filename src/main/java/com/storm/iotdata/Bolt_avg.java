@@ -154,8 +154,8 @@ class Bolt_avg extends BaseRichBolt {
             String day              = (String)tuple.getValueByField("day");
             Integer index       = (Integer) tuple.getValueByField("index");
             Double  value           = (Double) tuple.getValueByField("value");
-            String uniqueId = String.format("%d_%d_%d_%s_%s_%s_%d", houseId, householdId, deviceId, year, month, day, index);
-            deviceDataList.put(uniqueId, deviceDataList.getOrDefault(uniqueId, new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap)).increaseValue(value));
+            DeviceData deviceData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap);
+            deviceDataList.put(deviceData.getUniqueID(), deviceDataList.getOrDefault(deviceData.getUniqueID(), deviceData ).increaseValue(value));
         }
         _collector.ack(tuple);
     }
