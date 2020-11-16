@@ -28,7 +28,7 @@ import org.apache.storm.tuple.Values;
 class Bolt_avg extends BaseRichBolt {
     private StormConfig config;
     public Integer gap;
-    public Integer trigger_windows = 0;
+    public Integer triggerCount = 0;
     public Double total = Double.valueOf(0);
     public HashMap<String, DeviceData> data_list = new HashMap<String, DeviceData>();
     public HashMap<String, DeviceProp> data_prop_list = new HashMap<String, DeviceProp>();
@@ -48,13 +48,14 @@ class Bolt_avg extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         if(tuple.contains("trigger")){
-            if(((++trigger_windows)%gap)==0){
-                trigger_windows = 0;
+            if(((++triggerCount)%gap)==0){
+                triggerCount = 0;
                 Long startTime = (Long) tuple.getValueByField("trigger");
                 Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
                 Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
                 Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
 
+                Long startExec = System.currentTimeMillis();
                 Stack<String> needClean = new Stack<String>();
                 Integer newSave = 0;
                 Stack<DeviceData> needSave = new Stack<DeviceData>();
@@ -104,21 +105,26 @@ class Bolt_avg extends BaseRichBolt {
                     data_prop_list.put(data_prop_uniqueId, data_prop.addValue(data.getAvg()));
                 }
 
-                System.out.printf("\n[Bolt_avg_%3d] Noti list: %-10d\n", gap, noti_list.size());
-
                 //Push Noti
                 MQTT_Publisher.notificationsPublish(noti_list);
                 //Save Noti
                 if(DB_store.pushDeviceNotification(noti_list, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
                     //Noti saved
-                    System.out.printf("\n[Bolt_avg_%3d] Saved to DB %-10d notifications\n", gap, noti_list.size());
+                    // System.out.printf("\n[Bolt_avg_%-3d] Saved to DB %-10d notifications\n", gap, noti_list.size());
                 }
+
+                Long execTime = System.currentTimeMillis() - startExec;
+                System.out.printf("\n[Bolt_avg_%-3d] Noti list: %-10d\n", gap, noti_list.size());
+                System.out.printf("\n[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, data_list.size(), data_list.size()-needSave.size(), needSave.size(), newSave, needClean.size());
+                System.out.printf("\n[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000);
 
                 try {
                     FileWriter log = new FileWriter(new File("tmp/bolt_avg_"+ gap +".tmp"), false);
                     PrintWriter pwOb = new PrintWriter(log , false);
                     pwOb.flush();
-                    log.write(String.format("[Bolt_avg_%3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d | Notification: %10d",gap, data_list.size(), data_list.size()-needSave.size(), needSave.size(), newSave, needClean.size(), noti_list.size()));
+                    log.write(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, noti_list.size()));
+                    log.write(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, data_list.size(), data_list.size()-needSave.size(), needSave.size(), newSave, needClean.size()));
+                    log.write(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
                     pwOb.close();
                     log.close();
                 } catch (IOException e) {
@@ -126,7 +132,6 @@ class Bolt_avg extends BaseRichBolt {
                     e.printStackTrace();
                 }
                 
-                System.out.printf("\n[Bolt_avg_%3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, data_list.size(), data_list.size()-needSave.size(), needSave.size(), newSave, needClean.size());
             }
         }
         else{

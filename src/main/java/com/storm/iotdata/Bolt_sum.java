@@ -32,13 +32,9 @@ class Bolt_sum extends BaseRichBolt {
     public Integer gap;
     public Integer triggerCount = 0;
     private OutputCollector _collector;
-    public long processed = Long.valueOf(0);
     public HashMap<String, HashMap<Integer, HashMap<Integer, HashMap<String, DeviceData> > > > allData = new HashMap<String, HashMap<Integer,HashMap<Integer,HashMap<String, DeviceData> > > >();
     public HashMap <Integer, HashMap<String, HouseData> > finalHouseData = new HashMap <Integer, HashMap<String, HouseData> >();
     public HashMap <Integer, HashMap<String, HouseholdData> > finalHouseholdData = new HashMap <Integer, HashMap<String, HouseholdData> >();
-    public Date lastChange = new Date();
-    public Integer dataSize = 0;
-    private Long lastProcessed = Long.valueOf(0);
     
     public Bolt_sum(int gap, StormConfig config) {
         this.gap = gap;
@@ -64,12 +60,13 @@ class Bolt_sum extends BaseRichBolt {
                 Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
                 Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
                 Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
+
+                Long startExec = System.currentTimeMillis();
                 Stack<HouseData> houseDataNeedSave = new Stack<HouseData>();
                 Stack<HouseholdData> householdDataNeedSave = new Stack<HouseholdData>();
                 Stack<HouseData> houseDataNeedClean = new Stack<HouseData>();
                 Stack<HouseholdData> householdDataNeedClean = new Stack<HouseholdData>();
-                Stack<DeviceData> deviceDataNeedClean = new Stack<DeviceData>();
-                
+                Stack<String> timesliceNeedClean = new Stack<String>();
                 
                 // for(Integer houseId : allData.keySet()){
                 //     Stack<String> sliceNeedClean = new Stack<String>();
@@ -126,20 +123,27 @@ class Bolt_sum extends BaseRichBolt {
 
                 // Init data
                 for(String timeslice : allData.keySet()){
+                    Boolean cleanable = false;
                     HashMap<Integer, HashMap<Integer, HashMap<String, DeviceData> > > sliceData = allData.get(timeslice);
                     for(Integer houseId : sliceData.keySet()) {
+                        if(cleanable) break;
                         Double houseValue = Double.valueOf(0);
                         HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.get(houseId);
                         for(Integer householdId : houseData.keySet()) {
+                            if(cleanable) break;
                             Double householdValue = Double.valueOf(0);
                             HashMap<String, DeviceData> householdData = houseData.get(householdId);
                             for(String dataId : householdData.keySet()) {
+                                if(cleanable) break;
                                 DeviceData data = householdData.get(dataId);
-                                if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate()>(2*gap*1000))) {
-                                    deviceDataNeedClean.push(data);
+                                if((System.currentTimeMillis()-data.getLastUpdate()>(2*gap*1000))) {
+                                    timesliceNeedClean.push(timeslice);
+                                    cleanable = true;
                                 }
-                                houseValue+=data.getAvg();
-                                householdValue+=data.getAvg();
+                                else{
+                                    houseValue+=data.getAvg();
+                                    householdValue+=data.getAvg();
+                                }
                             }
                             HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.getOrDefault(householdId, new HashMap<String, HouseholdData>());
                             HouseholdData tempHouseholdData = tempFinalHouseholdData.getOrDefault(timeslice, new HouseholdData(houseId, householdId, timeslice, householdValue));
@@ -156,36 +160,50 @@ class Bolt_sum extends BaseRichBolt {
                         HashMap<String, HouseData> tempFinalHouseData = finalHouseData.getOrDefault(houseId, new HashMap<String, HouseData>());
                         HouseData tempHouseData = tempFinalHouseData.getOrDefault(timeslice, new HouseData(houseId, timeslice, houseValue));
                         tempHouseData.setValue(houseValue);
-                        if(!tempHouseData.isSaved()){
-                            houseDataNeedSave.push(tempHouseData);
-                        }
-                        else if((System.currentTimeMillis()-tempHouseData.getLastUpdate())>(2*gap*1000)){
-                            houseDataNeedClean.push(tempHouseData);
-                        }
                         tempFinalHouseData.put(timeslice, tempHouseData);
                         finalHouseData.put(houseId, tempFinalHouseData);
                     }
                 }
 
-                for(DeviceData deviceData : deviceDataNeedClean){
-                    allData.get(deviceData.getSliceId());
+                for(Integer houseId : finalHouseData.keySet()) {
+                    HashMap<String, HouseData> tempFinalHouseData = finalHouseData.get(houseId);
+                    for(String timeslice : tempFinalHouseData.keySet()){
+                        HouseData houseData = tempFinalHouseData.get(timeslice);
+                        if(!houseData.isSaved()){
+                            houseDataNeedSave.push(houseData);
+                        }
+                        else if((System.currentTimeMillis()-houseData.getLastUpdate())>(2*gap*1000)){
+                            houseDataNeedClean.push(houseData);
+                        }
+                    }
                 }
 
-                System.out.printf("\n[Bolt_sum_%3d] Need save %10d HouseData | %10d HouseholdData.", gap, houseDataNeedSave.size(), householdDataNeedSave.size());
-                System.out.printf("\n[Bolt_sum_%3d] Cleaned %10d HouseData | %10d HouseholdData | %10d DeviceData", gap, houseDataNeedClean.size(), householdDataNeedClean.size(), deviceDataNeedClean.size());
-
-                try {
-                    FileWriter log = new FileWriter(new File("tmp/bolt_sum_"+ gap +".tmp"), false);
-                    PrintWriter pwOb = new PrintWriter(log , false);
-                    pwOb.flush();
-                    log.write(String.format("[Bolt_sum_%3d] Need save %10d HouseData | %10d HouseholdData | Cleaned %10d HouseData | %10d HouseholdData | %10d DeviceData",gap, houseDataNeedSave.size(), householdDataNeedSave.size(),  houseDataNeedClean.size(), householdDataNeedClean.size(), deviceDataNeedClean.size()));
-                    pwOb.close();
-                    log.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                for(Integer householdId : finalHouseholdData.keySet()) {
+                    HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.get(householdId);
+                    for(String timeslice : tempFinalHouseholdData.keySet()){
+                        HouseholdData householdData = tempFinalHouseholdData.get(timeslice);
+                        if(!householdData.isSaved()){
+                            householdDataNeedSave.push(householdData);
+                        }
+                        else if((System.currentTimeMillis()-householdData.getLastUpdate())>(2*gap*1000)){
+                            householdDataNeedClean.push(householdData);
+                        }
+                    }
                 }
-                
+
+                //Wipe unused data
+                for(String timeslice : timesliceNeedClean){
+                    allData.remove(timeslice);
+                }
+
+                for(HouseData houseData : houseDataNeedClean){
+                    finalHouseData.get(houseData.getHouseId()).remove(houseData.getSliceId());
+                }
+
+                for(HouseholdData householdData : householdDataNeedClean) {
+                    finalHouseholdData.get(householdData.getHouseholdId()).remove(householdData.getSliceId());
+                }
+
                 // DB Store
                 if(houseDataNeedSave.size()!=0){
                     if(DB_store.pushHouseData(houseDataNeedSave, new File("./tmp/house2db-" + gap + ".lck"))){
@@ -210,7 +228,25 @@ class Bolt_sum extends BaseRichBolt {
                     }
                 }
 
-                System.out.println(String.format("\n[Bolt_sum_"+ gap +"] Temporal process speed %.2f (mess/s)", (float) ((processed-lastProcessed)*1000)/(System.currentTimeMillis()-lastChange.getTime())));
+                Long execTime = System.currentTimeMillis() - startExec;
+                System.out.printf("\n[Bolt_sum_%-3d] Need save %-10d HouseData | %-10d HouseholdData.\n", gap, houseDataNeedSave.size(), householdDataNeedSave.size());
+                System.out.printf("\n[Bolt_sum_%-3d] Cleaned %-10d HouseData | %-10d HouseholdData | %-10d Timeslice\n", gap, houseDataNeedClean.size(), householdDataNeedClean.size(), timesliceNeedClean.size());
+                System.out.printf("\n[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000);
+
+                try {
+                    FileWriter log = new FileWriter(new File("tmp/bolt_sum_"+ gap +".tmp"), false);
+                    PrintWriter pwOb = new PrintWriter(log , false);
+                    pwOb.flush();
+                    log.write(String.format("[Bolt_sum_%-3d] HouseData | Need save %-10d | Need clean: %-10d\n", gap, houseDataNeedSave.size(), houseDataNeedClean.size()));
+                    log.write(String.format("[Bolt_sum_%-3d] HouseholdData | Need save %-10d | Need clean: %-10d\n",gap, householdDataNeedSave.size(), householdDataNeedClean.size()));
+                    log.write(String.format("[Bolt_sum_%-3d] Timeslice | Need clean: %-10d\n", gap, timesliceNeedClean.size()));
+                    log.write(String.format("[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
+                    pwOb.close();
+                    log.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         }
         else{
@@ -218,21 +254,19 @@ class Bolt_sum extends BaseRichBolt {
             Double  avg             = (Double) tuple.getValueByField("avg");
             Integer householdId     = (Integer)tuple.getValueByField("householdId");
             Integer deviceId        = (Integer)tuple.getValueByField("deviceId");
-            Integer index     = (Integer)tuple.getValueByField("index");
+            Integer index           = (Integer)tuple.getValueByField("index");
             String year             = (String)tuple.getValueByField("year");
             String month            = (String)tuple.getValueByField("month");
             String day              = (String)tuple.getValueByField("day");
             DeviceData tempData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap).avg(avg).saved();
-            Timeslice timeslice = new Timeslice(year, month, day, index, gap);
 
-            HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > > sliceData = allData.getOrDefault(timeslice.getSliceId(), new HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > >());
+            HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > > sliceData = allData.getOrDefault(tempData.getSliceId(), new HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > >());
             HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.getOrDefault(houseId, new HashMap<Integer,HashMap<String, DeviceData> >());
             HashMap<String, DeviceData> householdData = houseData.getOrDefault(householdId, new HashMap<String, DeviceData>());
             householdData.put(tempData.getUniqueID(), tempData);
             houseData.put(householdId, householdData);
             sliceData.put(houseId, houseData);
-            allData.put(timeslice.getSliceId(), sliceData);
-            processed++;
+            allData.put(tempData.getSliceId(), sliceData);
         }
         _collector.ack(tuple);
     }

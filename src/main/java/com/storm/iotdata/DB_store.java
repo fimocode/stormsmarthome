@@ -23,7 +23,6 @@ public class DB_store {
         InputStream inputStream = getConfig();
         Map<String, Object> obj = yaml.load(inputStream);
         String dbURL = "jdbc:mysql://" + obj.get("db_url");
-        System.out.println("DB_URL: " + dbURL);
         String userName = (String) obj.get("db_user");
         String password = (String) obj.get("db_pass");
         Class.forName("com.mysql.cj.jdbc.Driver");

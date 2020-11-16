@@ -20,6 +20,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.storm.Config;
+import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
@@ -106,7 +107,8 @@ public class MainTopo {
                     avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger");
                     sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize);
                     sumList.get("sum-" + windowSize).shuffleGrouping("spout-trigger");
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("split-" + windowSize);
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("avg-" + windowSize);
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize);
                 }
 
                 Config conf = new Config();
