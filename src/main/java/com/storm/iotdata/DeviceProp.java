@@ -1,6 +1,8 @@
 package com.storm.iotdata;
 
-public class DeviceProp {
+import java.io.Serializable;
+
+public class DeviceProp implements Serializable{
     public int houseId;
     public int householdId;
     public int deviceId;
