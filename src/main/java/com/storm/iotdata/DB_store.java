@@ -170,7 +170,7 @@ public class DB_store {
             if (locker.exists() || dataList.isEmpty()) {
                 return false;
             } else {
-                // new HouseholdData2DB(dataList, locker).start();
+                new HouseholdData2DB(dataList, locker).start();
                 return true;
             }
         } catch (Exception e) {
@@ -669,6 +669,49 @@ class DeviceData2DB extends Thread {
                 tempSql.setDouble(9, data.getValue());
                 tempSql.setDouble(10, data.getCount());
                 tempSql.setDouble(11, data.getAvg());
+                tempSql.executeUpdate();
+            }
+            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            conn.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
+        }
+    }
+}
+
+class HouseholdData2DB extends Thread {
+    private Stack<HouseholdData> dataList;
+    private File locker;
+    
+    public HouseholdData2DB(Stack<HouseholdData> dataList, File locker){
+        this.dataList=dataList;
+        this.locker = locker;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init connection
+            Connection conn = DB_store.initConnection();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (HouseholdData data : dataList) {
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into device_data (house_id,household_id,year,month,day,slice_gap,slice_index,value) values (?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value)",
+                        Statement.RETURN_GENERATED_KEYS);
+                tempSql.setInt(1, data.getHouseId());
+                tempSql.setInt(2, data.getHouseholdId());
+                tempSql.setString(3, data.getYear());
+                tempSql.setString(4, data.getMonth());
+                tempSql.setString(5, data.getDay());
+                tempSql.setInt(6, data.getGap());
+                tempSql.setInt(7, data.getIndex());
+                tempSql.setDouble(8, data.getValue());
                 tempSql.executeUpdate();
             }
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
