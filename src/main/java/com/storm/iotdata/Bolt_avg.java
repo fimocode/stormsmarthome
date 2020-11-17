@@ -48,116 +48,121 @@ class Bolt_avg extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        if(tuple.contains("trigger")){
-            if(((++triggerCount)%gap)==0){
-                triggerCount = 0;
-                Long startTime = (Long) tuple.getValueByField("trigger");
-                Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
-                Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
-                Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
+        try{
+            if(tuple.contains("trigger")){
+                if(((++triggerCount)%gap)==0){
+                    triggerCount = 0;
+                    Long startTime = (Long) tuple.getValueByField("trigger");
+                    Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
+                    Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
+                    Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
 
-                Long startExec = System.currentTimeMillis();
-                Stack<String> needClean = new Stack<String>();
-                Integer newSave = 0;
-                Stack<DeviceData> needSave = new Stack<DeviceData>();
-                Stack<DeviceNotification> deviceNotificationList = new Stack<DeviceNotification>();
+                    Long startExec = System.currentTimeMillis();
+                    Stack<String> needClean = new Stack<String>();
+                    Integer newSave = 0;
+                    Stack<DeviceData> needSave = new Stack<DeviceData>();
+                    Stack<DeviceNotification> deviceNotificationList = new Stack<DeviceNotification>();
 
-                //Init data for save and clean procedure
-                for(String key : deviceDataList.keySet()){
-                    DeviceData data = deviceDataList.get(key);
-                    if(!data.isSaved()){
-                        _collector.emit(new Values(data.getHouseId(), data.getHouseholdId(), data.getDeviceId(), data.getYear(), data.getMonth(), data.getDay(), data.getIndex(), data.getAvg()));
-                        needSave.push(data);
+                    //Init data for save and clean procedure
+                    for(String key : deviceDataList.keySet()){
+                        DeviceData data = deviceDataList.get(key);
+                        if(!data.isSaved()){
+                            _collector.emit(new Values(data.getHouseId(), data.getHouseholdId(), data.getDeviceId(), data.getYear(), data.getMonth(), data.getDay(), data.getIndex(), data.getAvg()));
+                            needSave.push(data);
+                        }
+                        else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*gap)){
+                            needClean.push(key);
+                        }
                     }
-                    else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*gap)){
-                        needClean.push(key);
-                    }
-                }
 
-                //DB store data
-                if(DB_store.pushDeviceData(needSave, new File("./tmp/deviceData2db-" + gap + ".lck"))){
+                    //DB store data
+                    if(DB_store.pushDeviceData(needSave, new File("./tmp/deviceData2db-" + gap + ".lck"))){
+                        for(DeviceData deviceData : needSave){
+                            deviceDataList.get(deviceData.getUniqueID()).save();
+                            newSave++;
+                        }
+                    }
+
+                    //DB store prop
+                    Stack<DeviceProp> tempDevicePropList = new Stack<DeviceProp>();
+                    tempDevicePropList.addAll(devicePropList.values());
+                    if(DB_store.pushDeviceProp(tempDevicePropList, new File("./tmp/deviceProp2db-"+ gap + ".lck"))){
+                        for(DeviceProp deviceProp : tempDevicePropList){
+                            devicePropList.get(deviceProp.getDeviceUniqueID()).save();
+                        }
+                    }
+
+                    //Clean garbage
+                    for(String key : needClean){
+                        deviceDataList.remove(key);
+                    }
+
+                    //Check outlier
                     for(DeviceData deviceData : needSave){
-                        deviceDataList.get(deviceData.getUniqueID()).save();
-                        newSave++;
+                        String devicePropUniqueId = deviceData.getDeviceUniqueId();
+                        DeviceProp deviceProp = devicePropList.getOrDefault(devicePropUniqueId, new DeviceProp(deviceData.houseId, deviceData.householdId, deviceData.deviceId, this.gap, deviceData.getAvg(), deviceData.getAvg(), deviceData.getAvg()));
+                        if(config.isDeviceCheckMax() && deviceProp.getMax()!=0 && (deviceData.getAvg()-deviceProp.getMax())>=(deviceProp.getMax()*config.getDeviceLogGap()/100)){
+                            //Check over Max
+                            deviceNotificationList.push(new DeviceNotification(1, deviceData, deviceProp));
+                        }
+                        if(config.isDeviceCheckAvg() && deviceProp.getAvg()!=0 && (deviceData.getAvg()-deviceProp.getAvg())>=(deviceProp.getAvg()*config.getDeviceLogGap()/100)){
+                            //Check over Avg
+                            deviceNotificationList.push(new DeviceNotification(0, deviceData, deviceProp));
+                        }
+                        if(config.isDeviceCheckMin() && deviceProp.getMin()!=0 && (deviceProp.getMin()-deviceData.getAvg())<=(deviceProp.getMin()*config.getDeviceLogGap()/100)){
+                            //Check under Min
+                            deviceNotificationList.push(new DeviceNotification(-1, deviceData, deviceProp));
+                        }
+                        //Save data_prop
+                        devicePropList.put(devicePropUniqueId, deviceProp.addValue(deviceData.getAvg()));
                     }
-                }
 
-                //DB store prop
-                Stack<DeviceProp> tempDevicePropList = new Stack<DeviceProp>();
-                tempDevicePropList.addAll(devicePropList.values());
-                if(DB_store.pushDeviceProp(tempDevicePropList, new File("./tmp/deviceProp2db-"+ gap + ".lck"))){
-                    for(DeviceProp deviceProp : tempDevicePropList){
-                        devicePropList.get(deviceProp.getDeviceUniqueID()).save();
+                    //Push Noti
+                    MQTT_Publisher.notificationsPublish(deviceNotificationList);
+                    //Save Noti
+                    if(DB_store.pushDeviceNotification(deviceNotificationList, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
+                        //Noti saved
+                        // System.out.printf("\n[Bolt_avg_%-3d] Saved to DB %-10d notifications\n", gap, noti_list.size());
                     }
-                }
 
-                //Clean garbage
-                for(String key : needClean){
-                    deviceDataList.remove(key);
-                }
+                    Long execTime = System.currentTimeMillis() - startExec;
+                    System.out.printf("\n[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size());
+                    System.out.printf("\n[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), newSave, needClean.size());
+                    System.out.printf("\n[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000);
 
-                //Check outlier
-                for(DeviceData deviceData : needSave){
-                    String devicePropUniqueId = deviceData.getDeviceUniqueId();
-                    DeviceProp deviceProp = devicePropList.getOrDefault(devicePropUniqueId, new DeviceProp(deviceData.houseId, deviceData.householdId, deviceData.deviceId, this.gap, deviceData.getAvg(), deviceData.getAvg(), deviceData.getAvg()));
-                    if(config.isDeviceCheckMax() && deviceProp.getMax()!=0 && (deviceData.getAvg()-deviceProp.getMax())>=(deviceProp.getMax()*config.getDeviceLogGap()/100)){
-                        //Check over Max
-                        deviceNotificationList.push(new DeviceNotification(1, deviceData, deviceProp));
+                    try {
+                        FileWriter log = new FileWriter(new File("tmp/bolt_avg_"+ gap +".tmp"), false);
+                        PrintWriter pwOb = new PrintWriter(log , false);
+                        pwOb.flush();
+                        log.write(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
+                        log.write(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), newSave, needClean.size()));
+                        log.write(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
+                        pwOb.close();
+                        log.close();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
                     }
-                    if(config.isDeviceCheckAvg() && deviceProp.getAvg()!=0 && (deviceData.getAvg()-deviceProp.getAvg())>=(deviceProp.getAvg()*config.getDeviceLogGap()/100)){
-                        //Check over Avg
-                        deviceNotificationList.push(new DeviceNotification(0, deviceData, deviceProp));
-                    }
-                    if(config.isDeviceCheckMin() && deviceProp.getMin()!=0 && (deviceProp.getMin()-deviceData.getAvg())<=(deviceProp.getMin()*config.getDeviceLogGap()/100)){
-                        //Check under Min
-                        deviceNotificationList.push(new DeviceNotification(-1, deviceData, deviceProp));
-                    }
-                    //Save data_prop
-                    devicePropList.put(devicePropUniqueId, deviceProp.addValue(deviceData.getAvg()));
+                    
                 }
-
-                //Push Noti
-                MQTT_Publisher.notificationsPublish(deviceNotificationList);
-                //Save Noti
-                if(DB_store.pushDeviceNotification(deviceNotificationList, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
-                    //Noti saved
-                    // System.out.printf("\n[Bolt_avg_%-3d] Saved to DB %-10d notifications\n", gap, noti_list.size());
-                }
-
-                Long execTime = System.currentTimeMillis() - startExec;
-                System.out.printf("\n[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size());
-                System.out.printf("\n[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), newSave, needClean.size());
-                System.out.printf("\n[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000);
-
-                try {
-                    FileWriter log = new FileWriter(new File("tmp/bolt_avg_"+ gap +".tmp"), false);
-                    PrintWriter pwOb = new PrintWriter(log , false);
-                    pwOb.flush();
-                    log.write(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
-                    log.write(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Saved: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), newSave, needClean.size()));
-                    log.write(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
-                    pwOb.close();
-                    log.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                
             }
+            else{
+                Integer houseId        = (Integer) tuple.getValueByField("houseId");
+                Integer householdId    = (Integer)tuple.getValueByField("householdId");
+                Integer deviceId       = (Integer)tuple.getValueByField("deviceId");
+                String year             = (String)tuple.getValueByField("year");
+                String month            = (String)tuple.getValueByField("month");
+                String day              = (String)tuple.getValueByField("day");
+                Integer index       = (Integer) tuple.getValueByField("index");
+                Double  value           = (Double) tuple.getValueByField("value");
+                DeviceData deviceData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap);
+                deviceDataList.put(deviceData.getUniqueID(), deviceDataList.getOrDefault(deviceData.getUniqueID(), deviceData ).increaseValue(value));
+            }
+            _collector.ack(tuple);
+        }catch (Exception ex){
+            ex.printStackTrace();
+            _collector.fail(tuple);
         }
-        else{
-            Integer houseId        = (Integer) tuple.getValueByField("houseId");
-            Integer householdId    = (Integer)tuple.getValueByField("householdId");
-            Integer deviceId       = (Integer)tuple.getValueByField("deviceId");
-            String year             = (String)tuple.getValueByField("year");
-            String month            = (String)tuple.getValueByField("month");
-            String day              = (String)tuple.getValueByField("day");
-            Integer index       = (Integer) tuple.getValueByField("index");
-            Double  value           = (Double) tuple.getValueByField("value");
-            DeviceData deviceData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap);
-            deviceDataList.put(deviceData.getUniqueID(), deviceDataList.getOrDefault(deviceData.getUniqueID(), deviceData ).increaseValue(value));
-        }
-        _collector.ack(tuple);
     }
 
     @Override
