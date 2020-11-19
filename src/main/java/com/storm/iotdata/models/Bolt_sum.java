@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.storm.iotdata;
+package com.storm.iotdata.models;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -19,11 +19,13 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 
+import com.storm.iotdata.functions.*;
+
 /**
  *
  * @author hiiamlala
  */
-class Bolt_sum extends BaseRichBolt {
+public class Bolt_sum extends BaseRichBolt {
     private StormConfig config;
     public Integer gap;
     public Integer triggerCount = 0;

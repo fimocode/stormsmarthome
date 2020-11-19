@@ -1,4 +1,4 @@
-package com.storm.iotdata;
+package com.storm.iotdata.functions;
 
 import java.io.File;
 import java.io.InputStream;
@@ -8,6 +8,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+
+import com.storm.iotdata.models.*;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -702,7 +704,7 @@ class HouseholdData2DB extends Thread {
             stmt.execute("use iot_data");
             for (HouseholdData data : dataList) {
                 PreparedStatement tempSql = conn.prepareStatement(
-                        "insert into device_data (house_id,household_id,year,month,day,slice_gap,slice_index,value) values (?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value)",
+                        "insert into household_data (house_id,household_id,year,month,day,slice_gap,slice_index,avg) values (?,?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)",
                         Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());

@@ -1,4 +1,4 @@
-package com.storm.iotdata;
+package com.storm.iotdata.models;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -12,6 +12,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
+import com.storm.iotdata.functions.*;
+import com.storm.iotdata.models.*;
+import com.storm.iotdata.storm.*;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -20,7 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.storm.Config;
-// import org.apache.storm.LocalCluster;
+import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
@@ -48,7 +52,7 @@ public class MainTopo {
 
             try {
                 cmd = parser.parse(options, args);
-
+                
                 if(cmd.hasOption("purge") || config.isCleanDatabase()){
                     DB_store.purgeData();
                 }

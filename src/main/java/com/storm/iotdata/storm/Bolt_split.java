@@ -4,7 +4,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.storm.iotdata;
+package com.storm.iotdata.storm;
 
 import java.util.Date;
 import java.util.Map;
@@ -15,6 +15,8 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+
+import com.storm.iotdata.models.*;
 
 /**
  *

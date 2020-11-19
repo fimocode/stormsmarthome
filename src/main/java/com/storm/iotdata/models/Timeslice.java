@@ -1,4 +1,4 @@
-package com.storm.iotdata;
+package com.storm.iotdata.models;
 
 import java.util.Objects;
 

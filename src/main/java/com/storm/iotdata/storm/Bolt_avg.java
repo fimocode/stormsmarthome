@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.storm.iotdata;
+package com.storm.iotdata.storm;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -12,6 +12,9 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+
+import com.storm.iotdata.models.*;
+import com.storm.iotdata.functions.*;
 
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
@@ -25,7 +28,7 @@ import org.apache.storm.tuple.Values;
  *
  * @author hiiamlala
  */
-class Bolt_avg extends BaseRichBolt {
+public class Bolt_avg extends BaseRichBolt {
     private StormConfig config;
     public Integer gap;
     public Integer triggerCount = 0;

@@ -1,4 +1,4 @@
-package com.storm.iotdata;
+package com.storm.iotdata.functions;
 
 import java.util.Stack;
 import java.util.UUID;
@@ -7,6 +7,8 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import com.storm.iotdata.models.*;
 
 public class MQTT_Publisher {
     public static void notificationsPublish(Stack<DeviceNotification> data_list) {
