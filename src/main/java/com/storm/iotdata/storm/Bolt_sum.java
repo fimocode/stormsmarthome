@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.storm.iotdata.models;
+package com.storm.iotdata.storm;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -20,6 +20,7 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 
 import com.storm.iotdata.functions.*;
+import com.storm.iotdata.models.*;
 
 /**
  *
