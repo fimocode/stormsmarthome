@@ -121,7 +121,7 @@ public class Bolt_avg extends BaseRichBolt {
                     }
 
                     //Push Noti
-                    MQTT_Publisher.notificationsPublish(deviceNotificationList);
+                    MQTT_publisher.notificationsPublish(deviceNotificationList);
                     //Save Noti
                     if(DB_store.pushDeviceNotification(deviceNotificationList, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
                         //Noti saved

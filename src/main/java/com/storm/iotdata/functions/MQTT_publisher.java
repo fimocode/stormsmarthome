@@ -10,7 +10,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import com.storm.iotdata.models.*;
 
-public class MQTT_Publisher {
+public class MQTT_publisher {
     public static void notificationsPublish(Stack<DeviceNotification> data_list) {
         new NotificationPublisher(data_list).start();
     }
