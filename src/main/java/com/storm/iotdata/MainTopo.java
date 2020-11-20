@@ -45,6 +45,8 @@ public class MainTopo {
             options.addOption(opt_topic_list);
             Option opt_windows_list = new Option("w", "windows", true, "Windows list (split by \",\" )");
             options.addOption(opt_windows_list);
+            Option opt_develop = new Option("d", "develop", false, "Developing mode");
+            options.addOption(opt_develop);
 
             CommandLineParser parser = new DefaultParser();
             HelpFormatter formatter = new HelpFormatter();
@@ -121,15 +123,18 @@ public class MainTopo {
                 // conf.setNumWorkers(1);
 
                 // Local Cluster Test
-                // LocalCluster cluster = new LocalCluster(); // create the local cluster
-                // cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
-
-                System.out.println("Sending Topo....");
-                StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
+                if(cmd.hasOption("develop")){
+                    LocalCluster cluster = new LocalCluster(); // create the local cluster
+                    cluster.submitTopology(config.getTopologyName(), conf, builder.createTopology());
+                }
+                else {
+                    System.out.println("Sending Topo....");
+                    StormSubmitter.submitTopology(config.getTopologyName(), conf, builder.createTopology()); // define the name of
                                                                                                 // mylocal cluster, my
                                                                                                 // configuration object,
                                                                                                 // and my topology
-                System.out.println("Sent");
+                    System.out.println("Sent");
+                }
             } catch (ParseException e) {
                 System.out.println(e.getMessage());
                 formatter.printHelp("utility-name", options);
