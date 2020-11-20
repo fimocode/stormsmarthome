@@ -808,7 +808,7 @@ class HouseProp2DB extends Thread {
             stmt.execute("use iot_data");
             for (HouseProp data : dataList) {
                 PreparedStatement tempSql = conn.prepareStatement(
-                        "insert into household_prop (house_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
+                        "insert into house_prop (house_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
                         Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getSliceGap());
