@@ -10,7 +10,6 @@ public class HouseData extends Timeslice implements Serializable{
 
     public Integer houseId;
     public Double value;
-    public Double count;
     public Long lastUpdate;
     public Boolean saved = false;
 
@@ -18,16 +17,14 @@ public class HouseData extends Timeslice implements Serializable{
         super(timeslice);
         this.houseId = houseId;
         this.value = value;
-        this.count = Double.valueOf(1);
         this.setLastUpdate();
         this.saved = false;
     }
 
-    public HouseData(Integer houseId, Timeslice timeslice, Double value, Double count, Boolean saved) {
+    public HouseData(Integer houseId, Timeslice timeslice, Double value, Boolean saved) {
         super(timeslice);
         this.houseId = houseId;
         this.value = value;
-        this.count = count;
         this.setLastUpdate();
         this.saved = saved;
     }
@@ -96,14 +93,8 @@ public class HouseData extends Timeslice implements Serializable{
         }
     }
 
-    public Double getCount() {
-        return this.count;
-    }
-
-    public void setCount(Double count) {
-        this.lastUpdate=System.currentTimeMillis();
-        this.saved=false;
-        this.count=count;
+    public Double getAvg() {
+        return getValue();
     }
 
     public Long getLastUpdate() {
@@ -116,19 +107,6 @@ public class HouseData extends Timeslice implements Serializable{
 
     public HouseData save() {
         this.saved = true;
-        return this;
-    }
-
-    public HouseData increaseValue(Double value){
-        this.lastUpdate=System.currentTimeMillis();
-        this.saved=false;
-        this.value+=value;
-        this.count++;
-        return this;
-    }
-
-    public HouseData count(Double count) {
-        this.setCount(count);
         return this;
     }
 
@@ -160,13 +138,6 @@ public class HouseData extends Timeslice implements Serializable{
             ", saved='" + isSaved() + "'" +
             "}";
     }
-
-	public Double getAvg() {
-		if(this.count==0){
-            return  Double.valueOf(0);
-        }
-        return this.value/this.count;
-	}
 
     public String getUniqueId() {
         return String.format("%d-%s-%s-%s-%d", houseId, year, month, day, sliceIndex);

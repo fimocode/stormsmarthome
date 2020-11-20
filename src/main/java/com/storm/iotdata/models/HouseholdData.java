@@ -7,7 +7,6 @@ public class HouseholdData extends Timeslice implements Serializable {
     public Integer houseId;
     public Integer householdId;
     public Double value;
-    public Double count;
     public Long lastUpdate;
     public Boolean saved = false;
 
@@ -16,17 +15,15 @@ public class HouseholdData extends Timeslice implements Serializable {
         this.houseId = houseId;
         this.householdId = householdId;
         this.value = value;
-        this.count = Double.valueOf(1);
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
 
-    public HouseholdData(Integer houseId, Integer householdId, String timeslice, Double value, Double count, Boolean saved) {
+    public HouseholdData(Integer houseId, Integer householdId, String timeslice, Double value, Boolean saved) {
         super(timeslice);
         this.houseId = houseId;
         this.householdId = householdId;
         this.value = value;
-        this.count = count;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = saved;
     }
@@ -112,16 +109,6 @@ public class HouseholdData extends Timeslice implements Serializable {
         }
     }
 
-    public Double getCount() {
-        return this.value;
-    }
-
-    public void setCount(Double count) {
-        this.lastUpdate=System.currentTimeMillis();
-        this.saved=false;
-        this.count=count;
-    }
-
     public Long getLastUpdate() {
         return this.lastUpdate;
     }
@@ -158,14 +145,6 @@ public class HouseholdData extends Timeslice implements Serializable {
         this.lastUpdate=System.currentTimeMillis();
         this.saved=false;
         this.value+=value;
-        this.count++;
-        return this;
-    }
-
-    public HouseholdData count(Double count) {
-        this.lastUpdate=System.currentTimeMillis();
-        this.saved=false;
-        this.count=count;
         return this;
     }
 
@@ -194,9 +173,6 @@ public class HouseholdData extends Timeslice implements Serializable {
     }
 
     public Double getAvg() {
-        if(this.count==0){
-            return  Double.valueOf(0);
-        }
-        return this.value/this.count;
+        return getValue();
     }
 }
