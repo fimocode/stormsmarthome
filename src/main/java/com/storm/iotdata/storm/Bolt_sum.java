@@ -237,6 +237,14 @@ public class Bolt_sum extends BaseRichBolt {
                     System.out.print(String.format("[Bolt_sum_%-3d] Notification | House: %-10d | Household: %-10d\n", gap, houseNotificationList.size(), householdNotificationList.size()));
                     System.out.print(String.format("[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
 
+                    Stack<String> stormLogList = new Stack<String>();
+                    stormLogList.push(String.format("[Bolt_sum_%-3d] HouseData | Total: %-10d | Need save: %-10d | Need clean: %-10d\n", gap, finalHouseDataSize, houseDataNeedSave.size(), houseDataNeedClean.size()));
+                    stormLogList.push(String.format("[Bolt_sum_%-3d] HouseholdData | Total: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, finalHouseholdDataSize, householdDataNeedSave.size(), householdDataNeedClean.size()));
+                    stormLogList.push(String.format("[Bolt_sum_%-3d] Timeslice | Total: %-10d | Need clean: %-10d\n", gap, allData.size(), timesliceNeedClean.size()));
+                    stormLogList.push(String.format("[Bolt_sum_%-3d] Notification | House: %-10d | Household: %-10d\n", gap, houseNotificationList.size(), householdNotificationList.size()));
+                    stormLogList.push(String.format("[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
+                    MQTT_publisher.stormLogPublish(stormLogList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+
                     try {
                         FileWriter log = new FileWriter(new File("tmp/bolt_sum_"+ gap +".tmp"), false);
                         PrintWriter pwOb = new PrintWriter(log , false);
