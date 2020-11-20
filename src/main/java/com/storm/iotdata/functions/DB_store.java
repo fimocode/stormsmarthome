@@ -122,6 +122,30 @@ public class DB_store {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+            try {
+                stmt.executeUpdate(
+                        "create table household_prop (house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, slice_gap INT UNSIGNED NOT NULL, min DOUBLE UNSIGNED NOT NULL, avg DOUBLE UNSIGNED NOT NULL, max DOUBLE UNSIGNED NOT NULL, count DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, household_id, slice_gap))");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                stmt.executeUpdate(
+                        "create table household_notification (type INT SIGNED NOT NULL, house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL, slice_gap INT UNSIGNED NOT NULL, slice_index INT NOT NULL, value DOUBLE UNSIGNED NOT NULL, min DOUBLE UNSIGNED NOT NULL, max DOUBLE UNSIGNED NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(type, house_id, household_id, year, month, day, slice_gap, slice_index))");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                stmt.executeUpdate(
+                        "create table house_prop (house_id INT UNSIGNED NOT NULL, slice_gap INT UNSIGNED NOT NULL, min DOUBLE UNSIGNED NOT NULL, avg DOUBLE UNSIGNED NOT NULL, max DOUBLE UNSIGNED NOT NULL, count DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, slice_gap))");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                stmt.executeUpdate(
+                        "create table house_notification (type INT SIGNED NOT NULL, house_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL, slice_gap INT UNSIGNED NOT NULL, slice_index INT NOT NULL, value DOUBLE UNSIGNED NOT NULL, min DOUBLE UNSIGNED NOT NULL, max DOUBLE UNSIGNED NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(type, house_id, year, month, day, slice_gap, slice_index))");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -261,6 +285,34 @@ public class DB_store {
                 return false;
             } else {
                 new DeviceNotification2DB(dataList, locker).start();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean pushHouseholdNotification(Stack<HouseholdNotification> dataList, File locker) {
+        try {
+            if (locker.exists() || dataList.isEmpty()) {
+                return false;
+            } else {
+                new HouseholdNotification2DB(dataList, locker).start();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean pushHouseNotification(Stack<HouseNotification> dataList, File locker) {
+        try {
+            if (locker.exists() || dataList.isEmpty()) {
+                return false;
+            } else {
+                new HouseNotification2DB(dataList, locker).start();
                 return true;
             }
         } catch (Exception e) {
@@ -549,32 +601,18 @@ public class DB_store {
         String sql = "SELECT * FROM device_prop";
         try {
             conn = DB_store.initConnection();
-            try {
-                Statement stmt = conn.createStatement();
-                stmt.execute("use iot_data");
-                try (ResultSet rs = stmt.executeQuery(sql)) {
-                    while (rs.next()) {
-                        DeviceProp tempDeviceProp = new DeviceProp(rs.getInt("house_id"), rs.getInt("household_id"), rs.getInt("device_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"));
-                        result.put(tempDeviceProp.getDeviceUniqueID(), tempDeviceProp);
-                    }
-                    return result;
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            try (ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    DeviceProp tempDeviceProp = new DeviceProp(rs.getInt("house_id"), rs.getInt("household_id"), rs.getInt("device_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
+                    result.put(tempDeviceProp.getDeviceUniqueId(), tempDeviceProp);
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                System.out.println("[ERROR] " + sql);
-                return initDevicePropList();
+                return result;
             }
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new HashMap<String, DeviceProp>();
         }
 	}
 
@@ -590,8 +628,78 @@ public class DB_store {
             e.printStackTrace();
             return false;
         }
+    }
+
+	public static HashMap<String, HouseholdProp> initHouseholdPropList() {
+		Connection conn;
+        HashMap<String, HouseholdProp> result = new HashMap<String, HouseholdProp>();
+        String sql = "SELECT * FROM household_prop";
+        try {
+            conn = DB_store.initConnection();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            try (ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    HouseholdProp tempHouseholdProp = new HouseholdProp(rs.getInt("house_id"), rs.getInt("household_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
+                    result.put(tempHouseholdProp.getHouseholdUniqueId(), tempHouseholdProp);
+                }
+                return result;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new HashMap<String, HouseholdProp>();
+        }
+    }
+    
+    public static boolean pushHouseholdProp(Stack<HouseholdProp> dataList, File locker) {
+		try {
+            if (locker.exists() || dataList.isEmpty()) {
+                return false;
+            } else {
+                new HouseholdProp2DB(dataList, locker).start();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 	}
 
+	public static HashMap<String, HouseProp> initHousePropList() {
+		Connection conn;
+        HashMap<String, HouseProp> result = new HashMap<String, HouseProp>();
+        String sql = "SELECT * FROM house_prop";
+        try {
+            conn = DB_store.initConnection();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            try (ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    HouseProp tempHouseProp = new HouseProp(rs.getInt("house_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
+                    result.put(tempHouseProp.getHouseUniqueId(), tempHouseProp);
+                }
+                return result;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new HashMap<String, HouseProp>();
+        }
+    }
+
+	public static boolean pushHouseProp(Stack<HouseProp> dataList, File locker) {
+		try {
+            if (locker.exists() || dataList.isEmpty()) {
+                return false;
+            } else {
+                new HouseProp2DB(dataList, locker).start();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+	}
+    
 }
 
 class DeviceProp2DB extends Thread {
@@ -625,6 +733,89 @@ class DeviceProp2DB extends Thread {
                 tempSql.setDouble(6, data.getAvg());
                 tempSql.setDouble(7, data.getMax());
                 tempSql.setDouble(8, data.getCount());
+                tempSql.executeUpdate();
+            }
+            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            conn.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
+        }
+    }
+}
+
+class HouseholdProp2DB extends Thread {
+    private Stack<HouseholdProp> dataList;
+    private File locker;
+    
+    public HouseholdProp2DB(Stack<HouseholdProp> dataList, File locker){
+        this.dataList=dataList;
+        this.locker = locker;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init connection
+            Connection conn = DB_store.initConnection();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (HouseholdProp data : dataList) {
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into household_prop (house_id,household_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
+                        Statement.RETURN_GENERATED_KEYS);
+                tempSql.setInt(1, data.getHouseId());
+                tempSql.setInt(2, data.getHouseholdId());
+                tempSql.setInt(3, data.getSliceGap());
+                tempSql.setDouble(4, data.getMin());
+                tempSql.setDouble(5, data.getAvg());
+                tempSql.setDouble(6, data.getMax());
+                tempSql.setDouble(7, data.getCount());
+                tempSql.executeUpdate();
+            }
+            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            conn.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
+        }
+    }
+}
+
+class HouseProp2DB extends Thread {
+    private Stack<HouseProp> dataList;
+    private File locker;
+    
+    public HouseProp2DB(Stack<HouseProp> dataList, File locker){
+        this.dataList=dataList;
+        this.locker = locker;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init connection
+            Connection conn = DB_store.initConnection();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (HouseProp data : dataList) {
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into household_prop (house_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
+                        Statement.RETURN_GENERATED_KEYS);
+                tempSql.setInt(1, data.getHouseId());
+                tempSql.setInt(2, data.getSliceGap());
+                tempSql.setDouble(3, data.getMin());
+                tempSql.setDouble(4, data.getAvg());
+                tempSql.setDouble(5, data.getMax());
+                tempSql.setDouble(6, data.getCount());
                 tempSql.executeUpdate();
             }
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
@@ -805,8 +996,95 @@ class DeviceNotification2DB extends Thread {
                 tempSql.setDouble(12, data.getMax());
                 tempSql.setDouble(13, data.getAvg());
                 tempSql.executeUpdate();
-                // String statementText = tempSql.toString();
-                // sql += statementText.substring(statementText.slice_indexOf(": ") + 2) + ",";
+            }
+            conn.close();
+            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
+        }
+    }
+}
+
+class HouseholdNotification2DB extends Thread {
+    private Stack<HouseholdNotification> dataList;
+    private File locker;
+
+    public HouseholdNotification2DB(Stack<HouseholdNotification> dataList, File locker){
+        this.dataList = dataList;
+        this.locker = locker;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init connection
+            Connection conn = DB_store.initConnection();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (HouseholdNotification data : dataList) {
+                PreparedStatement tempSql = conn.prepareStatement("insert into household_notification (type,house_id,household_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                tempSql.setInt(1, data.getType());
+                tempSql.setInt(2, data.getHouseId());
+                tempSql.setInt(3, data.getHouseholdId());
+                tempSql.setString(4, data.getYear());
+                tempSql.setString(5, data.getMonth());
+                tempSql.setString(6, data.getDay());
+                tempSql.setInt(7, data.getGap());
+                tempSql.setInt(8, data.getIndex());
+                tempSql.setDouble(9, data.getValue());
+                tempSql.setDouble(10, data.getMin());
+                tempSql.setDouble(11, data.getMax());
+                tempSql.setDouble(12, data.getAvg());
+                tempSql.executeUpdate();
+            }
+            conn.close();
+            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            locker.delete();
+        }
+    }
+}
+
+class HouseNotification2DB extends Thread {
+    private Stack<HouseNotification> dataList;
+    private File locker;
+
+    public HouseNotification2DB(Stack<HouseNotification> dataList, File locker){
+        this.dataList = dataList;
+        this.locker = locker;
+    }
+
+    @Override
+    public void run() {
+        try {
+            locker.createNewFile();
+            // Init connection
+            Connection conn = DB_store.initConnection();
+            // Init SQL
+            Long start = System.currentTimeMillis();
+            Statement stmt = conn.createStatement();
+            stmt.execute("use iot_data");
+            for (HouseNotification data : dataList) {
+                PreparedStatement tempSql = conn.prepareStatement("insert into house_notification (type,house_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                tempSql.setInt(1, data.getType());
+                tempSql.setInt(2, data.getHouseId());
+                tempSql.setString(3, data.getYear());
+                tempSql.setString(4, data.getMonth());
+                tempSql.setString(5, data.getDay());
+                tempSql.setInt(6, data.getGap());
+                tempSql.setInt(7, data.getIndex());
+                tempSql.setDouble(8, data.getValue());
+                tempSql.setDouble(9, data.getMin());
+                tempSql.setDouble(10, data.getMax());
+                tempSql.setDouble(11, data.getAvg());
+                tempSql.executeUpdate();
             }
             conn.close();
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);

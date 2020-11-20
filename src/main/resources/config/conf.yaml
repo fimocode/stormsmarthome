@@ -8,7 +8,7 @@ iot analytics.windowList: [1, 5, 10, 15, 20, 30, 60, 120]
 
 notification.publishMQTT: true
 notification.brokerURL: "tcp://mqtt-broker:1883"
-notification.topicPrefix: "beta-"
+notification.topicPrefix: ""
 
 notification.house.logGap: 20
 notification.house.checkMin: false

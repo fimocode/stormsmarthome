@@ -7,6 +7,7 @@ public class HouseholdData extends Timeslice implements Serializable {
     public Integer houseId;
     public Integer householdId;
     public Double value;
+    public Double count;
     public Long lastUpdate;
     public Boolean saved = false;
 
@@ -15,15 +16,17 @@ public class HouseholdData extends Timeslice implements Serializable {
         this.houseId = houseId;
         this.householdId = householdId;
         this.value = value;
+        this.count = Double.valueOf(1);
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
 
-    public HouseholdData(Integer houseId, Integer householdId, String timeslice, Double value, Boolean saved) {
+    public HouseholdData(Integer houseId, Integer householdId, String timeslice, Double value, Double count, Boolean saved) {
         super(timeslice);
         this.houseId = houseId;
         this.householdId = householdId;
         this.value = value;
+        this.count = count;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = saved;
     }
@@ -44,6 +47,15 @@ public class HouseholdData extends Timeslice implements Serializable {
         this.value = value;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = saved;
+    }
+
+    public HouseholdData(Integer houseId, Integer householdId, String year, String month, String day, Integer sliceIndex, Integer sliceGap) {
+        super(year, month, day, sliceIndex, sliceGap);
+        this.houseId = houseId;
+        this.householdId = householdId;
+        this.value = Double.valueOf(0);
+        this.lastUpdate = System.currentTimeMillis();
+        this.saved = false;
     }
 
     public HouseholdData(Integer houseId, Integer householdId, String year, String month, String day, Integer sliceIndex, Integer sliceGap, Double value) {
@@ -100,6 +112,16 @@ public class HouseholdData extends Timeslice implements Serializable {
         }
     }
 
+    public Double getCount() {
+        return this.value;
+    }
+
+    public void setCount(Double count) {
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=false;
+        this.count=count;
+    }
+
     public Long getLastUpdate() {
         return this.lastUpdate;
     }
@@ -132,6 +154,21 @@ public class HouseholdData extends Timeslice implements Serializable {
         return this;
     }
 
+    public HouseholdData increaseValue(Double value){
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=false;
+        this.value+=value;
+        this.count++;
+        return this;
+    }
+
+    public HouseholdData count(Double count) {
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=false;
+        this.count=count;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "{" +
@@ -148,12 +185,18 @@ public class HouseholdData extends Timeslice implements Serializable {
             "}";
     }
 
-    // public String getUniqueId() {
-    //     return String.format("%d-%d-%s-%s-%s-%d", houseId, householdId, year, month, day, sliceIndex);
-    // }
+    public String getUniqueId() {
+        return String.format("%d-%d-%s-%s-%s-%d", houseId, householdId, year, month, day, sliceIndex);
+    }
 
     public String getHouseholdUniqueId() {
         return String.format("%d-%d", houseId, householdId);
     }
 
+    public Double getAvg() {
+        if(this.count==0){
+            return  Double.valueOf(0);
+        }
+        return this.value/this.count;
+    }
 }

@@ -204,7 +204,7 @@ public class DeviceData extends Timeslice implements Serializable{
             "}";
     }
 
-    public String getUniqueID(){
+    public String getUniqueId(){
         return String.format("%d-%d-%d-%s-%s-%s-%d", houseId, householdId, deviceId, year, month, day, sliceIndex);
     }
 

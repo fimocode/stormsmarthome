@@ -1,11 +1,11 @@
 package com.storm.iotdata.models;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-public class DeviceProp implements Serializable{
+public class HouseholdProp implements Serializable {
     public int houseId;
     public int householdId;
-    public int deviceId;
     public int sliceGap;
     public Double min;
     public Double max;
@@ -14,36 +14,21 @@ public class DeviceProp implements Serializable{
     public Long lastUpdate;
     public boolean saved = false;
 
-    public DeviceProp(int houseId, int householdId, int deviceId, int sliceGap) {
+    public HouseholdProp(int houseId, int householdId, int sliceGap) {
         this.houseId = houseId;
         this.householdId = householdId;
-        this.deviceId = deviceId;
         this.sliceGap = sliceGap;
         this.min = Double.valueOf(0);
         this.max = Double.valueOf(0);
-        this.count = Double.valueOf(0);
         this.avg = Double.valueOf(0);
+        this.count = Double.valueOf(0);
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
     }
 
-    public DeviceProp(int houseId, int householdId, int deviceId, int sliceGap, Double min, Double avg, Double max, Double count) {
+    public HouseholdProp(int houseId, int householdId, int sliceGap, Double min, Double max, Double avg) {
         this.houseId = houseId;
         this.householdId = householdId;
-        this.deviceId = deviceId;
-        this.sliceGap = sliceGap;
-        this.min = min;
-        this.max = max;
-        this.count = count;
-        this.avg = avg;
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved = false;
-    }
-
-    public DeviceProp(int houseId, int householdId, int deviceId, int sliceGap, Double min, Double avg, Double max) {
-        this.houseId = houseId;
-        this.householdId = householdId;
-        this.deviceId = deviceId;
         this.sliceGap = sliceGap;
         this.min = min;
         this.max = max;
@@ -53,10 +38,21 @@ public class DeviceProp implements Serializable{
         this.saved = false;
     }
 
-    public DeviceProp(int houseId, int householdId, int deviceId, int sliceGap, Double min, Double avg, Double max, Double count, Boolean saved) {
+    public HouseholdProp(int houseId, int householdId, int sliceGap, Double min, Double max, Double avg, Double count) {
         this.houseId = houseId;
         this.householdId = householdId;
-        this.deviceId = deviceId;
+        this.sliceGap = sliceGap;
+        this.min = min;
+        this.max = max;
+        this.avg = avg;
+        this.count = count;
+        this.lastUpdate = System.currentTimeMillis();
+        this.saved = false;
+    }
+
+    public HouseholdProp(int houseId, int householdId, int sliceGap, Double min, Double max, Double avg, Double count, boolean saved) {
+        this.houseId = houseId;
+        this.householdId = householdId;
         this.sliceGap = sliceGap;
         this.min = min;
         this.max = max;
@@ -86,21 +82,11 @@ public class DeviceProp implements Serializable{
         this.saved = false;
     }
 
-    public int getDeviceId() {
-        return this.deviceId;
-    }
-
-    public void setDeviceId(int deviceId) {
-        this.deviceId = deviceId;
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved = false;
-    }
-
     public int getSliceGap() {
-        return this.deviceId;
+        return this.sliceGap;
     }
 
-    public void setWindows(int sliceGap) {
+    public void setSliceGap(int sliceGap) {
         this.sliceGap = sliceGap;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
@@ -148,68 +134,74 @@ public class DeviceProp implements Serializable{
         return this.lastUpdate;
     }
 
-    public void setLastUpdate(Long lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setLastUpdate() {
+        this.lastUpdate = System.currentTimeMillis();
     }
 
     public boolean isSaved() {
         return this.saved;
     }
 
-    public void save() {
-        this.saved = true;
-    }
-
-    public DeviceProp houseId(int houseId) {
+    public HouseholdProp houseId(int houseId) {
         this.houseId = houseId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp householdId(int householdId) {
+    public HouseholdProp householdId(int householdId) {
         this.householdId = householdId;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp deviceId(int deviceId) {
-        this.deviceId = deviceId;
-        this.lastUpdate = System.currentTimeMillis();
-        this.saved = false;
-        return this;
-    }
-
-    public DeviceProp sliceGap(int sliceGap) {
+    public HouseholdProp sliceGap(int sliceGap) {
         this.sliceGap = sliceGap;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp min(Double min) {
+    public HouseholdProp min(Double min) {
         this.min = min;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp max(Double max) {
+    public HouseholdProp max(Double max) {
         this.max = max;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp avg(Double avg) {
+    public HouseholdProp avg(Double avg) {
         this.avg = avg;
         this.lastUpdate = System.currentTimeMillis();
         this.saved = false;
         return this;
     }
 
-    public DeviceProp addValue(Double value) {
+    public HouseholdProp count(Double count) {
+        this.count = count;
+        this.lastUpdate = System.currentTimeMillis();
+        this.saved = false;
+        return this;
+    }
+
+    public HouseholdProp lastUpdate() {
+        this.lastUpdate = System.currentTimeMillis();
+        return this;
+    }
+
+    public HouseholdProp save() {
+        this.saved = true;
+        return this;
+    }
+
+    public HouseholdProp addValue(Double value) {
         if(value != 0){
             this.avg = (this.avg*this.count + value)/(++this.count);
             if(value<this.getMin()){
@@ -222,14 +214,20 @@ public class DeviceProp implements Serializable{
         return this;
     }
 
-    public DeviceProp lastUpdate() {
-        this.lastUpdate = System.currentTimeMillis();
-        return this;
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof HouseholdProp)) {
+            return false;
+        }
+        HouseholdProp householdProp = (HouseholdProp) o;
+        return houseId == householdProp.houseId && householdId == householdProp.householdId && sliceGap == householdProp.sliceGap && Objects.equals(min, householdProp.min) && Objects.equals(max, householdProp.max) && Objects.equals(avg, householdProp.avg) && Objects.equals(count, householdProp.count) && Objects.equals(lastUpdate, householdProp.lastUpdate) && saved == householdProp.saved;
     }
 
-    public DeviceProp saved(boolean saved) {
-        this.saved = saved;
-        return this;
+    @Override
+    public int hashCode() {
+        return Objects.hash(houseId, householdId, sliceGap, min, max, avg, count, lastUpdate, saved);
     }
 
     @Override
@@ -237,7 +235,6 @@ public class DeviceProp implements Serializable{
         return "{" +
             " houseId='" + getHouseId() + "'" +
             ", householdId='" + getHouseholdId() + "'" +
-            ", deviceId='" + getDeviceId() + "'" +
             ", sliceGap='" + getSliceGap() + "'" +
             ", min='" + getMin() + "'" +
             ", max='" + getMax() + "'" +
@@ -249,10 +246,11 @@ public class DeviceProp implements Serializable{
     }
 
     public String getUniqueId(){
-        return getDeviceUniqueId();
+        return getHouseholdUniqueId();
+    }
+    
+    public String getHouseholdUniqueId() {
+        return String.format("%d-%d", houseId, householdId);
     }
 
-    public String getDeviceUniqueId(){
-        return String.format("%d-%d-%d", houseId, householdId, deviceId);
-    }
 }

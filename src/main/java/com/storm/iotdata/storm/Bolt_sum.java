@@ -32,12 +32,17 @@ public class Bolt_sum extends BaseRichBolt {
     public Integer triggerCount = 0;
     private OutputCollector _collector;
     public HashMap<String, HashMap<Integer, HashMap<Integer, HashMap<String, DeviceData> > > > allData = new HashMap<String, HashMap<Integer,HashMap<Integer,HashMap<String, DeviceData> > > >();
-    public HashMap <Integer, HashMap<String, HouseData> > finalHouseData = new HashMap <Integer, HashMap<String, HouseData> >();
-    public HashMap <String, HashMap<String, HouseholdData> > finalHouseholdData = new HashMap <String, HashMap<String, HouseholdData> >();
+    public HashMap <Integer, HashMap<String, HouseData> > finalHouseDataList = new HashMap <Integer, HashMap<String, HouseData> >();
+    public HashMap <String, HashMap<String, HouseholdData> > finalHouseholdDataList = new HashMap <String, HashMap<String, HouseholdData> >();
+    public HashMap <String, HouseProp> housePropList = new HashMap<String, HouseProp>();
+    public HashMap <String, HouseholdProp> householdPropList = new HashMap<String, HouseholdProp>();
+
     
     public Bolt_sum(int gap, StormConfig config) {
         this.gap = gap;
         this.config = config;
+        this.housePropList = DB_store.initHousePropList();
+        this.householdPropList = DB_store.initHouseholdPropList();
     }
 
     @Override
@@ -70,6 +75,8 @@ public class Bolt_sum extends BaseRichBolt {
                     Stack<HouseData> houseDataNeedClean = new Stack<HouseData>();
                     Stack<HouseholdData> householdDataNeedClean = new Stack<HouseholdData>();
                     Stack<String> timesliceNeedClean = new Stack<String>();
+                    Stack<HouseNotification> houseNotificationList = new Stack<HouseNotification>();
+                    Stack<HouseholdNotification> householdNotificationList = new Stack<HouseholdNotification>();
 
                     // Cal sum
                     for(String timeslice : allData.keySet()){
@@ -87,24 +94,24 @@ public class Bolt_sum extends BaseRichBolt {
                                     householdValue+=data.getAvg();
                                 }
                                 HouseholdData calHouseholdData = new HouseholdData(houseId, householdId, timeslice, householdValue);
-                                HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.getOrDefault(calHouseholdData.getHouseholdUniqueId(), new HashMap<String, HouseholdData>());
+                                HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdDataList.getOrDefault(calHouseholdData.getHouseholdUniqueId(), new HashMap<String, HouseholdData>());
                                 HouseholdData tempHouseholdData = tempFinalHouseholdData.getOrDefault(calHouseholdData.getSliceId(), calHouseholdData);
                                 tempHouseholdData.setValue(householdValue);
                                 tempFinalHouseholdData.put(calHouseholdData.getSliceId(), tempHouseholdData);
-                                finalHouseholdData.put(calHouseholdData.getHouseholdUniqueId(), tempFinalHouseholdData);
+                                finalHouseholdDataList.put(calHouseholdData.getHouseholdUniqueId(), tempFinalHouseholdData);
                             }
                             HouseData calHouseData = new HouseData(houseId, timeslice, houseValue);
-                            HashMap<String, HouseData> tempFinalHouseData = finalHouseData.getOrDefault(calHouseData.getHouseId(), new HashMap<String, HouseData>());
+                            HashMap<String, HouseData> tempFinalHouseData = finalHouseDataList.getOrDefault(calHouseData.getHouseId(), new HashMap<String, HouseData>());
                             HouseData tempHouseData = tempFinalHouseData.getOrDefault(calHouseData.getSliceId(), calHouseData);
                             tempHouseData.setValue(houseValue);
                             tempFinalHouseData.put(calHouseData.getSliceId(), tempHouseData);
-                            finalHouseData.put(calHouseData.getHouseId(), tempFinalHouseData);
+                            finalHouseDataList.put(calHouseData.getHouseId(), tempFinalHouseData);
                         }
                     }
 
                     //Init data
-                    for(Integer houseId : finalHouseData.keySet()) {
-                        HashMap<String, HouseData> tempFinalHouseData = finalHouseData.get(houseId);
+                    for(Integer houseId : finalHouseDataList.keySet()) {
+                        HashMap<String, HouseData> tempFinalHouseData = finalHouseDataList.get(houseId);
                         for(String timeslice : tempFinalHouseData.keySet()){
                             finalHouseDataSize++;
                             HouseData houseData = tempFinalHouseData.get(timeslice);
@@ -117,8 +124,8 @@ public class Bolt_sum extends BaseRichBolt {
                         }
                     }
 
-                    for(String uniqueHouseholdId : finalHouseholdData.keySet()) {
-                        HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdData.get(uniqueHouseholdId);
+                    for(String uniqueHouseholdId : finalHouseholdDataList.keySet()) {
+                        HashMap<String, HouseholdData> tempFinalHouseholdData = finalHouseholdDataList.get(uniqueHouseholdId);
                         for(String timeslice : tempFinalHouseholdData.keySet()){
                             finalHouseholdDataSize++;
                             HouseholdData householdData = tempFinalHouseholdData.get(timeslice);
@@ -142,33 +149,84 @@ public class Bolt_sum extends BaseRichBolt {
                         }
                     }
 
-                    // DB Store
+                    // DB store data
                     if(houseDataNeedSave.size()!=0){
                         if(DB_store.pushHouseData(houseDataNeedSave, new File("./tmp/houseData2db-" + gap + ".lck"))){
                             for(HouseData data : houseDataNeedSave){
-                                finalHouseData.get(data.getHouseId()).get(data.getSliceId()).save();
+                                finalHouseDataList.get(data.getHouseId()).get(data.getSliceId()).save();
                             }
                         }
                     }
                     if(householdDataNeedSave.size()!=0){
                         if(DB_store.pushHouseHoldData(householdDataNeedSave, new File("./tmp/householdData2db-" + gap + ".lck"))){
                             for(HouseholdData data : householdDataNeedSave){
-                                finalHouseholdData.get(data.getHouseholdUniqueId()).get(data.getSliceId()).save();
+                                finalHouseholdDataList.get(data.getHouseholdUniqueId()).get(data.getSliceId()).save();
                             }
                         }
                     }
 
-                    //Wipe unused data
-                    for(String timeslice : timesliceNeedClean){
-                        allData.remove(timeslice);
+                    // DB store prop
+                    Stack<HouseProp> tempHousePropList = new Stack<HouseProp>();
+                    tempHousePropList.addAll(housePropList.values());
+                    if(DB_store.pushHouseProp(tempHousePropList, new File("./tmp/houseProp2db-"+ gap +".lck"))){
+                        for(HouseProp houseProp : tempHousePropList){
+                            housePropList.get(houseProp.getHouseUniqueId()).save();
+                        }
+                    }
+                    Stack<HouseholdProp> tempHouseholdPropList = new Stack<HouseholdProp>();
+                    tempHouseholdPropList.addAll(householdPropList.values());
+                    if(DB_store.pushHouseholdProp(tempHouseholdPropList, new File("./tmp/householdProp2db-"+ gap +".lck"))){
+                        for(HouseholdProp householdProp : tempHouseholdPropList){
+                            householdPropList.get(householdProp.getHouseholdUniqueId()).save();
+                        }
                     }
 
-                    for(HouseData houseData : houseDataNeedClean){
-                        finalHouseData.get(houseData.getHouseId()).remove(houseData.getSliceId());
+                    // Check Outlier
+                    for(HouseData houseData : houseDataNeedSave){
+                        HouseProp houseProp = housePropList.getOrDefault(houseData.getHouseUniqueId(), new HouseProp(houseData.getHouseId(), houseData.getGap()));
+                        // Check min
+                        if(config.getHouseCheckMin() && houseProp.getMin()!=0 && (houseProp.getMin() - houseData.getAvg()) <= (houseProp.getMin()*config.getHouseLogGap()/100)){
+                            houseNotificationList.push(new HouseNotification(-1, houseData, houseProp));
+                        }
+                        // Check avg
+                        if(config.getHouseCheckAvg() && houseProp.getAvg()!=0 && (houseProp.getAvg() - houseData.getAvg()) >= (houseProp.getAvg()*config.getHouseLogGap()/100)){
+                            houseNotificationList.push(new HouseNotification(0, houseData, houseProp));
+                        }
+                        // Check max
+                        if(config.getHouseCheckMax() && houseProp.getMax()!=0 && (houseProp.getMax() - houseData.getAvg()) >= (houseProp.getMax()*config.getHouseLogGap()/100)){
+                            houseNotificationList.push(new HouseNotification(0, houseData, houseProp));
+                        }
+                        housePropList.put(houseData.getHouseUniqueId(), houseProp.addValue(houseData.getAvg()));
                     }
 
-                    for(HouseholdData householdData : householdDataNeedClean) {
-                        finalHouseholdData.get(householdData.getHouseholdUniqueId()).remove(householdData.getSliceId());
+                    for(HouseholdData householdData : householdDataNeedSave){
+                        HouseholdProp householdProp = householdPropList.getOrDefault(householdData.getHouseholdUniqueId(), new HouseholdProp(householdData.getHouseId(), householdData.getHouseholdId(), householdData.getGap()));
+                        // Check min
+                        if(config.getHouseCheckMin() && householdProp.getMin()!=0 && (householdProp.getMin() - householdData.getAvg()) <= (householdProp.getMin()*config.getHouseLogGap()/100)){
+                            householdNotificationList.push(new HouseholdNotification(-1, householdData, householdProp));
+                        }
+                        // Check avg
+                        if(config.getHouseCheckAvg() && householdProp.getAvg()!=0 && (householdProp.getAvg() - householdData.getAvg()) >= (householdProp.getAvg()*config.getHouseLogGap()/100)){
+                            householdNotificationList.push(new HouseholdNotification(0, householdData, householdProp));
+                        }
+                        // Check max
+                        if(config.getHouseCheckMax() && householdProp.getMax()!=0 && (householdProp.getMax() - householdData.getAvg()) >= (householdProp.getMax()*config.getHouseLogGap()/100)){
+                            householdNotificationList.push(new HouseholdNotification(0, householdData, householdProp));
+                        }
+                        householdPropList.put(householdData.getHouseholdUniqueId(), householdProp.addValue(householdData.getAvg()));
+                    }
+
+                    // Publish noti
+                    if(config.isNotificationMQTT()){
+                        MQTT_publisher.houseNotificationsPublish(houseNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                        MQTT_publisher.householdNotificationsPublish(householdNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                    }
+                    // Save noti
+                    if(DB_store.pushHouseNotification(houseNotificationList, new File("./tmp/housenoti2db-" + gap + ".lck"))){
+                        // House noti pushed
+                    }
+                    if(DB_store.pushHouseholdNotification(householdNotificationList, new File("./tmp/householdnoti2db-" + gap + ".lck"))){
+                        // House noti pushed
                     }
 
                     //Logging
@@ -176,6 +234,7 @@ public class Bolt_sum extends BaseRichBolt {
                     System.out.print(String.format("[Bolt_sum_%-3d] HouseData | Total: %-10d | Need save: %-10d | Need clean: %-10d\n", gap, finalHouseDataSize, houseDataNeedSave.size(), houseDataNeedClean.size()));
                     System.out.print(String.format("[Bolt_sum_%-3d] HouseholdData | Total: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, finalHouseholdDataSize, householdDataNeedSave.size(), householdDataNeedClean.size()));
                     System.out.print(String.format("[Bolt_sum_%-3d] Timeslice | Total: %-10d | Need clean: %-10d\n", gap, allData.size(), timesliceNeedClean.size()));
+                    System.out.print(String.format("[Bolt_sum_%-3d] Notification | House: %-10d | Household: %-10d\n", gap, houseNotificationList.size(), householdNotificationList.size()));
                     System.out.print(String.format("[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
 
                     try {
@@ -185,6 +244,7 @@ public class Bolt_sum extends BaseRichBolt {
                         log.write(String.format("[Bolt_sum_%-3d] HouseData | Total: %-10d | Need save: %-10d | Need clean: %-10d\n", gap, finalHouseDataSize, houseDataNeedSave.size(), houseDataNeedClean.size()));
                         log.write(String.format("[Bolt_sum_%-3d] HouseholdData | Total: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, finalHouseholdDataSize, householdDataNeedSave.size(), householdDataNeedClean.size()));
                         log.write(String.format("[Bolt_sum_%-3d] Timeslice | Total: %-10d | Need clean: %-10d\n", gap, allData.size(), timesliceNeedClean.size()));
+                        log.write(String.format("[Bolt_sum_%-3d] Notification | House: %-10d | Household: %-10d\n", gap, houseNotificationList.size(), householdNotificationList.size()));
                         log.write(String.format("[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
                         pwOb.close();
                         log.close();
@@ -192,6 +252,20 @@ public class Bolt_sum extends BaseRichBolt {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
+
+                    //Wipe unused data
+                    for(String timeslice : timesliceNeedClean){
+                        allData.remove(timeslice);
+                    }
+
+                    for(HouseData houseData : houseDataNeedClean){
+                        finalHouseDataList.get(houseData.getHouseId()).remove(houseData.getSliceId());
+                    }
+
+                    for(HouseholdData householdData : householdDataNeedClean) {
+                        finalHouseholdDataList.get(householdData.getHouseholdUniqueId()).remove(householdData.getSliceId());
+                    }
+
                 }
             }
             else{
@@ -208,7 +282,7 @@ public class Bolt_sum extends BaseRichBolt {
                 HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > > sliceData = allData.getOrDefault(tempData.getSliceId(), new HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > >());
                 HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.getOrDefault(houseId, new HashMap<Integer,HashMap<String, DeviceData> >());
                 HashMap<String, DeviceData> householdData = houseData.getOrDefault(householdId, new HashMap<String, DeviceData>());
-                householdData.put(tempData.getUniqueID(), tempData);
+                householdData.put(tempData.getUniqueId(), tempData);
                 houseData.put(householdId, householdData);
                 sliceData.put(houseId, houseData);
                 allData.put(tempData.getSliceId(), sliceData);

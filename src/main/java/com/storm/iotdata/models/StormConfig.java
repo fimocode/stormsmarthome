@@ -19,6 +19,7 @@ public class StormConfig implements Serializable{
     private List<Integer> stormWindowList = Arrays.asList(new Integer[] { 1, 5, 10, 15, 20, 30, 60, 120 });
     private boolean notificationMQTT = true;
     private String notificationBrokerURL = "tcp://mqtt-broker:1883";
+    private String mqttTopicPrefix = "";
     private int houseLogGap = 20;
     private boolean houseCheckMin = false;
     private boolean houseCheckAvg = true;
@@ -105,10 +106,6 @@ public class StormConfig implements Serializable{
         return this.notificationMQTT;
     }
 
-    public boolean getNotificationMQTT() {
-        return this.notificationMQTT;
-    }
-
     public void setNotificationMQTT(boolean notificationMQTT) {
         this.notificationMQTT = notificationMQTT;
     }
@@ -120,6 +117,16 @@ public class StormConfig implements Serializable{
     public void setNotificationBrokerURL(String notificationBrokerURL) {
         this.notificationBrokerURL = notificationBrokerURL;
     }
+
+
+    public String getMqttTopicPrefix() {
+        return this.mqttTopicPrefix;
+    }
+
+    public void setMqttTopicPrefix(String mqttTopicPrefix) {
+        this.mqttTopicPrefix = mqttTopicPrefix;
+    }
+
 
     public int getHouseLogGap() {
         return this.houseLogGap;
