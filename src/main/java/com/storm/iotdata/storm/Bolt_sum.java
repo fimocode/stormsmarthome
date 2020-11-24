@@ -189,11 +189,11 @@ public class Bolt_sum extends BaseRichBolt {
                             houseNotificationList.push(new HouseNotification(-1, houseData, houseProp));
                         }
                         // Check avg
-                        if(config.getHouseCheckAvg() && houseProp.getAvg()!=0 && (houseProp.getAvg() - houseData.getAvg()) >= (houseProp.getAvg()*config.getHouseLogGap()/100)){
+                        if(config.getHouseCheckAvg() && houseProp.getAvg()!=0 && (houseData.getAvg() - houseProp.getAvg()) >= (houseProp.getAvg()*config.getHouseLogGap()/100)){
                             houseNotificationList.push(new HouseNotification(0, houseData, houseProp));
                         }
                         // Check max
-                        if(config.getHouseCheckMax() && houseProp.getMax()!=0 && (houseProp.getMax() - houseData.getAvg()) >= (houseProp.getMax()*config.getHouseLogGap()/100)){
+                        if(config.getHouseCheckMax() && houseProp.getMax()!=0 && (houseData.getAvg() - houseProp.getMax()) >= (houseProp.getMax()*config.getHouseLogGap()/100)){
                             houseNotificationList.push(new HouseNotification(0, houseData, houseProp));
                         }
                         housePropList.put(houseData.getHouseUniqueId(), houseProp.addValue(houseData.getAvg()));
@@ -206,11 +206,11 @@ public class Bolt_sum extends BaseRichBolt {
                             householdNotificationList.push(new HouseholdNotification(-1, householdData, householdProp));
                         }
                         // Check avg
-                        if(config.getHouseCheckAvg() && householdProp.getAvg()!=0 && (householdProp.getAvg() - householdData.getAvg()) >= (householdProp.getAvg()*config.getHouseLogGap()/100)){
+                        if(config.getHouseCheckAvg() && householdProp.getAvg()!=0 && (householdData.getAvg() - householdProp.getAvg()) >= (householdProp.getAvg()*config.getHouseLogGap()/100)){
                             householdNotificationList.push(new HouseholdNotification(0, householdData, householdProp));
                         }
                         // Check max
-                        if(config.getHouseCheckMax() && householdProp.getMax()!=0 && (householdProp.getMax() - householdData.getAvg()) >= (householdProp.getMax()*config.getHouseLogGap()/100)){
+                        if(config.getHouseCheckMax() && householdProp.getMax()!=0 && (householdData.getAvg() - householdProp.getMax()) >= (householdProp.getMax()*config.getHouseLogGap()/100)){
                             householdNotificationList.push(new HouseholdNotification(0, householdData, householdProp));
                         }
                         householdPropList.put(householdData.getHouseholdUniqueId(), householdProp.addValue(householdData.getAvg()));
