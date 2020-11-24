@@ -47,7 +47,7 @@ public class Bolt_sum extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("houseId", "year", "month", "day", "index", "value"));
+        declarer.declare(new Fields("type", "data"));
     }
 
     @Override
@@ -273,29 +273,24 @@ public class Bolt_sum extends BaseRichBolt {
                     for(HouseholdData householdData : householdDataNeedClean) {
                         finalHouseholdDataList.get(householdData.getHouseholdUniqueId()).remove(householdData.getSliceId());
                     }
-
                 }
+                _collector.ack(tuple);
             }
-            else{
-                Integer houseId         = (Integer) tuple.getValueByField("houseId");
-                Double  avg             = (Double) tuple.getValueByField("avg");
-                Integer householdId     = (Integer)tuple.getValueByField("householdId");
-                Integer deviceId        = (Integer)tuple.getValueByField("deviceId");
-                Integer index           = (Integer)tuple.getValueByField("index");
-                String year             = (String)tuple.getValueByField("year");
-                String month            = (String)tuple.getValueByField("month");
-                String day              = (String)tuple.getValueByField("day");
-                DeviceData tempData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap).avg(avg).save();
+            else if(tuple.getValueByField("type").equals(DeviceData.class)){
+                DeviceData tempData     = (DeviceData) tuple.getValueByField("data");
 
                 HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > > sliceData = allData.getOrDefault(tempData.getSliceId(), new HashMap<Integer, HashMap<Integer,HashMap<String, DeviceData> > >());
-                HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.getOrDefault(houseId, new HashMap<Integer,HashMap<String, DeviceData> >());
-                HashMap<String, DeviceData> householdData = houseData.getOrDefault(householdId, new HashMap<String, DeviceData>());
+                HashMap<Integer,HashMap<String, DeviceData> > houseData = sliceData.getOrDefault(tempData.getHouseId(), new HashMap<Integer,HashMap<String, DeviceData> >());
+                HashMap<String, DeviceData> householdData = houseData.getOrDefault(tempData.getHouseholdId(), new HashMap<String, DeviceData>());
                 householdData.put(tempData.getUniqueId(), tempData);
-                houseData.put(householdId, householdData);
-                sliceData.put(houseId, houseData);
+                houseData.put(tempData.getHouseholdId(), householdData);
+                sliceData.put(tempData.getHouseId(), houseData);
                 allData.put(tempData.getSliceId(), sliceData);
+                _collector.ack(tuple);
             }
-            _collector.ack(tuple);
+            else{
+                _collector.fail(tuple);
+            }
         }
         catch (Exception ex){
             ex.printStackTrace();

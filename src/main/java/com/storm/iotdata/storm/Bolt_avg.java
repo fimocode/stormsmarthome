@@ -69,7 +69,7 @@ public class Bolt_avg extends BaseRichBolt {
                     for(String key : deviceDataList.keySet()){
                         DeviceData data = deviceDataList.get(key);
                         if(!data.isSaved()){
-                            _collector.emit(new Values(data.getHouseId(), data.getHouseholdId(), data.getDeviceId(), data.getYear(), data.getMonth(), data.getDay(), data.getIndex(), data.getAvg()));
+                            _collector.emit(new Values(data.getClass(), data));
                             needSave.push(data);
                         }
                         else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*gap)){
@@ -158,15 +158,15 @@ public class Bolt_avg extends BaseRichBolt {
                 }
             }
             else{
-                Integer houseId        = (Integer) tuple.getValueByField("houseId");
-                Integer householdId    = (Integer)tuple.getValueByField("householdId");
-                Integer deviceId       = (Integer)tuple.getValueByField("deviceId");
+                Integer houseId         = (Integer) tuple.getValueByField("houseId");
+                Integer householdId     = (Integer)tuple.getValueByField("householdId");
+                Integer deviceId        = (Integer)tuple.getValueByField("deviceId");
                 String year             = (String)tuple.getValueByField("year");
                 String month            = (String)tuple.getValueByField("month");
                 String day              = (String)tuple.getValueByField("day");
-                Integer index       = (Integer) tuple.getValueByField("index");
+                Integer index           = (Integer) tuple.getValueByField("sliceIndex");
                 Double  value           = (Double) tuple.getValueByField("value");
-                DeviceData deviceData = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap);
+                DeviceData deviceData   = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap);
                 deviceDataList.put(deviceData.getUniqueId(), deviceDataList.getOrDefault(deviceData.getUniqueId(), deviceData ).increaseValue(value));
             }
             _collector.ack(tuple);
@@ -178,7 +178,7 @@ public class Bolt_avg extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("houseId","householdId","deviceId","year","month","day","index","avg"));
+        declarer.declare(new Fields("type","data"));
     }
     
 }
