@@ -12,6 +12,9 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.storm.iotdata.models.SpoutProp;
+import com.storm.iotdata.models.StormConfig;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
@@ -36,16 +39,19 @@ public class Spout_data implements MqttCallback, IRichSpout {
     Long fail = Long.valueOf(0);
     Long speed = Long.valueOf(0);
     Long load = Long.valueOf(0);
+    Long totalLoad = Long.valueOf(0);
     Long last = System.currentTimeMillis();
-    Integer count = 0;
-    String brokerUrl = "localhost";
-    String clientId = "";
+    Integer tick = 0;
     MqttClient client;
-    String topic = "#";
+    String clientId = "";
+    String topic = "iot-data";
+    String logTopic = "%sspout-log";
+    StormConfig config;
 
-    public Spout_data(String broker_url, String topic) {
-        this.brokerUrl = broker_url;
+    public Spout_data( StormConfig config, String topic) {
+        this.config = config;
         this.topic = topic;
+        clientId = new String(config.getTopologyName()+"@"+topic);
         messages = new ConcurrentLinkedQueue<String>();
         if (!(new File("tmp").isDirectory())) {
             new File("tmp").mkdir();
@@ -74,14 +80,14 @@ public class Spout_data implements MqttCallback, IRichSpout {
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
-        System.out.println("[Spout-data-" + topic + "] Connecting to broker (" + brokerUrl + ")..");
+        System.out.println("[Spout-data-" + topic + "] Connecting to broker (" + config.getSpoutBrokerURL() + ")..");
         try {
-            client = new MqttClient(brokerUrl, clientId);
+            client = new MqttClient(config.getSpoutBrokerURL(), clientId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
             options.setConnectionTimeout(10);
             client.connect(options);
-            System.out.println("[Spout-data-" + topic + "] Connected to broker (" + brokerUrl + ").");
+            System.out.println("[Spout-data-" + topic + "] Connected to broker (" + config.getSpoutBrokerURL() + ").");
             client.setCallback(this);
         } catch (MqttException e) {
             e.printStackTrace();
@@ -142,33 +148,37 @@ public class Spout_data implements MqttCallback, IRichSpout {
 	}
 
 	public void nextTuple() {
-		if(messages.isEmpty()){
-            return;
-        }
-        String message = messages.poll();
-        String[] metric = message.split(",");
-        if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-            _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]), message);
-            load++;
-        }
-        if(++count>10000){
-            count=0;
+        tick++;
+		while(!messages.isEmpty()){
+            tick++;
             try {
-                FileWriter log = new FileWriter(new File("tmp/spout_data_log_"+ topic +".tmp"), false);
-                PrintWriter pwOb = new PrintWriter(log , false);
-                pwOb.flush();
-                log.write(speed*1000/(System.currentTimeMillis()-last)+"|"+load*1000/(System.currentTimeMillis()-last)+"|"+total+"|"+messages.size()+"|"+success+"|"+fail);
-                pwOb.close();
-                log.close();
-                speed = Long.valueOf(0);
-                load = Long.valueOf(0);
-                last=System.currentTimeMillis();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
+                String message = messages.poll();
+                String[] metric = message.split(",");
+                if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
+                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]), message);
+                    load++;
+                    totalLoad++;
+                }
+                if(System.currentTimeMillis()-last > 10000){
+                    log();
+                }
+            } catch (Exception e){
                 e.printStackTrace();
             }
         }
-	}
+        if(System.currentTimeMillis()-last > 10000){
+            log();
+        }
+    }
+    
+    public void log(){
+        tick=0;
+        String log = new SpoutProp(clientId,client.isConnected(),(float)(speed*1000/(System.currentTimeMillis()-last)),(float)(load*1000/(System.currentTimeMillis()-last)),total,totalLoad,messages.size(),success,fail).toString();
+        new SpoutDataLogger(client, String.format(logTopic, config.getMqttTopicPrefix()), new File("tmp/spout_data_log_"+ topic +".tmp"), log).start();
+        speed = Long.valueOf(0);
+        load = Long.valueOf(0);
+        last = System.currentTimeMillis();
+    }
 
 	public void ack(Object msgId) {
         success++;
@@ -186,5 +196,35 @@ public class Spout_data implements MqttCallback, IRichSpout {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         /* uses default stream id */
         declarer.declare(new Fields("timestamp", "value", "property", "plugId","householdId", "houseId"));
-    }    
+    }
+}
+
+class SpoutDataLogger extends Thread{
+    String log;
+    MqttClient client;
+    String logTopic;
+    File logFile;
+
+    public SpoutDataLogger(MqttClient client,String logTopic, File logFile, String log){
+        this.client = client;
+        this.logTopic = logTopic;
+        this.logFile = logFile;
+        this.log = log;
+    }
+
+    @Override
+    public void run(){
+        try {
+            FileWriter logWriter = new FileWriter(logFile, false);
+            PrintWriter pwOb = new PrintWriter(logWriter , false);
+            pwOb.flush();
+            logWriter.write(log);
+            pwOb.close();
+            logWriter.close();
+            byte[] payLoad = log.getBytes();
+            client.publish(logTopic, payLoad, 0, true);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }

@@ -715,6 +715,7 @@ class DeviceProp2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -758,6 +759,7 @@ class HouseholdProp2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -800,6 +802,7 @@ class HouseProp2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -841,6 +844,7 @@ class DeviceData2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -887,6 +891,7 @@ class HouseholdData2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -930,6 +935,7 @@ class HouseData2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -974,6 +980,7 @@ class DeviceNotification2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -1020,6 +1027,7 @@ class HouseholdNotification2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL
@@ -1065,6 +1073,7 @@ class HouseNotification2DB extends Thread {
     public void run() {
         try {
             locker.createNewFile();
+            locker.deleteOnExit();
             // Init connection
             Connection conn = DB_store.initConnection();
             // Init SQL

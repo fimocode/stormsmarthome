@@ -56,8 +56,8 @@ public class Bolt_avg extends BaseRichBolt {
                 if(((++triggerCount)%gap)==0){
                     triggerCount = 0;
                     Long startTime = (Long) tuple.getValueByField("trigger");
-                    Long spoutSpeed = (Long) tuple.getValueByField("spoutSpeed");
-                    Long spoutLoad = (Long) tuple.getValueByField("spoutLoad");
+                    Float spoutSpeed = (Float) tuple.getValueByField("spoutSpeed");
+                    Float spoutLoad = (Float) tuple.getValueByField("spoutLoad");
                     Long spoutTotal = (Long) tuple.getValueByField("spoutTotal");
 
                     Long startExec = System.currentTimeMillis();

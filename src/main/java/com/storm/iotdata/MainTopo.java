@@ -87,7 +87,7 @@ public class MainTopo {
                 builder.setSpout("spout-trigger", new Spout_trigger(60), 1);
 
                 for (String topic : config.getSpoutTopicList()) {
-                    builder.setSpout("spout-data-" + topic, new Spout_data(config.getSpoutBrokerURL(), topic), 1);
+                    builder.setSpout("spout-data-" + topic, new Spout_data(config, topic), 1);
                 }
 
                 HashMap<String, BoltDeclarer> splitList = new HashMap<String, BoltDeclarer>();

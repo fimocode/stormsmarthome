@@ -5,7 +5,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import com.google.gson.Gson;
+import com.storm.iotdata.models.SpoutProp;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -36,18 +42,17 @@ public class Spout_trigger extends BaseRichSpout {
             Thread.sleep(interval * 1000);
             File tempFolder = new File("./tmp");
             File[] spoutLogs = tempFolder.listFiles();
-            Long speed = Long.valueOf(0), load = Long.valueOf(0), total = Long.valueOf(0);
+            Float speed = Float.valueOf(0), load = Float.valueOf(0);
+            Long total = Long.valueOf(0);
             for (File Log : spoutLogs) {
                 try {
                     if(Log.getName().contains("spout_data_log_")){
-                        BufferedReader logReader = new BufferedReader(new FileReader(Log));
-                        String[] datas = logReader.readLine().split("|");
-                        if(datas.length >= 3){
-                            speed+=Long.valueOf(datas[0]);
-                            load+=Long.valueOf(datas[1]);
-                            total+=Long.valueOf(datas[2]);
-                        }
-                        logReader.close();
+                        String data = FileUtils.readFileToString(Log, StandardCharsets.UTF_8);
+                        Gson gson = new Gson();
+                        SpoutProp datas = gson.fromJson(data, SpoutProp.class);
+                        speed+=datas.getTotalSpeed();
+                        load+=datas.getLoadSpeed();
+                        total+=datas.getTotal();
                     }
                 } catch (FileNotFoundException e) {
                     // TODO Auto-generated catch block
