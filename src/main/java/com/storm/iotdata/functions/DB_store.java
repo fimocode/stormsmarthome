@@ -727,10 +727,10 @@ class DeviceProp2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (DeviceProp data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into device_prop (house_id,household_id,device_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (DeviceProp data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());
                 tempSql.setInt(3, data.getDeviceId());
@@ -739,8 +739,9 @@ class DeviceProp2DB extends Thread {
                 tempSql.setDouble(6, data.getAvg());
                 tempSql.setDouble(7, data.getMax());
                 tempSql.setDouble(8, data.getCount());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -779,10 +780,10 @@ class HouseholdProp2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (HouseholdProp data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into household_prop (house_id,household_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (HouseholdProp data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());
                 tempSql.setInt(3, data.getSliceGap());
@@ -790,8 +791,9 @@ class HouseholdProp2DB extends Thread {
                 tempSql.setDouble(5, data.getAvg());
                 tempSql.setDouble(6, data.getMax());
                 tempSql.setDouble(7, data.getCount());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -830,18 +832,19 @@ class HouseProp2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (HouseProp data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into house_prop (house_id,slice_gap,min,avg,max,count) values (?,?,?,?,?,?) on duplicate key update min=VALUES(min), avg=VALUES(avg), max=VALUES(max), count=VALUES(count)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (HouseProp data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getSliceGap());
                 tempSql.setDouble(3, data.getMin());
                 tempSql.setDouble(4, data.getAvg());
                 tempSql.setDouble(5, data.getMax());
                 tempSql.setDouble(6, data.getCount());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -880,10 +883,10 @@ class DeviceData2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (DeviceData data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into device_data (house_id,household_id,device_id,year,month,day,slice_gap,slice_index,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), count=VALUES(count), avg=VALUES(avg)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (DeviceData data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());
                 tempSql.setInt(3, data.getDeviceId());
@@ -895,8 +898,9 @@ class DeviceData2DB extends Thread {
                 tempSql.setDouble(9, data.getValue());
                 tempSql.setDouble(10, data.getCount());
                 tempSql.setDouble(11, data.getAvg());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -935,10 +939,10 @@ class HouseholdData2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (HouseholdData data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into household_data (house_id,household_id,year,month,day,slice_gap,slice_index,avg) values (?,?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (HouseholdData data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());
                 tempSql.setString(3, data.getYear());
@@ -947,8 +951,9 @@ class HouseholdData2DB extends Thread {
                 tempSql.setInt(6, data.getGap());
                 tempSql.setInt(7, data.getIndex());
                 tempSql.setDouble(8, data.getValue());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -987,10 +992,10 @@ class HouseData2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (HouseData data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into house_data (house_id,year,month,day,slice_gap,slice_index,avg) values (?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (HouseData data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setString(2, data.getYear());
                 tempSql.setString(3, data.getMonth());
@@ -998,12 +1003,13 @@ class HouseData2DB extends Thread {
                 tempSql.setInt(5, data.getGap());
                 tempSql.setInt(6, data.getIndex());
                 tempSql.setDouble(7, data.getValue());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
                 // String statementText = tempSql.toString();
                 // sql += statementText.substring(statementText.slice_indexOf(": ") + 2) + ",";
             }
             // sql = sql.substring(0, sql.length() - 1) + "";
             // stmt.executeUpdate(sql);
+            tempSql.executeBatch();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
@@ -1042,10 +1048,10 @@ class DeviceNotification2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
-            for (DeviceNotification data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
+            PreparedStatement tempSql = conn.prepareStatement(
                         "insert into device_notification (type,house_id,household_id,device_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
                         Statement.RETURN_GENERATED_KEYS);
+            for (DeviceNotification data : dataList) {
                 tempSql.setInt(1, data.getType());
                 tempSql.setInt(2, data.getHouseId());
                 tempSql.setInt(3, data.getHouseholdId());
@@ -1059,8 +1065,9 @@ class DeviceNotification2DB extends Thread {
                 tempSql.setDouble(11, data.getMin());
                 tempSql.setDouble(12, data.getMax());
                 tempSql.setDouble(13, data.getAvg());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
@@ -1099,10 +1106,10 @@ class HouseholdNotification2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
+            PreparedStatement tempSql = conn.prepareStatement(
+                    "insert into household_notification (type,house_id,household_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
+                    Statement.RETURN_GENERATED_KEYS);
             for (HouseholdNotification data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
-                        "insert into household_notification (type,house_id,household_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
-                        Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getType());
                 tempSql.setInt(2, data.getHouseId());
                 tempSql.setInt(3, data.getHouseholdId());
@@ -1115,8 +1122,9 @@ class HouseholdNotification2DB extends Thread {
                 tempSql.setDouble(10, data.getMin());
                 tempSql.setDouble(11, data.getMax());
                 tempSql.setDouble(12, data.getAvg());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
@@ -1156,10 +1164,10 @@ class HouseNotification2DB extends Thread {
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
+            PreparedStatement tempSql = conn.prepareStatement(
+                    "insert into house_notification (type,house_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
+                    Statement.RETURN_GENERATED_KEYS);
             for (HouseNotification data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement(
-                        "insert into house_notification (type,house_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
-                        Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getType());
                 tempSql.setInt(2, data.getHouseId());
                 tempSql.setString(3, data.getYear());
@@ -1171,8 +1179,9 @@ class HouseNotification2DB extends Thread {
                 tempSql.setDouble(9, data.getMin());
                 tempSql.setDouble(10, data.getMax());
                 tempSql.setDouble(11, data.getAvg());
-                tempSql.executeUpdate();
+                tempSql.addBatch();
             }
+            tempSql.executeBatch();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
