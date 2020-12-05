@@ -612,6 +612,7 @@ public class DB_store {
                             rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempDeviceProp.getDeviceUniqueId(), tempDeviceProp);
                 }
+                conn.close();
                 return result;
             }
         } catch (Exception ex) {
@@ -649,6 +650,7 @@ public class DB_store {
                             rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempHouseholdProp.getHouseholdUniqueId(), tempHouseholdProp);
                 }
+                conn.close();
                 return result;
             }
         } catch (Exception ex) {
@@ -685,6 +687,7 @@ public class DB_store {
                             rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempHouseProp.getHouseUniqueId(), tempHouseProp);
                 }
+                conn.close();
                 return result;
             }
         } catch (Exception ex) {
@@ -1172,12 +1175,11 @@ class HouseNotification2DB extends Thread {
 
     @Override
     public void run() {
-        Connection conn;
         try {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection();
             // Init SQL
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
