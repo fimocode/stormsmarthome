@@ -740,10 +740,8 @@ class DeviceProp2DB extends Thread {
             conn.close();
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new DeviceProp2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -785,10 +783,8 @@ class HouseholdProp2DB extends Thread {
             conn.close();
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new HouseholdProp2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -829,10 +825,8 @@ class HouseProp2DB extends Thread {
             conn.close();
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new HouseProp2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -878,10 +872,8 @@ class DeviceData2DB extends Thread {
             conn.close();
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new DeviceData2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -924,10 +916,8 @@ class HouseholdData2DB extends Thread {
             conn.close();
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new HouseholdData2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -971,10 +961,8 @@ class HouseData2DB extends Thread {
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new HouseData2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -1020,10 +1008,8 @@ class DeviceNotification2DB extends Thread {
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new DeviceNotification2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -1068,10 +1054,8 @@ class HouseholdNotification2DB extends Thread {
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new HouseholdNotification2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
@@ -1115,10 +1099,8 @@ class HouseNotification2DB extends Thread {
             System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             locker.delete();
-            this.start();
+            new HouseNotification2DB(dataList, locker).start();
             ex.printStackTrace();
-        } finally {
-            locker.delete();
         }
     }
 }
