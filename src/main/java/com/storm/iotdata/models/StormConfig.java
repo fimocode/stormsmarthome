@@ -13,6 +13,7 @@ import org.yaml.snakeyaml.Yaml;
 public class StormConfig implements Serializable{
     //default value config
     private boolean cleanDatabase = false;
+    private Integer updateInterval = 1;
     private String topologyName = "iot-smarthome";
     private String stormBrokerURL = "tcp://mqtt-broker:1883";
     private List<String> stormTopicList = Arrays.asList(new String[] { "iot-data" });
@@ -38,6 +39,7 @@ public class StormConfig implements Serializable{
         InputStream inputStream = StormConfig.class.getClassLoader().getResourceAsStream("config/conf.yaml");
         Map<String, Object> obj = yaml.load(inputStream);
         this.cleanDatabase = (Boolean) obj.getOrDefault("database.clean", this.cleanDatabase);
+        this.updateInterval = (Integer) obj.getOrDefault("database.updateInterval", this.updateInterval);
         this.topologyName = (String) obj.getOrDefault("storm.topologyName", this.topologyName);
         this.stormBrokerURL = (String) obj.getOrDefault("spout.brokerURL", this.stormBrokerURL);
         this.stormTopicList = (List<String>) obj.getOrDefault("spout.topicList", this.stormTopicList);
@@ -68,6 +70,14 @@ public class StormConfig implements Serializable{
 
     public void setCleanDatabase(boolean cleanDatabase) {
         this.cleanDatabase = cleanDatabase;
+    }
+
+    public Integer getUpdateInterval() {
+        return this.updateInterval;
+    }
+
+    public void setUpdateInterval(Integer updateInterval) {
+        this.updateInterval = updateInterval;
     }
 
     public String getTopologyName() {

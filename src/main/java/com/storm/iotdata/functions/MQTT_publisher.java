@@ -1,5 +1,6 @@
 package com.storm.iotdata.functions;
 
+import java.lang.reflect.Array;
 import java.util.Stack;
 import java.util.UUID;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -25,6 +26,10 @@ public class MQTT_publisher {
     
     public static void stormLogPublish(Stack<String> dataList, String brokerURL, String topicPrefix) {
         new StormLogPublisher(dataList, brokerURL, topicPrefix).start();
+    }
+
+    public static void mannualPublish(String brokerURL, String topic, String[] messages) {
+        new ManualPublisher(brokerURL, topic, messages);
     }
 }
 
@@ -206,6 +211,78 @@ class StormLogPublisher extends Thread {
             publisher.disconnect();
             publisher.close();
             System.out.printf("\n[Storm Log Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+        } catch (MqttException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+}
+
+class ManualPublisher extends Thread{
+    private String brokerURL;
+    private String topic;
+    private String[] messages;
+    private Integer qos = 0;
+    private Boolean retained = false;
+
+
+    public ManualPublisher(String brokerURL, String topic, String[] messages, Integer qos, Boolean retained) {
+        this.brokerURL = brokerURL;
+        this.topic = topic;
+        this.messages = messages;
+        this.qos = qos;
+        this.retained = retained;
+    }
+
+    public ManualPublisher(String brokerURL, String topic, String[] messages, Integer qos) {
+        this.brokerURL = brokerURL;
+        this.topic = topic;
+        this.messages = messages;
+        this.qos = qos;
+    }
+
+    public ManualPublisher(String brokerURL, String topic, String[] messages, Boolean retained) {
+        this.brokerURL = brokerURL;
+        this.topic = topic;
+        this.messages = messages;
+        this.retained = retained;
+    }
+
+    public ManualPublisher(String brokerURL, String topic, String[] messages){
+        this.brokerURL = brokerURL;
+        this.topic = topic;
+        this.messages = messages;
+    }
+
+    public ManualPublisher(String brokerURL, String topic, String messages){
+        this.brokerURL = brokerURL;
+        this.topic = topic;
+        String[] temp = {messages};
+        this.messages = temp;
+    }
+
+    @Override
+    public void run(){
+        Long start = System.currentTimeMillis();
+        String publisherId = UUID.randomUUID().toString();
+        try {
+            IMqttClient publisher = new MqttClient(brokerURL, publisherId);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true);
+            options.setCleanSession(true);
+            options.setConnectionTimeout(10);
+            publisher.connect(options);
+            if(publisher.isConnected())
+            for(String message : messages){
+                byte[] payload = message.getBytes();
+                MqttMessage msg = new MqttMessage(payload);
+                msg.setQos(qos);
+                msg.setRetained(retained);
+                publisher.publish(topic, msg);
+            }
+            publisher.disconnect();
+            publisher.close();
+            System.out.printf("\n[Mannual Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

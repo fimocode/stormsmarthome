@@ -84,7 +84,7 @@ public class MainTopo {
                 }
                 
                 TopologyBuilder builder = new TopologyBuilder();
-                builder.setSpout("spout-trigger", new Spout_trigger(60), 1);
+                builder.setSpout("spout-trigger", new Spout_trigger(config), 1);
 
                 for (String topic : config.getSpoutTopicList()) {
                     builder.setSpout("spout-data-" + topic, new Spout_data(config, topic), 1);

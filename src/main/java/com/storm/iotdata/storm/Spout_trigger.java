@@ -1,15 +1,14 @@
 package com.storm.iotdata.storm;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import com.google.gson.Gson;
 import com.storm.iotdata.models.SpoutProp;
+import com.storm.iotdata.models.StormConfig;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.storm.spout.SpoutOutputCollector;
@@ -23,10 +22,10 @@ public class Spout_trigger extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
     private long start = System.currentTimeMillis();
-    public Integer interval = 1;
+    private StormConfig config;
 
-    public Spout_trigger(Integer interval) {
-        this.interval = interval;
+    public Spout_trigger(StormConfig config) {
+        this.config = config;
         this.start = System.currentTimeMillis();
     }
 
@@ -38,8 +37,8 @@ public class Spout_trigger extends BaseRichSpout {
     @Override
     public void nextTuple() {
         try {
-            System.out.println("[Spout-trigger] Sleeping for "+interval+" second(s)");
-            Thread.sleep(interval * 1000);
+            System.out.println("[Spout-trigger] Sleeping for "+config.getUpdateInterval()+" second(s)");
+            Thread.sleep(config.getUpdateInterval() * 1000);
             File tempFolder = new File("./tmp");
             File[] spoutLogs = tempFolder.listFiles();
             Float speed = Float.valueOf(0), load = Float.valueOf(0);
