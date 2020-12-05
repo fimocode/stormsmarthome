@@ -29,7 +29,9 @@ public class DB_store {
         String userName = (String) obj.get("db_user");
         String password = (String) obj.get("db_pass");
         Class.forName("com.mysql.cj.jdbc.Driver");
-        return DriverManager.getConnection(dbURL, userName, password);
+        Connection conn = DriverManager.getConnection(dbURL, userName, password);
+        conn.setAutoCommit(false);
+        return conn;
     }
 
     public DB_store() {
