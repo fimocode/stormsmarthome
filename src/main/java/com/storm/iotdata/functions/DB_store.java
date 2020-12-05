@@ -748,6 +748,7 @@ class DeviceProp2DB extends Thread {
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
+            locker.delete();
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -801,6 +802,7 @@ class HouseholdProp2DB extends Thread {
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
+            locker.delete();
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -853,6 +855,7 @@ class HouseProp2DB extends Thread {
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
+            locker.delete();
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -910,6 +913,7 @@ class DeviceData2DB extends Thread {
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
+            locker.delete();
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -964,6 +968,7 @@ class HouseholdData2DB extends Thread {
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
+            locker.delete();
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -1019,6 +1024,7 @@ class HouseData2DB extends Thread {
             tempSql.executeBatch();
             conn.commit();
             conn.close();
+            locker.delete();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1078,6 +1084,7 @@ class DeviceNotification2DB extends Thread {
             tempSql.executeBatch();
             conn.commit();
             conn.close();
+            locker.delete();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1136,6 +1143,7 @@ class HouseholdNotification2DB extends Thread {
             tempSql.executeBatch();
             conn.commit();
             conn.close();
+            locker.delete();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1194,6 +1202,7 @@ class HouseNotification2DB extends Thread {
             tempSql.executeBatch();
             conn.commit();
             conn.close();
+            locker.delete();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
