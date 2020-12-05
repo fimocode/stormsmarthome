@@ -605,7 +605,9 @@ public class DB_store {
             stmt.execute("use iot_data");
             try (ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
-                    DeviceProp tempDeviceProp = new DeviceProp(rs.getInt("house_id"), rs.getInt("household_id"), rs.getInt("device_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
+                    DeviceProp tempDeviceProp = new DeviceProp(rs.getInt("house_id"), rs.getInt("household_id"),
+                            rs.getInt("device_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"),
+                            rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempDeviceProp.getDeviceUniqueId(), tempDeviceProp);
                 }
                 return result;
@@ -614,10 +616,10 @@ public class DB_store {
             ex.printStackTrace();
             return new HashMap<String, DeviceProp>();
         }
-	}
+    }
 
-	public static boolean pushDeviceProp(Stack<DeviceProp> dataList, File locker) {
-		try {
+    public static boolean pushDeviceProp(Stack<DeviceProp> dataList, File locker) {
+        try {
             if (locker.exists() || dataList.isEmpty()) {
                 return false;
             } else {
@@ -630,8 +632,8 @@ public class DB_store {
         }
     }
 
-	public static HashMap<String, HouseholdProp> initHouseholdPropList() {
-		Connection conn;
+    public static HashMap<String, HouseholdProp> initHouseholdPropList() {
+        Connection conn;
         HashMap<String, HouseholdProp> result = new HashMap<String, HouseholdProp>();
         String sql = "SELECT * FROM household_prop";
         try {
@@ -640,7 +642,9 @@ public class DB_store {
             stmt.execute("use iot_data");
             try (ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
-                    HouseholdProp tempHouseholdProp = new HouseholdProp(rs.getInt("house_id"), rs.getInt("household_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
+                    HouseholdProp tempHouseholdProp = new HouseholdProp(rs.getInt("house_id"),
+                            rs.getInt("household_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"),
+                            rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempHouseholdProp.getHouseholdUniqueId(), tempHouseholdProp);
                 }
                 return result;
@@ -650,9 +654,9 @@ public class DB_store {
             return new HashMap<String, HouseholdProp>();
         }
     }
-    
+
     public static boolean pushHouseholdProp(Stack<HouseholdProp> dataList, File locker) {
-		try {
+        try {
             if (locker.exists() || dataList.isEmpty()) {
                 return false;
             } else {
@@ -663,10 +667,10 @@ public class DB_store {
             e.printStackTrace();
             return false;
         }
-	}
+    }
 
-	public static HashMap<String, HouseProp> initHousePropList() {
-		Connection conn;
+    public static HashMap<String, HouseProp> initHousePropList() {
+        Connection conn;
         HashMap<String, HouseProp> result = new HashMap<String, HouseProp>();
         String sql = "SELECT * FROM house_prop";
         try {
@@ -675,7 +679,8 @@ public class DB_store {
             stmt.execute("use iot_data");
             try (ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
-                    HouseProp tempHouseProp = new HouseProp(rs.getInt("house_id"), rs.getInt("slice_gap"), rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
+                    HouseProp tempHouseProp = new HouseProp(rs.getInt("house_id"), rs.getInt("slice_gap"),
+                            rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempHouseProp.getHouseUniqueId(), tempHouseProp);
                 }
                 return result;
@@ -686,8 +691,8 @@ public class DB_store {
         }
     }
 
-	public static boolean pushHouseProp(Stack<HouseProp> dataList, File locker) {
-		try {
+    public static boolean pushHouseProp(Stack<HouseProp> dataList, File locker) {
+        try {
             if (locker.exists() || dataList.isEmpty()) {
                 return false;
             } else {
@@ -698,16 +703,16 @@ public class DB_store {
             e.printStackTrace();
             return false;
         }
-	}
-    
+    }
+
 }
 
 class DeviceProp2DB extends Thread {
     private Stack<DeviceProp> dataList;
     private File locker;
-    
-    public DeviceProp2DB(Stack<DeviceProp> dataList, File locker){
-        this.dataList=dataList;
+
+    public DeviceProp2DB(Stack<DeviceProp> dataList, File locker) {
+        this.dataList = dataList;
         this.locker = locker;
     }
 
@@ -736,9 +741,17 @@ class DeviceProp2DB extends Thread {
                 tempSql.setDouble(8, data.getCount());
                 tempSql.executeUpdate();
             }
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new DeviceProp2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -749,9 +762,9 @@ class DeviceProp2DB extends Thread {
 class HouseholdProp2DB extends Thread {
     private Stack<HouseholdProp> dataList;
     private File locker;
-    
-    public HouseholdProp2DB(Stack<HouseholdProp> dataList, File locker){
-        this.dataList=dataList;
+
+    public HouseholdProp2DB(Stack<HouseholdProp> dataList, File locker) {
+        this.dataList = dataList;
         this.locker = locker;
     }
 
@@ -779,9 +792,17 @@ class HouseholdProp2DB extends Thread {
                 tempSql.setDouble(7, data.getCount());
                 tempSql.executeUpdate();
             }
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new HouseholdProp2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -792,9 +813,9 @@ class HouseholdProp2DB extends Thread {
 class HouseProp2DB extends Thread {
     private Stack<HouseProp> dataList;
     private File locker;
-    
-    public HouseProp2DB(Stack<HouseProp> dataList, File locker){
-        this.dataList=dataList;
+
+    public HouseProp2DB(Stack<HouseProp> dataList, File locker) {
+        this.dataList = dataList;
         this.locker = locker;
     }
 
@@ -821,9 +842,17 @@ class HouseProp2DB extends Thread {
                 tempSql.setDouble(6, data.getCount());
                 tempSql.executeUpdate();
             }
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new HouseProp2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -834,9 +863,9 @@ class HouseProp2DB extends Thread {
 class DeviceData2DB extends Thread {
     private Stack<DeviceData> dataList;
     private File locker;
-    
-    public DeviceData2DB(Stack<DeviceData> dataList, File locker){
-        this.dataList=dataList;
+
+    public DeviceData2DB(Stack<DeviceData> dataList, File locker) {
+        this.dataList = dataList;
         this.locker = locker;
     }
 
@@ -868,9 +897,17 @@ class DeviceData2DB extends Thread {
                 tempSql.setDouble(11, data.getAvg());
                 tempSql.executeUpdate();
             }
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new DeviceData2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -881,9 +918,9 @@ class DeviceData2DB extends Thread {
 class HouseholdData2DB extends Thread {
     private Stack<HouseholdData> dataList;
     private File locker;
-    
-    public HouseholdData2DB(Stack<HouseholdData> dataList, File locker){
-        this.dataList=dataList;
+
+    public HouseholdData2DB(Stack<HouseholdData> dataList, File locker) {
+        this.dataList = dataList;
         this.locker = locker;
     }
 
@@ -912,9 +949,17 @@ class HouseholdData2DB extends Thread {
                 tempSql.setDouble(8, data.getValue());
                 tempSql.executeUpdate();
             }
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new HouseholdData2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -925,8 +970,8 @@ class HouseholdData2DB extends Thread {
 class HouseData2DB extends Thread {
     private Stack<HouseData> dataList;
     private File locker;
-    
-    public HouseData2DB(Stack<HouseData> dataList, File locker){
+
+    public HouseData2DB(Stack<HouseData> dataList, File locker) {
         this.dataList = dataList;
         this.locker = locker;
     }
@@ -943,7 +988,9 @@ class HouseData2DB extends Thread {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for (HouseData data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement("insert into house_data (house_id,year,month,day,slice_gap,slice_index,avg) values (?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into house_data (house_id,year,month,day,slice_gap,slice_index,avg) values (?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)",
+                        Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setString(2, data.getYear());
                 tempSql.setString(3, data.getMonth());
@@ -958,8 +1005,16 @@ class HouseData2DB extends Thread {
             // sql = sql.substring(0, sql.length() - 1) + "";
             // stmt.executeUpdate(sql);
             conn.close();
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new HouseData2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -971,7 +1026,7 @@ class DeviceNotification2DB extends Thread {
     private Stack<DeviceNotification> dataList;
     private File locker;
 
-    public DeviceNotification2DB(Stack<DeviceNotification> dataList, File locker){
+    public DeviceNotification2DB(Stack<DeviceNotification> dataList, File locker) {
         this.dataList = dataList;
         this.locker = locker;
     }
@@ -988,7 +1043,9 @@ class DeviceNotification2DB extends Thread {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for (DeviceNotification data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement("insert into device_notification (type,house_id,household_id,device_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into device_notification (type,house_id,household_id,device_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
+                        Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getType());
                 tempSql.setInt(2, data.getHouseId());
                 tempSql.setInt(3, data.getHouseholdId());
@@ -1005,8 +1062,16 @@ class DeviceNotification2DB extends Thread {
                 tempSql.executeUpdate();
             }
             conn.close();
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new DeviceNotification2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -1018,7 +1083,7 @@ class HouseholdNotification2DB extends Thread {
     private Stack<HouseholdNotification> dataList;
     private File locker;
 
-    public HouseholdNotification2DB(Stack<HouseholdNotification> dataList, File locker){
+    public HouseholdNotification2DB(Stack<HouseholdNotification> dataList, File locker) {
         this.dataList = dataList;
         this.locker = locker;
     }
@@ -1035,7 +1100,9 @@ class HouseholdNotification2DB extends Thread {
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for (HouseholdNotification data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement("insert into household_notification (type,house_id,household_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into household_notification (type,house_id,household_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
+                        Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getType());
                 tempSql.setInt(2, data.getHouseId());
                 tempSql.setInt(3, data.getHouseholdId());
@@ -1051,8 +1118,16 @@ class HouseholdNotification2DB extends Thread {
                 tempSql.executeUpdate();
             }
             conn.close();
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new HouseholdNotification2DB(dataList, locker).start();
             ex.printStackTrace();
@@ -1064,24 +1139,27 @@ class HouseNotification2DB extends Thread {
     private Stack<HouseNotification> dataList;
     private File locker;
 
-    public HouseNotification2DB(Stack<HouseNotification> dataList, File locker){
+    public HouseNotification2DB(Stack<HouseNotification> dataList, File locker) {
         this.dataList = dataList;
         this.locker = locker;
     }
 
     @Override
     public void run() {
+        Connection conn;
         try {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            conn = DB_store.initConnection();
             // Init SQL
             Long start = System.currentTimeMillis();
             Statement stmt = conn.createStatement();
             stmt.execute("use iot_data");
             for (HouseNotification data : dataList) {
-                PreparedStatement tempSql = conn.prepareStatement("insert into house_notification (type,house_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)", Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement tempSql = conn.prepareStatement(
+                        "insert into house_notification (type,house_id,year,month,day,slice_gap,slice_index,value,min,max,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), min=VALUES(min), max=VALUES(max), avg=VALUES(avg)",
+                        Statement.RETURN_GENERATED_KEYS);
                 tempSql.setInt(1, data.getType());
                 tempSql.setInt(2, data.getHouseId());
                 tempSql.setString(3, data.getYear());
@@ -1096,8 +1174,16 @@ class HouseNotification2DB extends Thread {
                 tempSql.executeUpdate();
             }
             conn.close();
-            System.out.printf("\n["+ locker.getName() +"] DB tooks %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+                    (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
+            try {
+                System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             locker.delete();
             new HouseNotification2DB(dataList, locker).start();
             ex.printStackTrace();
