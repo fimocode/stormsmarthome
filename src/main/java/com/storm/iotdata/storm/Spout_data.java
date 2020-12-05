@@ -10,7 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.storm.iotdata.models.SpoutProp;
 import com.storm.iotdata.models.StormConfig;
@@ -30,10 +30,10 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 
-public class Spout_data implements MqttCallback, IRichSpout {
+public class Spout_data implements MqttCallback, IRichSpout{
 
     private SpoutOutputCollector _collector;
-    ConcurrentLinkedQueue<String> messages;
+    LinkedBlockingQueue<String> messages;
     Long total = Long.valueOf(0);
     Long success = Long.valueOf(0);
     Long fail = Long.valueOf(0);
@@ -41,7 +41,6 @@ public class Spout_data implements MqttCallback, IRichSpout {
     Long load = Long.valueOf(0);
     Long totalLoad = Long.valueOf(0);
     Long last = System.currentTimeMillis();
-    Integer tick = 0;
     MqttClient client;
     String clientId = "";
     String topic = "iot-data";
@@ -52,7 +51,7 @@ public class Spout_data implements MqttCallback, IRichSpout {
         this.config = config;
         this.topic = topic;
         clientId = new String(config.getTopologyName()+"@"+topic);
-        messages = new ConcurrentLinkedQueue<String>();
+        messages = new LinkedBlockingQueue<String>();
         if (!(new File("tmp").isDirectory())) {
             new File("tmp").mkdir();
         } else {
@@ -72,7 +71,14 @@ public class Spout_data implements MqttCallback, IRichSpout {
     }
 
     public void connectionLost(Throwable cause) {
-        System.out.println("[Spout-data-" + topic + "] Lost connection with broker. Trying to reconnect..");
+        try{
+            log();
+            System.out.println("[Spout-data-" + topic + "] Lost connection with broker. Trying to reconnect in 10s");
+            Thread.sleep(10000);
+            client.reconnect();
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
     public void deliveryComplete(IMqttDeliveryToken token) {
@@ -148,9 +154,7 @@ public class Spout_data implements MqttCallback, IRichSpout {
 	}
 
 	public void nextTuple() {
-        tick++;
 		while(!messages.isEmpty()){
-            tick++;
             try {
                 String message = messages.poll();
                 String[] metric = message.split(",");
@@ -172,7 +176,6 @@ public class Spout_data implements MqttCallback, IRichSpout {
     }
     
     public void log(){
-        tick=0;
         String log = new SpoutProp(clientId,client.isConnected(),(float)(speed*1000/(System.currentTimeMillis()-last)),(float)(load*1000/(System.currentTimeMillis()-last)),total,totalLoad,messages.size(),success,fail).toString();
         new SpoutDataLogger(client, String.format(logTopic, config.getMqttTopicPrefix()), new File("tmp/spout_data_log_"+ topic +".tmp"), log).start();
         speed = Long.valueOf(0);

@@ -30,13 +30,13 @@ public class Bolt_sum extends BaseRichBolt {
     private StormConfig config;
     public Integer gap;
     public Integer triggerCount = 0;
+    public Integer cleanTrigger = 5; //older than 5*gap will be clean 
     private OutputCollector _collector;
     public HashMap<String, HashMap<Integer, HashMap<Integer, HashMap<String, DeviceData> > > > allData = new HashMap<String, HashMap<Integer,HashMap<Integer,HashMap<String, DeviceData> > > >();
     public HashMap <Integer, HashMap<String, HouseData> > finalHouseDataList = new HashMap <Integer, HashMap<String, HouseData> >();
     public HashMap <String, HashMap<String, HouseholdData> > finalHouseholdDataList = new HashMap <String, HashMap<String, HouseholdData> >();
     public HashMap <String, HouseProp> housePropList = new HashMap<String, HouseProp>();
     public HashMap <String, HouseholdProp> householdPropList = new HashMap<String, HouseholdProp>();
-
     
     public Bolt_sum(int gap, StormConfig config) {
         this.gap = gap;
@@ -118,7 +118,7 @@ public class Bolt_sum extends BaseRichBolt {
                             if(!houseData.isSaved()){
                                 houseDataNeedSave.push(houseData);
                             }
-                            else if((System.currentTimeMillis()-houseData.getLastUpdate())>(2*gap*1000)){
+                            else if((System.currentTimeMillis()-houseData.getLastUpdate())>(cleanTrigger*gap*1000)){
                                 houseDataNeedClean.push(houseData);
                             }
                         }
@@ -132,7 +132,7 @@ public class Bolt_sum extends BaseRichBolt {
                             if(!householdData.isSaved()){
                                 householdDataNeedSave.push(householdData);
                             }
-                            else if((System.currentTimeMillis()-householdData.getLastUpdate())>(2*gap*1000)){
+                            else if((System.currentTimeMillis()-householdData.getLastUpdate())>(cleanTrigger*gap*1000)){
                                 householdDataNeedClean.push(householdData);
                             }
                         }

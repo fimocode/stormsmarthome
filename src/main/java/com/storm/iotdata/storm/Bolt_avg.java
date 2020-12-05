@@ -32,6 +32,7 @@ public class Bolt_avg extends BaseRichBolt {
     private StormConfig config;
     public Integer gap;
     public Integer triggerCount = 0;
+    public Integer cleanTrigger = 5; //older than 5*gap will be clean 
     public Double total = Double.valueOf(0);
     public HashMap<String, DeviceData> deviceDataList = new HashMap<String, DeviceData>();
     public HashMap<String, DeviceProp> devicePropList = new HashMap<String, DeviceProp>();
@@ -72,7 +73,7 @@ public class Bolt_avg extends BaseRichBolt {
                             _collector.emit(new Values(data.getClass(), data));
                             needSave.push(data);
                         }
-                        else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(60000*gap)){
+                        else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(cleanTrigger*gap*60000)){
                             needClean.push(key);
                         }
                     }
