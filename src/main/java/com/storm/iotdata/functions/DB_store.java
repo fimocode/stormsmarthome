@@ -742,6 +742,7 @@ class DeviceProp2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -794,6 +795,7 @@ class HouseholdProp2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -845,6 +847,7 @@ class HouseProp2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -901,6 +904,7 @@ class DeviceData2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -954,6 +958,7 @@ class HouseholdData2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
@@ -1010,6 +1015,7 @@ class HouseData2DB extends Thread {
             // sql = sql.substring(0, sql.length() - 1) + "";
             // stmt.executeUpdate(sql);
             tempSql.executeBatch();
+            conn.commit();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
@@ -1068,6 +1074,7 @@ class DeviceNotification2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
@@ -1125,6 +1132,7 @@ class HouseholdNotification2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
@@ -1182,6 +1190,7 @@ class HouseNotification2DB extends Thread {
                 tempSql.addBatch();
             }
             tempSql.executeBatch();
+            conn.commit();
             conn.close();
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
