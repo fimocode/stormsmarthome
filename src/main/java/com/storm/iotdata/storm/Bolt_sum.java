@@ -27,6 +27,12 @@ import com.storm.iotdata.models.*;
  * @author hiiamlala
  */
 public class Bolt_sum extends BaseRichBolt {
+    public Integer houseDataUpdateFailCount = 0;
+    public Integer houseNotiUpdateFailCount = 0;
+    public Integer housePropUpdateFailCount = 0;
+    public Integer householdDataUpdateFailCount = 0;
+    public Integer householdNotiUpdateFailCount = 0;
+    public Integer householdPropUpdateFailCount = 0;
     private StormConfig config;
     public Integer gap;
     public Integer triggerCount = 0;
@@ -152,33 +158,51 @@ public class Bolt_sum extends BaseRichBolt {
                     // DB store data
                     if(houseDataNeedSave.size()!=0){
                         if(DB_store.pushHouseData(houseDataNeedSave, new File("./tmp/houseData2db-" + gap + ".lck"))){
+                            houseDataUpdateFailCount=0;
                             for(HouseData data : houseDataNeedSave){
                                 finalHouseDataList.get(data.getHouseId()).get(data.getSliceId()).save();
                             }
                         }
                     }
+                    else if(++houseDataUpdateFailCount>=3){
+                        new File("./tmp/houseData2db-" + gap + ".lck").delete();
+                    }
+
                     if(householdDataNeedSave.size()!=0){
                         if(DB_store.pushHouseHoldData(householdDataNeedSave, new File("./tmp/householdData2db-" + gap + ".lck"))){
+                            householdDataUpdateFailCount=0;
                             for(HouseholdData data : householdDataNeedSave){
                                 finalHouseholdDataList.get(data.getHouseholdUniqueId()).get(data.getSliceId()).save();
                             }
                         }
+                    }
+                    else if(++householdDataUpdateFailCount>=3){
+                        new File("./tmp/householdData2db-" + gap + ".lck").delete();
                     }
 
                     // DB store prop
                     Stack<HouseProp> tempHousePropList = new Stack<HouseProp>();
                     tempHousePropList.addAll(housePropList.values());
                     if(DB_store.pushHouseProp(tempHousePropList, new File("./tmp/houseProp2db-"+ gap +".lck"))){
+                        housePropUpdateFailCount=0;
                         for(HouseProp houseProp : tempHousePropList){
                             housePropList.get(houseProp.getHouseUniqueId()).save();
                         }
                     }
+                    else if(++housePropUpdateFailCount>=3){
+                        new File("./tmp/houseProp2db-"+ gap +".lck").delete();
+                    }
+
                     Stack<HouseholdProp> tempHouseholdPropList = new Stack<HouseholdProp>();
                     tempHouseholdPropList.addAll(householdPropList.values());
                     if(DB_store.pushHouseholdProp(tempHouseholdPropList, new File("./tmp/householdProp2db-"+ gap +".lck"))){
+                        householdPropUpdateFailCount=0;
                         for(HouseholdProp householdProp : tempHouseholdPropList){
                             householdPropList.get(householdProp.getHouseholdUniqueId()).save();
                         }
+                    }
+                    else if(++householdPropUpdateFailCount>=3){
+                        new File("./tmp/householdProp2db-"+ gap +".lck").delete();
                     }
 
                     // Check Outlier
@@ -215,18 +239,30 @@ public class Bolt_sum extends BaseRichBolt {
                         }
                         householdPropList.put(householdData.getHouseholdUniqueId(), householdProp.addValue(householdData.getAvg()));
                     }
-
-                    // Publish noti
-                    if(config.isNotificationMQTT()){
-                        MQTT_publisher.houseNotificationsPublish(houseNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
-                        MQTT_publisher.householdNotificationsPublish(householdNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
-                    }
+                    
                     // Save noti
                     if(DB_store.pushHouseNotification(houseNotificationList, new File("./tmp/housenoti2db-" + gap + ".lck"))){
-                        // House noti pushed
+                        houseNotiUpdateFailCount=0;
+                        // House noti saved
+                        // Publish noti
+                        if(config.isNotificationMQTT()){
+                            MQTT_publisher.houseNotificationsPublish(houseNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                        }
                     }
+                    else if(++houseNotiUpdateFailCount>=3){
+                        new File("./tmp/housenoti2db-" + gap + ".lck").delete();
+                    }
+
                     if(DB_store.pushHouseholdNotification(householdNotificationList, new File("./tmp/householdnoti2db-" + gap + ".lck"))){
+                        householdNotiUpdateFailCount=0;
                         // House noti pushed
+                        // Publish noti
+                        if(config.isNotificationMQTT()){
+                            MQTT_publisher.householdNotificationsPublish(householdNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                        }
+                    }
+                    else if(++householdNotiUpdateFailCount>=3){
+                        new File("./tmp/householdnoti2db-" + gap + ".lck").delete();
                     }
 
                     //Logging

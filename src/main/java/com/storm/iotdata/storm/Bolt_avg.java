@@ -29,6 +29,9 @@ import org.apache.storm.tuple.Values;
  * @author hiiamlala
  */
 public class Bolt_avg extends BaseRichBolt {
+    public Integer deviceDataUpdateFailCount = 0;
+    public Integer deviceNotiUpdateFailCount = 0;
+    public Integer devicePropUpdateFailCount = 0;
     private StormConfig config;
     public Integer gap;
     public Integer triggerCount = 0;
@@ -80,18 +83,26 @@ public class Bolt_avg extends BaseRichBolt {
 
                     //DB store data
                     if(DB_store.pushDeviceData(needSave, new File("./tmp/deviceData2db-" + gap + ".lck"))){
+                        deviceDataUpdateFailCount=0;
                         for(DeviceData deviceData : needSave){
                             deviceDataList.get(deviceData.getUniqueId()).save();
                         }
+                    }
+                    else if(++deviceDataUpdateFailCount >= 3) {
+                        new File("./tmp/deviceData2db-" + gap + ".lck").delete();
                     }
 
                     //DB store prop
                     Stack<DeviceProp> tempDevicePropList = new Stack<DeviceProp>();
                     tempDevicePropList.addAll(devicePropList.values());
                     if(DB_store.pushDeviceProp(tempDevicePropList, new File("./tmp/deviceProp2db-"+ gap + ".lck"))){
+                        devicePropUpdateFailCount=0;
                         for(DeviceProp deviceProp : tempDevicePropList){
                             devicePropList.get(deviceProp.getDeviceUniqueId()).save();
                         }
+                    }
+                    else if(++devicePropUpdateFailCount >= 3) {
+                        new File("./tmp/deviceProp2db-"+ gap + ".lck").delete();
                     }
 
                     //Check outlier
@@ -113,16 +124,18 @@ public class Bolt_avg extends BaseRichBolt {
                         //Save data_prop
                         devicePropList.put(devicePropUniqueId, deviceProp.addValue(deviceData.getAvg()));
                     }
-
-                    //Publish Noti
-                    if(config.isNotificationMQTT()){
-                        MQTT_publisher.deviceNotificationsPublish(deviceNotificationList, config.getSpoutBrokerURL(), config.getMqttTopicPrefix());
-                    }
                     
                     //Save Noti
                     if(DB_store.pushDeviceNotification(deviceNotificationList, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
+                        deviceNotiUpdateFailCount = 0;
                         //Noti saved
-                        // System.out.printf("\n[Bolt_avg_%-3d] Saved to DB %-10d notifications\n", gap, noti_list.size());
+                        //Publish Noti
+                        if(config.isNotificationMQTT()){
+                            MQTT_publisher.deviceNotificationsPublish(deviceNotificationList, config.getSpoutBrokerURL(), config.getMqttTopicPrefix());
+                        }
+                    }
+                    else if(++deviceNotiUpdateFailCount>=3){
+                        new File("./tmp/devicenoti2db-" + gap + ".lck").delete();
                     }
                     
                     //Logging
