@@ -1098,7 +1098,7 @@ class DeviceDataForecast2DB extends Thread {
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
-                        "insert into device_data_forecast_"+ version +" (house_id,household_id,device_id,year,month,day,slice_gap,slice_index,value,count,avg) values (?,?,?,?,?,?,?,?,?,?,?) on duplicate key update value=VALUES(value), count=VALUES(count), avg=VALUES(avg)");
+                        "insert into device_data_forecast_"+ version +" (house_id,household_id,device_id,year,month,day,slice_gap,slice_index,avg) values (?,?,?,?,?,?,?,?,?) on duplicate key update avg=VALUES(avg)");
             for (DeviceData data : dataList) {
                 tempSql.setInt(1, data.getHouseId());
                 tempSql.setInt(2, data.getHouseholdId());
@@ -1108,9 +1108,7 @@ class DeviceDataForecast2DB extends Thread {
                 tempSql.setString(6, data.getDay());
                 tempSql.setInt(7, data.getGap());
                 tempSql.setInt(8, data.getIndex());
-                tempSql.setDouble(9, data.getValue());
-                tempSql.setDouble(10, data.getCount());
-                tempSql.setDouble(11, data.getAvg());
+                tempSql.setDouble(9, data.getAvg());
                 tempSql.addBatch();
             }
             tempSql.executeBatch();

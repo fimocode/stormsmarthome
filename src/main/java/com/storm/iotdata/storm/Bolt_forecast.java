@@ -69,24 +69,29 @@ public class Bolt_forecast extends BaseRichBolt {
                         deviceDataList.remove(key);
                     }
                 };
+                _collector.ack(input);
             }
             else if(input.getValueByField("type").equals(HouseData.class)){
                 HouseData data = (HouseData) input.getValueByField("data");
                 houseDataList.put(data.getUniqueId(), data);
+                _collector.ack(input);
             }
             else if(input.getValueByField("type").equals(HouseholdData.class)){
                 HouseholdData data = (HouseholdData) input.getValueByField("data");
                 householdDataList.put(data.getUniqueId(), data);
+                _collector.ack(input);
             }
             else if(input.getValueByField("type").equals(DeviceData.class)){
                 DeviceData data = (DeviceData) input.getValueByField("data");
                 deviceDataList.put(data.getUniqueId(), data);
+                _collector.ack(input);
             }
             else {
                 _collector.fail(input);
             }
         } catch (Exception ex){
             ex.printStackTrace();
+            _collector.fail(input);
         }
     }
 
