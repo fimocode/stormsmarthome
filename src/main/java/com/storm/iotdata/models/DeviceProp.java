@@ -249,7 +249,7 @@ public class DeviceProp implements Serializable{
     }
 
     public String getUniqueId(){
-        return getDeviceUniqueId();
+        return String.format("%d-%d-%d-%d", houseId, householdId, deviceId, sliceGap);
     }
 
     public String getDeviceUniqueId(){

@@ -216,7 +216,7 @@ public class HouseProp implements Serializable{
     }
 
     public String getUniqueId(){
-        return String.valueOf(getHouseId());
+        return String.format("%d-%d", houseId, sliceGap);
     }
 
     public String getHouseUniqueId(){

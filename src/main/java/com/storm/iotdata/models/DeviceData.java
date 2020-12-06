@@ -7,7 +7,7 @@ import java.util.Objects;
  * DeviceData
  */
 
-public class DeviceData extends Timeslice implements Serializable{
+public class DeviceData extends Timeslice implements Serializable {
 
     public Integer houseId;
     public Integer householdId;
@@ -28,6 +28,17 @@ public class DeviceData extends Timeslice implements Serializable{
         this.saved=false;
     }
 
+    public DeviceData(Integer houseId, Integer householdId, Integer deviceId, Timeslice timeslice, Double avg) {
+        super(timeslice);
+        this.houseId=houseId;
+        this.householdId=householdId;
+        this.deviceId=deviceId;
+        this.value=avg;
+        this.count=Double.valueOf(1);
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=false;
+    }
+
     public DeviceData(Integer houseId, Integer householdId, Integer deviceId, Timeslice timeslice, Double value, Double count, Boolean saved) {
         super(timeslice);
         this.houseId=houseId;
@@ -37,6 +48,17 @@ public class DeviceData extends Timeslice implements Serializable{
         this.count=count;
         this.lastUpdate=System.currentTimeMillis();
         this.saved=saved;
+    }
+
+    public DeviceData(Integer houseId, Integer householdId, Integer deviceId, String year, String month, String day, Integer sliceIndex, Integer sliceGap, Double avg) {
+        super(year, month, day, sliceIndex, sliceGap);
+        this.houseId=houseId;
+        this.householdId=householdId;
+        this.deviceId=deviceId;
+        this.value=avg;
+        this.count=Double.valueOf(1);
+        this.lastUpdate=System.currentTimeMillis();
+        this.saved=false;
     }
 
     public DeviceData(Integer houseId, Integer householdId, Integer deviceId, String year, String month, String day, Integer sliceIndex, Integer sliceGap, Double value, Double count, Boolean saved) {
@@ -205,7 +227,7 @@ public class DeviceData extends Timeslice implements Serializable{
     }
 
     public String getUniqueId(){
-        return String.format("%d-%d-%d-%s-%s-%s-%d", houseId, householdId, deviceId, year, month, day, sliceIndex);
+        return String.format("%d-%d-%d-%s-%s-%s-%d-%d", houseId, householdId, deviceId, year, month, day, sliceGap, sliceIndex);
     }
 
 	public String getDeviceUniqueId() {

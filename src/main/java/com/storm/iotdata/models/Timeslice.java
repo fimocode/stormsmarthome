@@ -1,5 +1,7 @@
 package com.storm.iotdata.models;
 
+import java.sql.Time;
+import java.time.YearMonth;
 import java.util.Objects;
 
 public class Timeslice{
@@ -31,11 +33,18 @@ public class Timeslice{
     }
 
     public Timeslice(String year, String month, String day, Integer index, Integer gap) {
-        this.year = year;
-        this.month = month;
-        this.day = day;
-        this.sliceIndex = index;
         this.sliceGap = gap;
+        Integer numSliceInDay = 24*60/this.sliceGap;
+        Integer numDayInMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).lengthOfMonth();
+        this.sliceIndex = index%numSliceInDay;
+        this.day = String.format("%02d", (Integer.parseInt(day) + Math.floorDiv(sliceIndex, numSliceInDay))%numDayInMonth);
+        this.month = String.format("%02d", Integer.parseInt(month) + Math.floorDiv((Integer.parseInt(day) + Math.floorDiv(sliceIndex, numSliceInDay)), numDayInMonth));
+        if(Integer.parseInt(this.month)>12){
+            this.year = String.format("%d", Integer.parseInt(year)+1);
+        }
+        else{
+            this.year = year;
+        }
     }
 
     public String getYear() {
@@ -128,5 +137,12 @@ public class Timeslice{
     public String getDate() {
         return year + "/" + month + "/" + day;
     }
-    
+
+    public Timeslice getNextTimeslice(Integer num){
+        return new Timeslice(this.year, this.month, this.day, this.sliceIndex + num, this.sliceGap);
+    }
+
+    public Timeslice getNextTimeslice(){
+        return new Timeslice(this.year, this.month, this.day, this.sliceIndex + 1, this.sliceGap);
+    }
 }

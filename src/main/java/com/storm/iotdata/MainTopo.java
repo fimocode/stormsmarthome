@@ -115,6 +115,7 @@ public class MainTopo {
                     sumList.get("sum-" + windowSize).shuffleGrouping("spout-trigger");
                     forecastList.get("forecast-" + windowSize).shuffleGrouping("avg-" + windowSize);
                     forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize);
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("spout-trigger");
                 }
 
                 Config conf = new Config();
