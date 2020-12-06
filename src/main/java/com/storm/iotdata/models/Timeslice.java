@@ -37,8 +37,8 @@ public class Timeslice{
         Integer numSliceInDay = 24*60/this.sliceGap;
         Integer numDayInMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).lengthOfMonth();
         this.sliceIndex = ((index-1)%numSliceInDay)+1;
-        this.day = String.format("%02d", ((Integer.parseInt(day) + Math.floorDiv(sliceIndex, numSliceInDay)-1)%numDayInMonth)+1);
-        this.month = String.format("%02d", (((Integer.parseInt(month) + Math.floorDiv((Integer.parseInt(day) + Math.floorDiv(sliceIndex, numSliceInDay)), numDayInMonth)-1)%12)+1));
+        this.day = String.format("%02d", ((Integer.parseInt(day) + Math.floorDiv(sliceIndex-1, numSliceInDay)-1)%numDayInMonth)+1);
+        this.month = String.format("%02d", (((Integer.parseInt(month) + Math.floorDiv((Integer.parseInt(day) + Math.floorDiv(sliceIndex-1, numSliceInDay))-1, numDayInMonth)-1)%12)+1));
         if(Integer.parseInt(this.month)>12){
             this.year = String.format("%d", Integer.parseInt(year)+1);
         }
