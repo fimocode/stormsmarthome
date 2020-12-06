@@ -76,7 +76,7 @@ class DeviceNotificationPublisher extends Thread {
             }
             publisher.disconnect();
             publisher.close();
-            System.out.printf("\n[Device Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("[Device Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -124,7 +124,7 @@ class HouseholdNotificationPublisher extends Thread {
             }
             publisher.disconnect();
             publisher.close();
-            System.out.printf("\n[Household Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("[Household Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -169,7 +169,7 @@ class HouseNotificationPublisher extends Thread {
             }
             publisher.disconnect();
             publisher.close();
-            System.out.printf("\n[House Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("[House Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -210,7 +210,7 @@ class StormLogPublisher extends Thread {
             }
             publisher.disconnect();
             publisher.close();
-            System.out.printf("\n[Storm Log Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("[Storm Log Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -282,7 +282,7 @@ class ManualPublisher extends Thread{
             }
             publisher.disconnect();
             publisher.close();
-            System.out.printf("\n[Mannual Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
+            System.out.printf("[Mannual Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
         } catch (MqttException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

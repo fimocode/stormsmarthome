@@ -30,7 +30,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 
-public class Spout_data implements MqttCallback, IRichSpout{
+public class Spout_data implements MqttCallback, IRichSpout {
 
     private SpoutOutputCollector _collector;
     LinkedBlockingQueue<String> messages;
@@ -47,10 +47,10 @@ public class Spout_data implements MqttCallback, IRichSpout{
     String logTopic = "%sspout-log";
     StormConfig config;
 
-    public Spout_data( StormConfig config, String topic) {
+    public Spout_data(StormConfig config, String topic) {
         this.config = config;
         this.topic = topic;
-        clientId = new String(config.getTopologyName()+"@"+topic);
+        clientId = new String(config.getTopologyName() + "@" + topic);
         messages = new LinkedBlockingQueue<String>();
         if (!(new File("tmp").isDirectory())) {
             new File("tmp").mkdir();
@@ -71,12 +71,12 @@ public class Spout_data implements MqttCallback, IRichSpout{
     }
 
     public void connectionLost(Throwable cause) {
-        try{
+        try {
             log();
             System.out.println("[Spout-data-" + topic + "] Lost connection with broker. Trying to reconnect in 10s");
             Thread.sleep(10000);
             client.reconnect();
-        } catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -87,17 +87,7 @@ public class Spout_data implements MqttCallback, IRichSpout{
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
         System.out.println("[Spout-data-" + topic + "] Connecting to broker (" + config.getSpoutBrokerURL() + ")..");
-        try {
-            client = new MqttClient(config.getSpoutBrokerURL(), clientId);
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setAutomaticReconnect(true);
-            options.setConnectionTimeout(10);
-            client.connect(options);
-            System.out.println("[Spout-data-" + topic + "] Connected to broker (" + config.getSpoutBrokerURL() + ").");
-            client.setCallback(this);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
+        initMQTTClient();
     }
 
     public void close() {
@@ -107,7 +97,7 @@ public class Spout_data implements MqttCallback, IRichSpout{
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        new File("/tmp/spout_log_"+ topic +".tmp").delete();
+        new File("/tmp/spout_log_" + topic + ".tmp").delete();
     }
 
     public void activate() {
@@ -128,13 +118,14 @@ public class Spout_data implements MqttCallback, IRichSpout{
                 e.printStackTrace();
             } catch (MqttException e) {
                 // TODO Auto-generated catch block
+                initMQTTClient();
                 e.printStackTrace();
             }
         }
-	}
+    }
 
-	public void deactivate() {
-        if(client.isConnected()){
+    public void deactivate() {
+        if (client.isConnected()) {
             try {
                 client.unsubscribe(topic);
                 System.out.println("[Spout-data-" + topic + "] Unsubscribed topic " + topic + ".");
@@ -142,8 +133,7 @@ public class Spout_data implements MqttCallback, IRichSpout{
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        }
-        else{
+        } else {
             try {
                 client.reconnect();
             } catch (MqttException e) {
@@ -151,54 +141,85 @@ public class Spout_data implements MqttCallback, IRichSpout{
                 e.printStackTrace();
             }
         }
-	}
+    }
 
-	public void nextTuple() {
-		while(!messages.isEmpty()){
+    public void nextTuple() {
+        while (!messages.isEmpty()) {
             try {
                 String message = messages.poll();
                 String[] metric = message.split(",");
                 if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]), message);
+                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]),
+                            message);
                     load++;
                     totalLoad++;
                 }
-                if(System.currentTimeMillis()-last > 10000){
+                if (System.currentTimeMillis() - last > 10000) {
                     log();
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if(System.currentTimeMillis()-last > 10000){
+        if (System.currentTimeMillis() - last > 10000) {
             log();
         }
     }
-    
-    public void log(){
-        String log = new SpoutProp(clientId,client.isConnected(),(float)(speed*1000/(System.currentTimeMillis()-last)),(float)(load*1000/(System.currentTimeMillis()-last)),total,totalLoad,messages.size(),success,fail).toString();
-        new SpoutDataLogger(client, String.format(logTopic, config.getMqttTopicPrefix()), new File("tmp/spout_data_log_"+ topic +".tmp"), log).start();
+
+    public void log() {
+        String log = new SpoutProp(clientId, client.isConnected(),
+                (float) (speed * 1000 / (System.currentTimeMillis() - last)),
+                (float) (load * 1000 / (System.currentTimeMillis() - last)), total, totalLoad, messages.size(), success,
+                fail).toString();
+        new SpoutDataLogger(client, String.format(logTopic, config.getMqttTopicPrefix()),
+                new File("tmp/spout_data_log_" + topic + ".tmp"), log).start();
         speed = Long.valueOf(0);
         load = Long.valueOf(0);
         last = System.currentTimeMillis();
     }
 
-	public void ack(Object msgId) {
+    public void ack(Object msgId) {
         success++;
     }
 
-	public void fail(Object msgId) {
+    public void fail(Object msgId) {
         fail++;
-	}
+    }
 
-	public Map<String, Object> getComponentConfiguration() {
-		return null;
-	}
+    public Map<String, Object> getComponentConfiguration() {
+        return null;
+    }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         /* uses default stream id */
-        declarer.declare(new Fields("timestamp", "value", "property", "plugId","householdId", "houseId"));
+        declarer.declare(new Fields("timestamp", "value", "property", "plugId", "householdId", "houseId"));
+    }
+
+    public void initMQTTClient() {
+        System.out.println("[Spout-data-" + topic + "] Connecting to broker (" + config.getSpoutBrokerURL() + ")..");
+        try {
+            if (client!=null) {
+                client.close(true);
+            }
+            client = new MqttClient(config.getSpoutBrokerURL(), clientId);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true);
+            options.setConnectionTimeout(10);
+            client.connect(options);
+            System.out.println("[Spout-data-" + topic + "] Connected to broker (" + config.getSpoutBrokerURL() + ").");
+            client.setCallback(this);
+        } catch (MqttException e) {
+            e.printStackTrace();
+            try {
+                Thread.sleep(10000);
+                System.out.println("[Spout-data-" + topic + "] Waiting 10s before retry to connect to MQTT Broker (" + config.getSpoutBrokerURL() + ").");
+                initMQTTClient();
+            } catch (InterruptedException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        }
     }
 }
 
@@ -226,8 +247,16 @@ class SpoutDataLogger extends Thread{
             logWriter.close();
             byte[] payLoad = log.getBytes();
             client.publish(logTopic, payLoad, 0, true);
-        } catch (Exception ex) {
+        } catch (MqttException ex) {
             ex.printStackTrace();
+            try {
+                client.reconnect();
+            } catch (MqttException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

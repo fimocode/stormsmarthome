@@ -1,6 +1,8 @@
 package com.storm.iotdata.storm;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -14,6 +16,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 import com.storm.iotdata.functions.DB_store;
+import com.storm.iotdata.functions.MQTT_publisher;
 import com.storm.iotdata.models.*;
 
 public class Bolt_forecast extends BaseRichBolt {
@@ -42,7 +45,9 @@ public class Bolt_forecast extends BaseRichBolt {
     public void execute(Tuple input) {
         try{
             if(input.contains("trigger")){
+                Stack<String> logs = new Stack<String>();
                 //Start forecast
+                Long start = System.currentTimeMillis();
                 HashMap<String, HouseData> houseDataForecast= forecast(HouseData.class, houseDataList);
                 Stack<HouseData> tempHouseDataForecast = new Stack<HouseData>();
                 tempHouseDataForecast.addAll(houseDataForecast.values());
@@ -51,7 +56,11 @@ public class Bolt_forecast extends BaseRichBolt {
                         houseDataList.remove(key);
                     }
                 };
+                //Log HouseData
+                logs.add(String.format("[Bolt_forecast_%d] HouseData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
+                logs.add(String.format("[Bolt_forecast_%d] HouseData Total: %-10d | Saved and clean: %-10d\n", gap, houseDataList.size(), tempHouseDataForecast.size()));
 
+                start = System.currentTimeMillis();
                 HashMap<String, HouseholdData> householdDataForecast = forecast(HouseholdData.class, householdDataList);
                 Stack<HouseholdData> tempHouseholdDataForecast = new Stack<HouseholdData>();
                 tempHouseholdDataForecast.addAll(householdDataForecast.values());
@@ -60,6 +69,9 @@ public class Bolt_forecast extends BaseRichBolt {
                         householdDataList.remove(key);
                     }
                 };
+                //Log HouseholdData
+                logs.add(String.format("[Bolt_forecast_%d] HouseholdData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
+                logs.add(String.format("[Bolt_forecast_%d] HouseholdData Total: %-10d | Saved and clean: %-10d\n", gap, householdDataList.size(), tempHouseholdDataForecast.size()));
 
                 HashMap<String, DeviceData> deviceDataForecast = forecast(DeviceData.class, deviceDataList);
                 Stack<DeviceData> tempDeviceDataForecast = new Stack<DeviceData>();
@@ -69,6 +81,28 @@ public class Bolt_forecast extends BaseRichBolt {
                         deviceDataList.remove(key);
                     }
                 };
+                //Log HouseData
+                logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
+                logs.add(String.format("[Bolt_forecast_%d] DeviceData Total: %-10d | Saved and clean: %-10d\n", gap, deviceDataList.size(), tempDeviceDataForecast.size()));
+
+                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                for(String data : logs){
+                    System.out.println(data);
+                }
+                try {
+                    FileWriter log = new FileWriter(new File("tmp/bolt_forecast_"+ gap +".tmp"), false);
+                    PrintWriter pwOb = new PrintWriter(log , false);
+                    pwOb.flush();
+                    for(String data : logs){
+                        log.write(data);
+                    }
+                    pwOb.close();
+                    log.close();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
                 _collector.ack(input);
             }
             else if(input.getValueByField("type").equals(HouseData.class)){
@@ -108,91 +142,34 @@ public class Bolt_forecast extends BaseRichBolt {
             if(E.equals(HouseData.class)){
                 for(String key : inputData.keySet()){
                     HouseData ele = (HouseData) inputData.get(key);
-                    HashMap<String, HouseData> beforeData = DB_store.queryBefore(ele, conn);
-                    if(beforeData.isEmpty()){
-                        HouseData forecastResult = new HouseData(ele.getHouseId(), ele.getTimeslice().getNextTimeslice(2), ele.getAvg());
-                        result.put(key, (E) forecastResult);
+                    Double median = getMedian(DB_store.queryBefore(ele, conn));
+                    Double forecastValue = ele.getAvg();
+                    if(median > 0){
+                        forecastValue = (forecastValue + median)/2;
                     }
-                    else{
-                        ArrayList<HouseData> beforeAvgs = new ArrayList<>(beforeData.values());
-                        beforeAvgs.sort(new Comparator<HouseData>(){
-                            @Override
-                            public int compare(HouseData data1, HouseData data2) {
-                                return Double.compare(data1.getAvg(), data2.getAvg());
-                            }
-                        });
-                        Double median = Double.valueOf(0);
-                        if(beforeAvgs.size()%2==0){
-                            median = (beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)).getAvg() + beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)-1).getAvg())/2;
-                        }
-                        else {
-                            median = beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)).getAvg();
-                        }
-                        Double value = (ele.getAvg() + median)/2;
-                        value = (ele.getAvg() + median)/2;
-                        HouseData forecastResult = new HouseData(ele.getHouseId(), ele.getTimeslice().getNextTimeslice(2), value);
-                        result.put(key, (E) forecastResult);
-                    }
+                    result.put(key, (E) new HouseData(ele.getHouseId(), ele.getTimeslice().getNextTimeslice(2), forecastValue));
                 }
             }
             else if(E.equals(HouseholdData.class)){
                 for(String key : inputData.keySet()){
                     HouseholdData ele = (HouseholdData) inputData.get(key);
-                    HashMap<String, HouseholdData> beforeData = DB_store.queryBefore(ele, conn);
-                    if(beforeData.isEmpty()){
-                        HouseholdData forecastResult = new HouseholdData(ele.getHouseId(), ele.getHouseholdId(), ele.getTimeslice().getNextTimeslice(2), ele.getAvg());
-                        result.put(key, (E) forecastResult);
+                    Double median = getMedian(DB_store.queryBefore(ele, conn));
+                    Double forecastValue = ele.getAvg();
+                    if(median > 0){
+                        forecastValue = (forecastValue + median)/2;
                     }
-                    else{
-                        ArrayList<HouseholdData> beforeAvgs = new ArrayList<>(beforeData.values());
-                        beforeAvgs.sort(new Comparator<HouseholdData>(){
-                            @Override
-                            public int compare(HouseholdData data1, HouseholdData data2) {
-                                return Double.compare(data1.getAvg(), data2.getAvg());
-                            }
-                        });
-                        Double median = Double.valueOf(0);
-                        if(beforeAvgs.size()%2==0){
-                            median = (beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)).getAvg() + beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)-1).getAvg())/2;
-                        }
-                        else {
-                            median = beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)).getAvg();
-                        }
-                        Double value = (ele.getAvg() + median)/2;
-                        value = (ele.getAvg() + median)/2;
-                        HouseholdData forecastResult = new HouseholdData(ele.getHouseId(), ele.getHouseholdId() , ele.getTimeslice().getNextTimeslice(2), value);
-                        result.put(key, (E) forecastResult);
-                    }
+                    result.put(key, (E) new HouseholdData(ele.getHouseId(), ele.getHouseholdId() , ele.getTimeslice().getNextTimeslice(2), forecastValue));
                 }
             }
             else if(E.equals(DeviceData.class)){
                 for(String key : inputData.keySet()){
                     DeviceData ele = (DeviceData) inputData.get(key);
-                    HashMap<String, DeviceData> beforeData = DB_store.queryBefore(ele, conn);
-                    if(beforeData.isEmpty()){
-                        DeviceData forecastResult = new DeviceData(ele.getHouseId(), ele.getHouseholdId(), ele.getDeviceId(), ele.getTimeslice().getNextTimeslice(2), ele.getAvg());
-                        result.put(key, (E) forecastResult);
+                    Double median = getMedian(DB_store.queryBefore(ele, conn));
+                    Double forecastValue = ele.getAvg();
+                    if(median > 0){
+                        forecastValue = (forecastValue + median)/2;
                     }
-                    else{
-                        ArrayList<DeviceData> beforeAvgs = new ArrayList<>(beforeData.values());
-                        beforeAvgs.sort(new Comparator<DeviceData>(){
-                            @Override
-                            public int compare(DeviceData data1, DeviceData data2) {
-                                return Double.compare(data1.getAvg(), data2.getAvg());
-                            }
-                        });
-                        Double median = Double.valueOf(0);
-                        if(beforeAvgs.size()%2==0){
-                            median = (beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)).getAvg() + beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)-1).getAvg())/2;
-                        }
-                        else {
-                            median = beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)).getAvg();
-                        }
-                        Double value = (ele.getAvg() + median)/2;
-                        value = (ele.getAvg() + median)/2;
-                        DeviceData forecastResult = new DeviceData(ele.getHouseId(), ele.getHouseholdId(), ele.getDeviceId(), ele.getTimeslice().getNextTimeslice(2), value);
-                        result.put(key, (E) forecastResult);
-                    }
+                    result.put(key, (E) new DeviceData(ele.getHouseId(), ele.getHouseholdId(), ele.getDeviceId(), ele.getTimeslice().getNextTimeslice(2), forecastValue));
                 }
             }
             conn.close();
@@ -201,5 +178,65 @@ public class Bolt_forecast extends BaseRichBolt {
         } finally {
             return result;
         }
+    }
+
+    public static <E> Double getMedian(HashMap<String, E> beforeData){
+        Double median = Double.valueOf(0);
+        if(beforeData.size()>0){
+            ArrayList<E> beforeAvgs = new ArrayList<>(beforeData.values());
+            beforeAvgs.sort(new Comparator<E>(){
+                @Override
+                public int compare(E data1, E data2) {
+                    if(data1 instanceof HouseData){
+                        HouseData temp1 = (HouseData) data1;
+                        HouseData temp2 = (HouseData) data2;
+                        return Double.compare(temp1.getAvg(), temp2.getAvg());
+                    }
+                    else if(data1 instanceof HouseholdData){
+                        HouseholdData temp1 = (HouseholdData) data1;
+                        HouseholdData temp2 = (HouseholdData) data2;
+                        return Double.compare(temp1.getAvg(), temp2.getAvg());
+                    }
+                    else if(data1 instanceof DeviceData){
+                        DeviceData temp1 = (DeviceData) data1;
+                        DeviceData temp2 = (DeviceData) data2;
+                        return Double.compare(temp1.getAvg(), temp2.getAvg());
+                    }
+                    return 0;
+                }
+            });
+            if(beforeAvgs.size()%2==0){
+                if(beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)) instanceof HouseData){
+                    HouseData temp1 = (HouseData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2));
+                    HouseData temp2 = (HouseData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)-1);
+                    median = (temp1.getAvg() + temp2.getAvg())/2;
+                }
+                else if(beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)) instanceof HouseholdData){
+                    HouseholdData temp1 = (HouseholdData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2));
+                    HouseholdData temp2 = (HouseholdData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)-1);
+                    median = (temp1.getAvg() + temp2.getAvg())/2;
+                }
+                else if(beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)) instanceof HouseholdData){
+                    DeviceData temp1 = (DeviceData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2));
+                    DeviceData temp2 = (DeviceData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)-1);
+                    median = (temp1.getAvg() + temp2.getAvg())/2;
+                }
+            }
+            else {
+                if(beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)) instanceof HouseData){
+                    HouseData temp = (HouseData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2));
+                    median = temp.getAvg();
+                }
+                else if(beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)) instanceof HouseholdData){
+                    HouseholdData temp = (HouseholdData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2));
+                    median = temp.getAvg();
+                }
+                else if(beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2)) instanceof HouseholdData){
+                    DeviceData temp = (DeviceData) beforeAvgs.get(Math.floorDiv(beforeAvgs.size(), 2));
+                    median = temp.getAvg();
+                }
+            }
+        }
+        return median;
     }
 }

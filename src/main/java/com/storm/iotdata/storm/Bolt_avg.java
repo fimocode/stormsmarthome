@@ -140,23 +140,23 @@ public class Bolt_avg extends BaseRichBolt {
                     
                     //Logging
                     Long execTime = System.currentTimeMillis() - startExec;
-                    System.out.printf("\n[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size());
-                    System.out.printf("\n[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size());
-                    System.out.printf("\n[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000);
 
-                    Stack<String> stormLogList = new Stack<String>();
-                    stormLogList.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
-                    stormLogList.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
-                    stormLogList.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
-                    MQTT_publisher.stormLogPublish(stormLogList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                    Stack<String> logs = new Stack<String>();
+                    logs.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
+                    logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
+                    logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
 
+                    MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                    for(String data : logs){
+                        System.out.println(data);
+                    }
                     try {
                         FileWriter log = new FileWriter(new File("tmp/bolt_avg_"+ gap +".tmp"), false);
                         PrintWriter pwOb = new PrintWriter(log , false);
                         pwOb.flush();
-                        log.write(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
-                        log.write(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
-                        log.write(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
+                        for(String data : logs){
+                            log.write(data);
+                        }
                         pwOb.close();
                         log.close();
                     } catch (IOException e) {
