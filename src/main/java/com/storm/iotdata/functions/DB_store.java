@@ -709,9 +709,17 @@ public class DB_store {
                     Integer rsGap = rs.getInt("slice_gap");
                     Double rsAvg = rs.getDouble("avg");
                     
-                    if(Integer.parseInt(rsYear) <= Integer.parseInt(householdData.getYear())){
-                        if(Integer.parseInt(rsMonth) <= Integer.parseInt(householdData.getMonth())){
-                            if(Integer.parseInt(rsDay) <= Integer.parseInt(householdData.getDay())){
+                    if(Integer.parseInt(rsYear) < Integer.parseInt(householdData.getYear())){
+                        HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
+                        result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
+                    }
+                    else if(Integer.parseInt(rsYear) == Integer.parseInt(householdData.getYear())){
+                        if(Integer.parseInt(rsMonth) < Integer.parseInt(householdData.getMonth())){
+                            HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
+                            result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
+                        }
+                        else if(Integer.parseInt(rsMonth) == Integer.parseInt(householdData.getMonth())){
+                            if(Integer.parseInt(rsDay) < Integer.parseInt(householdData.getDay())){
                                 HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
                                 result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
                             }
