@@ -29,6 +29,7 @@ import org.apache.storm.tuple.Values;
  * @author hiiamlala
  */
 public class Bolt_avg extends BaseRichBolt {
+    public Long processSpeed = Long.valueOf(0);
     public Integer deviceDataUpdateFailCount = 0;
     public Integer deviceNotiUpdateFailCount = 0;
     public Integer devicePropUpdateFailCount = 0;
@@ -139,6 +140,7 @@ public class Bolt_avg extends BaseRichBolt {
                 Long execTime = System.currentTimeMillis() - startExec;
 
                 Stack<String> logs = new Stack<String>();
+                logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/(triggerInterval*1000)));
                 logs.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
                 logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
                 logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
@@ -168,6 +170,7 @@ public class Bolt_avg extends BaseRichBolt {
 
                 _collector.emit("trigger", new Values(triggerInterval, spoutProp));
                 _collector.ack(tuple);
+                processSpeed = Long.valueOf(0);
             }
             else if (tuple.getSourceStreamId().equals("data")) {
                 Integer houseId         = (Integer) tuple.getValueByField("houseId");
@@ -180,6 +183,7 @@ public class Bolt_avg extends BaseRichBolt {
                 Double  value           = (Double) tuple.getValueByField("value");
                 DeviceData deviceData   = new DeviceData(houseId, householdId, deviceId, year, month, day, index, gap);
                 deviceDataList.put(deviceData.getUniqueId(), deviceDataList.getOrDefault(deviceData.getUniqueId(), deviceData ).increaseValue(value));
+                processSpeed++;
                 _collector.ack(tuple);
             }
             else{

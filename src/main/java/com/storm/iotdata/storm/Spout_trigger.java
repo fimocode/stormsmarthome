@@ -71,6 +71,7 @@ public class Spout_trigger extends BaseRichSpout {
                     e.printStackTrace();
                 }
             }
+            System.gc();
             _collector.emit("trigger", new Values(config.getUpdateInterval(), new SpoutProp(name, connect, totalSpeed, loadSpeed, total, load, queue, success, fail)), System.currentTimeMillis()); // Trigger signal to write data to file after 1 min
         } catch (InterruptedException e) {
             e.printStackTrace();
