@@ -30,7 +30,20 @@ public class DB_store {
         String password = (String) obj.get("db_pass");
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection conn = DriverManager.getConnection(dbURL, userName, password);
-        conn.setAutoCommit(false);
+        conn.setAutoCommit(true);
+        return conn;
+    }
+
+    public static Connection initConnection(Boolean autoCommit) throws ClassNotFoundException, SQLException, FileNotFoundException {
+        Yaml yaml = new Yaml();
+        InputStream inputStream = getConfig();
+        Map<String, Object> obj = yaml.load(inputStream);
+        String dbURL = "jdbc:mysql://" + obj.get("db_url") + "/" + obj.get("db_name");
+        String userName = (String) obj.get("db_user");
+        String password = (String) obj.get("db_pass");
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Connection conn = DriverManager.getConnection(dbURL, userName, password);
+        conn.setAutoCommit(autoCommit);
         return conn;
     }
 
@@ -76,7 +89,6 @@ public class DB_store {
             String password = (String) obj.get("db_pass");
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection conn = DriverManager.getConnection(dbURL, userName, password);
-            conn.setAutoCommit(false);
             Statement stmt = conn.createStatement();
             try {
                 stmt.executeUpdate(String.format("create database if not exists %s", dbName));
@@ -151,6 +163,7 @@ public class DB_store {
                 ex.printStackTrace();
             }
             initForecastTable("v0");
+            stmt.close();
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -169,6 +182,7 @@ public class DB_store {
                     + " (house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,slice_gap INT UNSIGNED NOT NULL, slice_index INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, slice_gap, slice_index))");
             stmt.executeUpdate("create table if not exists device_data_forecast_" + table
                     + " (house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, device_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,slice_gap INT UNSIGNED NOT NULL, slice_index INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, slice_gap, slice_index))");
+            stmt.close();
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -190,6 +204,7 @@ public class DB_store {
                     + " (house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,slice_gap INT UNSIGNED NOT NULL, slice_index INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, slice_gap, slice_index))");
             stmt.executeUpdate("create table if not exists device_data_forecast_" + table
                     + " (house_id INT UNSIGNED NOT NULL, household_id INT UNSIGNED NOT NULL, device_id INT UNSIGNED NOT NULL, year VARCHAR(4) NOT NULL, month VARCHAR(2) NOT NULL, day VARCHAR(2) NOT NULL,slice_gap INT UNSIGNED NOT NULL, slice_index INT NOT NULL, avg DOUBLE UNSIGNED NOT NULL, reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY(house_id, year, month, day, slice_gap, slice_index))");
+            stmt.close();
             conn.close();
             return true;
         } catch (Exception ex) {
@@ -533,16 +548,7 @@ public class DB_store {
 
     public void reConnect() {
         try {
-            this.conn.close();
-            // Init connection
-            Yaml yaml = new Yaml();
-            InputStream inputStream = getConfig();
-            Map<String, Object> obj = yaml.load(inputStream);
-            String dbURL = "jdbc:mysql://" + obj.get("db_url");
-            String userName = (String) obj.get("db_user");
-            String password = (String) obj.get("db_pass");
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            this.conn = DriverManager.getConnection(dbURL, userName, password);
+            this.conn = DB_store.initConnection();
         } catch (Exception ex) {
             System.out.println("connect failure! Retrying...");
             try {
@@ -579,6 +585,8 @@ public class DB_store {
                             rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempDeviceProp.getDeviceUniqueId(), tempDeviceProp);
                 }
+                rs.close();
+                stmt.close();
                 conn.close();
                 return result;
             }
@@ -616,6 +624,8 @@ public class DB_store {
                             rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempHouseholdProp.getHouseholdUniqueId(), tempHouseholdProp);
                 }
+                rs.close();
+                stmt.close();
                 conn.close();
                 return result;
             }
@@ -652,6 +662,8 @@ public class DB_store {
                             rs.getDouble("min"), rs.getDouble("avg"), rs.getDouble("max"), rs.getDouble("count"), true);
                     result.put(tempHouseProp.getHouseUniqueId(), tempHouseProp);
                 }
+                rs.close();
+                stmt.close();
                 conn.close();
                 return result;
             }
@@ -701,6 +713,9 @@ public class DB_store {
                         }
                     }
                 }
+                rs.close();
+                tempSql.close();
+                conn.commit();
             }
         } catch(Exception ex){
             ex.printStackTrace();
@@ -809,7 +824,7 @@ class DeviceProp2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -862,7 +877,7 @@ class HouseholdProp2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -914,7 +929,7 @@ class HouseProp2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -965,7 +980,7 @@ class DeviceData2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1021,7 +1036,7 @@ class HouseholdData2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1074,7 +1089,7 @@ class HouseData2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1132,7 +1147,7 @@ class DeviceDataForecast2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1188,7 +1203,7 @@ class HouseholdDataForecast2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1243,7 +1258,7 @@ class HouseDataForecast2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1299,7 +1314,7 @@ class DeviceNotification2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1357,7 +1372,7 @@ class HouseholdNotification2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
@@ -1415,7 +1430,7 @@ class HouseNotification2DB extends Thread {
             locker.createNewFile();
             locker.deleteOnExit();
             // Init connection
-            Connection conn = DB_store.initConnection();
+            Connection conn = DB_store.initConnection(false);
             // Init SQL
             Long start = System.currentTimeMillis();
             PreparedStatement tempSql = conn.prepareStatement(
