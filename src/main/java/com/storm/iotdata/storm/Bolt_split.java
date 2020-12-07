@@ -35,7 +35,7 @@ public class Bolt_split extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("houseId", "householdId", "deviceId", "year", "month", "day", "sliceIndex", "value"));
+        declarer.declareStream("data", new Fields("houseId", "householdId", "deviceId", "year", "month", "day", "sliceIndex", "value"));
     }
 
     @Override
@@ -46,21 +46,26 @@ public class Bolt_split extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         try{
-            Integer houseId     = Integer.parseInt((String)tuple.getValueByField("houseId"));
-            Integer householdId = Integer.parseInt((String)tuple.getValueByField("householdId"));
-            Integer plugId      = Integer.parseInt((String)tuple.getValueByField("plugId"));
-            Long    timestamp    = Long.parseLong((String)tuple.getValueByField("timestamp"));
-            Double  value        = Double.parseDouble((String)tuple.getValueByField("value"));
-            // Integer property     = Integer.parseInt((String)tuple.getValueByField("property"));
-            // Timestamp stamp = new Timestamp(timestamp);
-            Date date = new Date(timestamp*1000);
-            String year = Integer.toString(1900 + date.getYear());;
-            String month = String.format("%02d", (1+date.getMonth()));
-            String day = String.format("%02d", date.getDate()) ;
-            Long time = (date.getTime()%86400000);
-            int sliceIndex = (int) Math.floorDiv(time,(window*60000));
-            _collector.emit(new Values(houseId, householdId, plugId, year, month, day, sliceIndex, value));
-            _collector.ack(tuple);
+            if(tuple.getSourceStreamId().equals("data")){
+                Integer houseId     = Integer.parseInt((String)tuple.getValueByField("houseId"));
+                Integer householdId = Integer.parseInt((String)tuple.getValueByField("householdId"));
+                Integer plugId      = Integer.parseInt((String)tuple.getValueByField("plugId"));
+                Long    timestamp    = Long.parseLong((String)tuple.getValueByField("timestamp"));
+                Double  value        = Double.parseDouble((String)tuple.getValueByField("value"));
+                // Integer property     = Integer.parseInt((String)tuple.getValueByField("property"));
+                // Timestamp stamp = new Timestamp(timestamp);
+                Date date = new Date(timestamp*1000);
+                String year = Integer.toString(1900 + date.getYear());;
+                String month = String.format("%02d", (1+date.getMonth()));
+                String day = String.format("%02d", date.getDate()) ;
+                Long time = (date.getTime()%86400000);
+                int sliceIndex = (int) Math.floorDiv(time,(window*60000));
+                _collector.emit("data", new Values(houseId, householdId, plugId, year, month, day, sliceIndex, value));
+                _collector.ack(tuple);
+            }
+            else{
+                _collector.fail(tuple);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
             _collector.fail(tuple);

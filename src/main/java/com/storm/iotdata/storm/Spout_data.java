@@ -149,7 +149,7 @@ public class Spout_data implements MqttCallback, IRichSpout {
                 String message = messages.poll();
                 String[] metric = message.split(",");
                 if (Integer.parseInt(metric[3]) == 1) { // On prend juste les loads
-                    _collector.emit(new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]),
+                    _collector.emit("data", new Values(metric[1], metric[2], metric[3], metric[4], metric[5], metric[6]),
                             message);
                     load++;
                     totalLoad++;
@@ -193,7 +193,7 @@ public class Spout_data implements MqttCallback, IRichSpout {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         /* uses default stream id */
-        declarer.declare(new Fields("timestamp", "value", "property", "plugId", "householdId", "houseId"));
+        declarer.declareStream("data", new Fields("timestamp", "value", "property", "plugId", "householdId", "houseId"));
     }
 
     public void initMQTTClient() {

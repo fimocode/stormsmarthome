@@ -44,7 +44,7 @@ public class Bolt_forecast extends BaseRichBolt {
     @Override
     public void execute(Tuple input) {
         try{
-            if(input.contains("trigger")){
+            if(input.getSourceStreamId().equals("trigger")){
                 Stack<String> logs = new Stack<String>();
                 //Start forecast
                 Long start = System.currentTimeMillis();
@@ -105,20 +105,25 @@ public class Bolt_forecast extends BaseRichBolt {
 
                 _collector.ack(input);
             }
-            else if(input.getValueByField("type").equals(HouseData.class)){
-                HouseData data = (HouseData) input.getValueByField("data");
-                houseDataList.put(data.getUniqueId(), data);
-                _collector.ack(input);
-            }
-            else if(input.getValueByField("type").equals(HouseholdData.class)){
-                HouseholdData data = (HouseholdData) input.getValueByField("data");
-                householdDataList.put(data.getUniqueId(), data);
-                _collector.ack(input);
-            }
-            else if(input.getValueByField("type").equals(DeviceData.class)){
-                DeviceData data = (DeviceData) input.getValueByField("data");
-                deviceDataList.put(data.getUniqueId(), data);
-                _collector.ack(input);
+            else if(input.getSourceStreamId().equals("data")){
+                if(input.getValueByField("type").equals(HouseData.class)){
+                    HouseData data = (HouseData) input.getValueByField("data");
+                    houseDataList.put(data.getUniqueId(), data);
+                    _collector.ack(input);
+                }
+                else if(input.getValueByField("type").equals(HouseholdData.class)){
+                    HouseholdData data = (HouseholdData) input.getValueByField("data");
+                    householdDataList.put(data.getUniqueId(), data);
+                    _collector.ack(input);
+                }
+                else if(input.getValueByField("type").equals(DeviceData.class)){
+                    DeviceData data = (DeviceData) input.getValueByField("data");
+                    deviceDataList.put(data.getUniqueId(), data);
+                    _collector.ack(input);
+                }
+                else {
+                    _collector.fail(input);
+                }
             }
             else {
                 _collector.fail(input);

@@ -107,15 +107,15 @@ public class MainTopo {
                 
                 for (Integer windowSize : config.getWindowList()) {
                     for (String topic : config.getSpoutTopicList()){
-                        splitList.get("split-" + windowSize).shuffleGrouping("spout-data-" + topic);
+                        splitList.get("split-" + windowSize).shuffleGrouping("spout-data-" + topic, "data");
                     }
-                    avgList.get("avg-" + windowSize).shuffleGrouping("split-" + windowSize);
-                    avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger");
-                    sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize);
-                    sumList.get("sum-" + windowSize).shuffleGrouping("spout-trigger");
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("avg-" + windowSize);
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize);
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("spout-trigger");
+                    avgList.get("avg-" + windowSize).shuffleGrouping("split-" + windowSize, "data");
+                    avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger", "trigger");
+                    sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize, "data");
+                    sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize, "trigger");
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("avg-" + windowSize, "data");
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize, "data");
+                    forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize, "trigger");
                 }
 
                 Config conf = new Config();

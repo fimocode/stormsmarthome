@@ -12,15 +12,15 @@ notification.topicPrefix: ""
 
 notification.house.logGap: 20
 notification.house.checkMin: false
-notification.house.checkAvg: true
+notification.house.checkAvg: false
 notification.house.checkMax: true
 
 notification.household.logGap: 20
 notification.household.checkMin: false
-notification.household.checkAvg: true
+notification.household.checkAvg: false
 notification.household.checkMax: true
 
 notification.device.logGap: 20
 notification.device.checkMin: false
-notification.device.checkAvg: true
+notification.device.checkAvg: false
 notification.device.checkMax: true

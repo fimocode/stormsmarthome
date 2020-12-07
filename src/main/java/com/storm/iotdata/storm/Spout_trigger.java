@@ -21,12 +21,10 @@ import org.apache.storm.tuple.Values;
 public class Spout_trigger extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
-    private long start = System.currentTimeMillis();
     private StormConfig config;
 
     public Spout_trigger(StormConfig config) {
         this.config = config;
-        this.start = System.currentTimeMillis();
     }
 
     @Override
@@ -41,17 +39,27 @@ public class Spout_trigger extends BaseRichSpout {
             Thread.sleep(config.getUpdateInterval() * 1000);
             File tempFolder = new File("./tmp");
             File[] spoutLogs = tempFolder.listFiles();
-            Float speed = Float.valueOf(0), load = Float.valueOf(0);
-            Long total = Long.valueOf(0);
+            String name = String.format("%s@all-spout", config.getTopologyName());
+            Boolean connect = true; 
+            Float totalSpeed = Float.valueOf(0), loadSpeed = Float.valueOf(0);
+            Long total = Long.valueOf(0), load = Long.valueOf(0), success = Long.valueOf(0), fail = Long.valueOf(0);
+            Integer queue = 0;
             for (File Log : spoutLogs) {
                 try {
                     if(Log.getName().contains("spout_data_log_")){
-                        String data = FileUtils.readFileToString(Log, StandardCharsets.UTF_8);
+                        String raw = FileUtils.readFileToString(Log, StandardCharsets.UTF_8);
                         Gson gson = new Gson();
-                        SpoutProp datas = gson.fromJson(data, SpoutProp.class);
-                        speed+=datas.getTotalSpeed();
-                        load+=datas.getLoadSpeed();
+                        SpoutProp datas = gson.fromJson(raw, SpoutProp.class);
+                        if(!datas.isConnect()){
+                            connect = false;
+                        }
+                        totalSpeed+=datas.getTotalSpeed();
+                        loadSpeed+=datas.getLoadSpeed();
                         total+=datas.getTotal();
+                        load+=datas.getLoad();
+                        queue+=datas.getQueue();
+                        success+=datas.getSuccess();
+                        fail+=datas.getFail();
                     }
                 } catch (FileNotFoundException e) {
                     // TODO Auto-generated catch block
@@ -63,7 +71,7 @@ public class Spout_trigger extends BaseRichSpout {
                     e.printStackTrace();
                 }
             }
-            _collector.emit(new Values(start, speed, load, total), System.currentTimeMillis()); // Trigger signal to write data to file after 1 min
+            _collector.emit("trigger", new Values(config.getUpdateInterval(), new SpoutProp(name, connect, totalSpeed, loadSpeed, total, load, queue, success, fail)), System.currentTimeMillis()); // Trigger signal to write data to file after 1 min
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -72,6 +80,6 @@ public class Spout_trigger extends BaseRichSpout {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("trigger", "spoutSpeed", "spoutLoad", "spoutTotal"));
+        declarer.declareStream("trigger", new Fields("trigger", "spoutProp"));
     }
 }
