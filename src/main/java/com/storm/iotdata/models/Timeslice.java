@@ -22,11 +22,24 @@ public class Timeslice{
     public Timeslice(String sliceId) {
         try{
             String[] sliceProp = sliceId.split("-");
-            this.year = sliceProp[0];
-            this.month = sliceProp[1];
-            this.day = sliceProp[2];
-            this.sliceIndex = Integer.parseInt(sliceProp[3]);
-            this.sliceGap = Integer.parseInt(sliceProp[4]);
+            String year = sliceProp[0];
+            String month = sliceProp[1];
+            String day = sliceProp[2];
+            Integer index = Integer.parseInt(sliceProp[3]);
+            Integer gap = Integer.parseInt(sliceProp[4]);
+
+            this.sliceGap = gap;
+            Integer numSliceInDay = 24*60/this.sliceGap;
+            Integer numDayInMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).lengthOfMonth();
+            this.sliceIndex = ((index-1)%numSliceInDay)+1;
+            this.day = String.format("%02d", ((Integer.parseInt(day) + Math.floorDiv(sliceIndex-1, numSliceInDay)-1)%numDayInMonth)+1);
+            this.month = String.format("%02d", (((Integer.parseInt(month) + Math.floorDiv((Integer.parseInt(day) + Math.floorDiv(sliceIndex-1, numSliceInDay))-1, numDayInMonth)-1)%12)+1));
+            if(Integer.parseInt(this.month)>12){
+                this.year = String.format("%d", Integer.parseInt(year)+1);
+            }
+            else{
+                this.year = year;
+            }
         } catch (Exception ex) {
             throw ex;
         }
