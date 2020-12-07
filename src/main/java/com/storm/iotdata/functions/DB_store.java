@@ -690,32 +690,33 @@ public class DB_store {
     public static HashMap<String, HouseData> queryBefore(HouseData houseData, Connection conn){
         HashMap<String, HouseData> result = new HashMap<String, HouseData>();
         try{
-            PreparedStatement tempSql = conn.prepareStatement("select * from house_data where house_id=? and slice_gap=? and slice_index=?");
-            tempSql.setInt(1, houseData.getHouseId());
-            tempSql.setInt(2, houseData.getGap());
-            tempSql.setInt(3, houseData.getTimeslice().getNextTimeslice(2).getIndex());
-            try (ResultSet rs = tempSql.executeQuery()) {
-                while (rs.next()) {
-                    Integer rsHouseId = rs.getInt("house_id");
-                    String rsYear = rs.getString("year");
-                    String rsMonth = rs.getString("month");
-                    String rsDay = rs.getString("day");
-                    Integer rsIndex = rs.getInt("slice_index");
-                    Integer rsGap = rs.getInt("slice_gap");
-                    Double rsAvg = rs.getDouble("avg");
-                    
-                    if(Integer.parseInt(rsYear) <= Integer.parseInt(houseData.getYear())){
-                        if(Integer.parseInt(rsMonth) <= Integer.parseInt(houseData.getMonth())){
-                            if(Integer.parseInt(rsDay) <= Integer.parseInt(houseData.getDay())){
-                                HouseData rsHouseData = new HouseData(rsHouseId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
-                                result.put(rsHouseData.getUniqueId(), rsHouseData);
+            try (PreparedStatement tempSql = conn.prepareStatement("select * from house_data where house_id=? and slice_gap=? and slice_index=?")){
+                tempSql.setInt(1, houseData.getHouseId());
+                tempSql.setInt(2, houseData.getGap());
+                tempSql.setInt(3, houseData.getTimeslice().getNextTimeslice(2).getIndex());
+                try (ResultSet rs = tempSql.executeQuery()) {
+                    while (rs.next()) {
+                        Integer rsHouseId = rs.getInt("house_id");
+                        String rsYear = rs.getString("year");
+                        String rsMonth = rs.getString("month");
+                        String rsDay = rs.getString("day");
+                        Integer rsIndex = rs.getInt("slice_index");
+                        Integer rsGap = rs.getInt("slice_gap");
+                        Double rsAvg = rs.getDouble("avg");
+                        
+                        if(Integer.parseInt(rsYear) <= Integer.parseInt(houseData.getYear())){
+                            if(Integer.parseInt(rsMonth) <= Integer.parseInt(houseData.getMonth())){
+                                if(Integer.parseInt(rsDay) <= Integer.parseInt(houseData.getDay())){
+                                    HouseData rsHouseData = new HouseData(rsHouseId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
+                                    result.put(rsHouseData.getUniqueId(), rsHouseData);
+                                }
                             }
                         }
                     }
+                    rs.close();
+                    tempSql.close();
+                    conn.commit();
                 }
-                rs.close();
-                tempSql.close();
-                conn.commit();
             }
         } catch(Exception ex){
             ex.printStackTrace();
@@ -726,42 +727,43 @@ public class DB_store {
     public static HashMap<String, HouseholdData> queryBefore(HouseholdData householdData, Connection conn){
         HashMap<String, HouseholdData> result = new HashMap<String, HouseholdData>();
         try{
-            PreparedStatement tempSql = conn.prepareStatement("select * from household_data where house_id=? and household_id=? and slice_gap=? and slice_index=?");
-            tempSql.setInt(1, householdData.getHouseId());
-            tempSql.setInt(2, householdData.getHouseholdId());
-            tempSql.setInt(3, householdData.getGap());
-            tempSql.setInt(4, householdData.getTimeslice().getNextTimeslice(2).getIndex());
-            try (ResultSet rs = tempSql.executeQuery()) {
-                while (rs.next()) {
-                    Integer rsHouseId = rs.getInt("house_id");
-                    Integer rsHouseholdId = rs.getInt("household_id");
-                    String rsYear = rs.getString("year");
-                    String rsMonth = rs.getString("month");
-                    String rsDay = rs.getString("day");
-                    Integer rsIndex = rs.getInt("slice_index");
-                    Integer rsGap = rs.getInt("slice_gap");
-                    Double rsAvg = rs.getDouble("avg");
-                    
-                    if(Integer.parseInt(rsYear) < Integer.parseInt(householdData.getYear())){
-                        HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
-                        result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
-                    }
-                    else if(Integer.parseInt(rsYear) == Integer.parseInt(householdData.getYear())){
-                        if(Integer.parseInt(rsMonth) < Integer.parseInt(householdData.getMonth())){
+            try (PreparedStatement tempSql = conn.prepareStatement("select * from household_data where house_id=? and household_id=? and slice_gap=? and slice_index=?")){
+                tempSql.setInt(1, householdData.getHouseId());
+                tempSql.setInt(2, householdData.getHouseholdId());
+                tempSql.setInt(3, householdData.getGap());
+                tempSql.setInt(4, householdData.getTimeslice().getNextTimeslice(2).getIndex());
+                try (ResultSet rs = tempSql.executeQuery()) {
+                    while (rs.next()) {
+                        Integer rsHouseId = rs.getInt("house_id");
+                        Integer rsHouseholdId = rs.getInt("household_id");
+                        String rsYear = rs.getString("year");
+                        String rsMonth = rs.getString("month");
+                        String rsDay = rs.getString("day");
+                        Integer rsIndex = rs.getInt("slice_index");
+                        Integer rsGap = rs.getInt("slice_gap");
+                        Double rsAvg = rs.getDouble("avg");
+                        
+                        if(Integer.parseInt(rsYear) < Integer.parseInt(householdData.getYear())){
                             HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
                             result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
                         }
-                        else if(Integer.parseInt(rsMonth) == Integer.parseInt(householdData.getMonth())){
-                            if(Integer.parseInt(rsDay) < Integer.parseInt(householdData.getDay())){
+                        else if(Integer.parseInt(rsYear) == Integer.parseInt(householdData.getYear())){
+                            if(Integer.parseInt(rsMonth) < Integer.parseInt(householdData.getMonth())){
                                 HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
                                 result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
                             }
+                            else if(Integer.parseInt(rsMonth) == Integer.parseInt(householdData.getMonth())){
+                                if(Integer.parseInt(rsDay) < Integer.parseInt(householdData.getDay())){
+                                    HouseholdData rsHouseholdData = new HouseholdData(rsHouseId, rsHouseholdId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
+                                    result.put(rsHouseholdData.getUniqueId(), rsHouseholdData);
+                                }
+                            }
                         }
                     }
+                    rs.close();
+                    tempSql.close();
+                    conn.commit();
                 }
-                rs.close();
-                tempSql.close();
-                conn.commit();
             }
         } catch(Exception ex){
             ex.printStackTrace();
@@ -772,35 +774,36 @@ public class DB_store {
     public static HashMap<String, DeviceData> queryBefore(DeviceData deviceData, Connection conn){
         HashMap<String, DeviceData> result = new HashMap<String, DeviceData>();
         try{
-            PreparedStatement tempSql = conn.prepareStatement("select * from device_data where house_id=? and household_id=? and slice_gap=? and slice_index=?");
-            tempSql.setInt(1, deviceData.getHouseId());
-            tempSql.setInt(2, deviceData.getHouseholdId());
-            tempSql.setInt(3, deviceData.getGap());
-            tempSql.setInt(4, deviceData.getTimeslice().getNextTimeslice(2).getIndex());
-            try (ResultSet rs = tempSql.executeQuery()) {
-                while (rs.next()) {
-                    Integer rsHouseId = rs.getInt("house_id");
-                    Integer rsHouseholdId = rs.getInt("household_id");
-                    Integer rsDeviceId = rs.getInt("device_id");
-                    String rsYear = rs.getString("year");
-                    String rsMonth = rs.getString("month");
-                    String rsDay = rs.getString("day");
-                    Integer rsIndex = rs.getInt("slice_index");
-                    Integer rsGap = rs.getInt("slice_gap");
-                    Double rsAvg = rs.getDouble("avg");
-                    
-                    if(Integer.parseInt(rsYear) <= Integer.parseInt(deviceData.getYear())){
-                        if(Integer.parseInt(rsMonth) <= Integer.parseInt(deviceData.getMonth())){
-                            if(Integer.parseInt(rsDay) <= Integer.parseInt(deviceData.getDay())){
-                                DeviceData rsDeviceData = new DeviceData(rsHouseId, rsHouseholdId, rsDeviceId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
-                                result.put(rsDeviceData.getUniqueId(), rsDeviceData);
+            try (PreparedStatement tempSql = conn.prepareStatement("select * from device_data where house_id=? and household_id=? and slice_gap=? and slice_index=?")){
+                tempSql.setInt(1, deviceData.getHouseId());
+                tempSql.setInt(2, deviceData.getHouseholdId());
+                tempSql.setInt(3, deviceData.getGap());
+                tempSql.setInt(4, deviceData.getTimeslice().getNextTimeslice(2).getIndex());
+                try (ResultSet rs = tempSql.executeQuery()) {
+                    while (rs.next()) {
+                        Integer rsHouseId = rs.getInt("house_id");
+                        Integer rsHouseholdId = rs.getInt("household_id");
+                        Integer rsDeviceId = rs.getInt("device_id");
+                        String rsYear = rs.getString("year");
+                        String rsMonth = rs.getString("month");
+                        String rsDay = rs.getString("day");
+                        Integer rsIndex = rs.getInt("slice_index");
+                        Integer rsGap = rs.getInt("slice_gap");
+                        Double rsAvg = rs.getDouble("avg");
+                        
+                        if(Integer.parseInt(rsYear) <= Integer.parseInt(deviceData.getYear())){
+                            if(Integer.parseInt(rsMonth) <= Integer.parseInt(deviceData.getMonth())){
+                                if(Integer.parseInt(rsDay) <= Integer.parseInt(deviceData.getDay())){
+                                    DeviceData rsDeviceData = new DeviceData(rsHouseId, rsHouseholdId, rsDeviceId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
+                                    result.put(rsDeviceData.getUniqueId(), rsDeviceData);
+                                }
                             }
                         }
                     }
+                    rs.close();
+                    tempSql.close();
+                    conn.commit();
                 }
-                rs.close();
-                tempSql.close();
-                conn.commit();
             }
         } catch(Exception ex){
             ex.printStackTrace();

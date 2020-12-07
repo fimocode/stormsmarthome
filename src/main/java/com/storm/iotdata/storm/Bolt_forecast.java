@@ -143,41 +143,42 @@ public class Bolt_forecast extends BaseRichBolt {
     public static <E> HashMap<String, E> forecast(Class E, HashMap<String,E> inputData){
         HashMap<String, E> result = new HashMap<String, E>();
         try{
-            Connection conn = DB_store.initConnection();
-            if(E.equals(HouseData.class)){
-                for(String key : inputData.keySet()){
-                    HouseData ele = (HouseData) inputData.get(key);
-                    Double median = getMedian(DB_store.queryBefore(ele, conn));
-                    Double forecastValue = ele.getAvg();
-                    if(median > 0){
-                        forecastValue = (forecastValue + median)/2;
+            try (Connection conn = DB_store.initConnection()){
+                if(E.equals(HouseData.class)){
+                    for(String key : inputData.keySet()){
+                        HouseData ele = (HouseData) inputData.get(key);
+                        Double median = getMedian(DB_store.queryBefore(ele, conn));
+                        Double forecastValue = ele.getAvg();
+                        if(median > 0){
+                            forecastValue = (forecastValue + median)/2;
+                        }
+                        result.put(key, (E) new HouseData(ele.getHouseId(), ele.getTimeslice().getNextTimeslice(2), forecastValue));
                     }
-                    result.put(key, (E) new HouseData(ele.getHouseId(), ele.getTimeslice().getNextTimeslice(2), forecastValue));
                 }
-            }
-            else if(E.equals(HouseholdData.class)){
-                for(String key : inputData.keySet()){
-                    HouseholdData ele = (HouseholdData) inputData.get(key);
-                    Double median = getMedian(DB_store.queryBefore(ele, conn));
-                    Double forecastValue = ele.getAvg();
-                    if(median > 0){
-                        forecastValue = (forecastValue + median)/2;
+                else if(E.equals(HouseholdData.class)){
+                    for(String key : inputData.keySet()){
+                        HouseholdData ele = (HouseholdData) inputData.get(key);
+                        Double median = getMedian(DB_store.queryBefore(ele, conn));
+                        Double forecastValue = ele.getAvg();
+                        if(median > 0){
+                            forecastValue = (forecastValue + median)/2;
+                        }
+                        result.put(key, (E) new HouseholdData(ele.getHouseId(), ele.getHouseholdId() , ele.getTimeslice().getNextTimeslice(2), forecastValue));
                     }
-                    result.put(key, (E) new HouseholdData(ele.getHouseId(), ele.getHouseholdId() , ele.getTimeslice().getNextTimeslice(2), forecastValue));
                 }
-            }
-            else if(E.equals(DeviceData.class)){
-                for(String key : inputData.keySet()){
-                    DeviceData ele = (DeviceData) inputData.get(key);
-                    Double median = getMedian(DB_store.queryBefore(ele, conn));
-                    Double forecastValue = ele.getAvg();
-                    if(median > 0){
-                        forecastValue = (forecastValue + median)/2;
+                else if(E.equals(DeviceData.class)){
+                    for(String key : inputData.keySet()){
+                        DeviceData ele = (DeviceData) inputData.get(key);
+                        Double median = getMedian(DB_store.queryBefore(ele, conn));
+                        Double forecastValue = ele.getAvg();
+                        if(median > 0){
+                            forecastValue = (forecastValue + median)/2;
+                        }
+                        result.put(key, (E) new DeviceData(ele.getHouseId(), ele.getHouseholdId(), ele.getDeviceId(), ele.getTimeslice().getNextTimeslice(2), forecastValue));
                     }
-                    result.put(key, (E) new DeviceData(ele.getHouseId(), ele.getHouseholdId(), ele.getDeviceId(), ele.getTimeslice().getNextTimeslice(2), forecastValue));
                 }
+                conn.close();
             }
-            conn.close();
         } catch (Exception ex){
             ex.printStackTrace();
         } finally {
@@ -241,7 +242,9 @@ public class Bolt_forecast extends BaseRichBolt {
                     median = temp.getAvg();
                 }
             }
+            beforeAvgs = null;
         }
+        beforeData = null;
         return median;
     }
 }
