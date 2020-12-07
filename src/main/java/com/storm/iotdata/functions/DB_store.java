@@ -726,6 +726,9 @@ public class DB_store {
                         }
                     }
                 }
+                rs.close();
+                tempSql.close();
+                conn.commit();
             }
         } catch(Exception ex){
             ex.printStackTrace();
@@ -762,6 +765,9 @@ public class DB_store {
                         }
                     }
                 }
+                rs.close();
+                tempSql.close();
+                conn.commit();
             }
         } catch(Exception ex){
             ex.printStackTrace();
