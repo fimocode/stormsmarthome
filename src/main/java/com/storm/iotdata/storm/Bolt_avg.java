@@ -140,7 +140,7 @@ public class Bolt_avg extends BaseRichBolt {
                 Long execTime = System.currentTimeMillis() - startExec;
 
                 Stack<String> logs = new Stack<String>();
-                logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/(triggerInterval*1000)));
+                logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/triggerInterval));
                 logs.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
                 logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
                 logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
