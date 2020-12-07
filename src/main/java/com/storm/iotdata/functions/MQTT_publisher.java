@@ -1,35 +1,35 @@
 package com.storm.iotdata.functions;
 
+import java.io.File;
 import java.lang.reflect.Array;
 import java.util.Stack;
 import java.util.UUID;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import com.storm.iotdata.models.*;
 
 public class MQTT_publisher {
-    public static void deviceNotificationsPublish(Stack<DeviceNotification> dataList, String brokerURL, String topicPrefix) {
-        new DeviceNotificationPublisher(dataList, brokerURL, topicPrefix).start();
+    public static void deviceNotificationsPublish(Stack<DeviceNotification> dataList, String brokerURL, String topicPrefix, File locker) {
+        new DeviceNotificationPublisher(dataList, brokerURL, topicPrefix, locker).start();
     }
 
-    public static void householdNotificationsPublish(Stack<HouseholdNotification> dataList, String brokerURL, String topicPrefix) {
-        new HouseholdNotificationPublisher(dataList, brokerURL, topicPrefix).start();
+    public static void householdNotificationsPublish(Stack<HouseholdNotification> dataList, String brokerURL, String topicPrefix, File locker) {
+        new HouseholdNotificationPublisher(dataList, brokerURL, topicPrefix, locker).start();
 	}
 
-	public static void houseNotificationsPublish(Stack<HouseNotification> dataList, String brokerURL, String topicPrefix) {
-        new HouseNotificationPublisher(dataList, brokerURL, topicPrefix).start();
+	public static void houseNotificationsPublish(Stack<HouseNotification> dataList, String brokerURL, String topicPrefix, File locker) {
+        new HouseNotificationPublisher(dataList, brokerURL, topicPrefix, locker).start();
     }
     
-    public static void stormLogPublish(Stack<String> dataList, String brokerURL, String topicPrefix) {
-        new StormLogPublisher(dataList, brokerURL, topicPrefix).start();
+    public static void stormLogPublish(Stack<String> dataList, String brokerURL, String topicPrefix, File locker) {
+        new StormLogPublisher(dataList, brokerURL, topicPrefix, locker).start();
     }
 
-    public static void mannualPublish(String brokerURL, String topic, String[] messages) {
-        new ManualPublisher(brokerURL, topic, messages);
+    public static void mannualPublish(String brokerURL, String topic, String[] messages, File locker) {
+        new ManualPublisher(brokerURL, topic, messages, locker).start();
     }
 }
 
@@ -40,12 +40,14 @@ class DeviceNotificationPublisher extends Thread {
     String householdTopic = "%shousehold-%d-%d-notification";
     String houseTopic = "%shouse-%d-notification";
     String topicPrefix = "";
+    File locker;
     Stack<DeviceNotification> dataList;
 
-    public DeviceNotificationPublisher(Stack<DeviceNotification> dataList, String brokerURL, String topicPrefix) {
+    public DeviceNotificationPublisher(Stack<DeviceNotification> dataList, String brokerURL, String topicPrefix, File locker) {
         this.dataList = dataList;
         this.brokerURL = brokerURL;
         this.topicPrefix = topicPrefix;
+        this.locker = locker;
     }
 
     @Override
@@ -53,6 +55,7 @@ class DeviceNotificationPublisher extends Thread {
         Long start = System.currentTimeMillis();
         String publisherId = UUID.randomUUID().toString();
         try {
+            locker.createNewFile();
             IMqttClient publisher = new MqttClient(brokerURL, publisherId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
@@ -77,10 +80,11 @@ class DeviceNotificationPublisher extends Thread {
             publisher.disconnect();
             publisher.close();
             System.out.printf("[Device Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-        } catch (MqttException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        locker.delete();
     }
 }
 
@@ -90,12 +94,14 @@ class HouseholdNotificationPublisher extends Thread {
     String householdTopic = "%shousehold-%d-%d-notification";
     String houseTopic = "%shouse-%d-notification";
     String topicPrefix = "";
+    File locker;
     Stack<HouseholdNotification> dataList;
 
-    public HouseholdNotificationPublisher(Stack<HouseholdNotification> dataList, String brokerURL, String topicPrefix) {
+    public HouseholdNotificationPublisher(Stack<HouseholdNotification> dataList, String brokerURL, String topicPrefix, File locker) {
         this.dataList = dataList;
         this.brokerURL = brokerURL;
         this.topicPrefix = topicPrefix;
+        this.locker = locker;
     }
 
     @Override
@@ -103,6 +109,7 @@ class HouseholdNotificationPublisher extends Thread {
         Long start = System.currentTimeMillis();
         String publisherId = UUID.randomUUID().toString();
         try {
+            locker.createNewFile();
             IMqttClient publisher = new MqttClient(brokerURL, publisherId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
@@ -125,10 +132,11 @@ class HouseholdNotificationPublisher extends Thread {
             publisher.disconnect();
             publisher.close();
             System.out.printf("[Household Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-        } catch (MqttException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        locker.delete();
     }
 }
 
@@ -137,12 +145,14 @@ class HouseNotificationPublisher extends Thread {
     String globalTopic = "%siot-notification";
     String houseTopic = "%shouse-%d-notification";
     String topicPrefix = "";
+    File locker;
     Stack<HouseNotification> dataList;
 
-    public HouseNotificationPublisher(Stack<HouseNotification> dataList, String brokerURL, String topicPrefix) {
+    public HouseNotificationPublisher(Stack<HouseNotification> dataList, String brokerURL, String topicPrefix, File locker) {
         this.dataList = dataList;
         this.brokerURL = brokerURL;
         this.topicPrefix = topicPrefix;
+        this.locker = locker;
     }
 
     @Override
@@ -150,6 +160,7 @@ class HouseNotificationPublisher extends Thread {
         Long start = System.currentTimeMillis();
         String publisherId = UUID.randomUUID().toString();
         try {
+            locker.createNewFile();
             IMqttClient publisher = new MqttClient(brokerURL, publisherId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
@@ -170,10 +181,11 @@ class HouseNotificationPublisher extends Thread {
             publisher.disconnect();
             publisher.close();
             System.out.printf("[House Notification Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-        } catch (MqttException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        locker.delete();
     }
 }
 
@@ -181,12 +193,14 @@ class StormLogPublisher extends Thread {
     String brokerURL = "tcp://mqtt-broker:1883";
     String stormLogTopic = "%sstorm-log";
     String topicPrefix = "";
+    File locker;
     Stack<String> dataList;
 
-    public StormLogPublisher(Stack<String> dataList, String brokerURL, String topicPrefix) {
+    public StormLogPublisher(Stack<String> dataList, String brokerURL, String topicPrefix, File locker) {
         this.dataList = dataList;
         this.brokerURL = brokerURL;
         this.topicPrefix = topicPrefix;
+        this.locker = locker;
     }
 
     @Override
@@ -194,6 +208,7 @@ class StormLogPublisher extends Thread {
         Long start = System.currentTimeMillis();
         String publisherId = UUID.randomUUID().toString();
         try {
+            locker.createNewFile();
             IMqttClient publisher = new MqttClient(brokerURL, publisherId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
@@ -211,54 +226,61 @@ class StormLogPublisher extends Thread {
             publisher.disconnect();
             publisher.close();
             System.out.printf("[Storm Log Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-        } catch (MqttException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        locker.delete();
     }
 }
 
 class ManualPublisher extends Thread{
-    private String brokerURL;
-    private String topic;
-    private String[] messages;
-    private Integer qos = 0;
-    private Boolean retained = false;
+    String brokerURL;
+    String topic;
+    String[] messages;
+    Integer qos = 0;
+    Boolean retained = false;
+    File locker;
 
 
-    public ManualPublisher(String brokerURL, String topic, String[] messages, Integer qos, Boolean retained) {
+    public ManualPublisher(String brokerURL, String topic, String[] messages, Integer qos, Boolean retained, File locker) {
         this.brokerURL = brokerURL;
         this.topic = topic;
         this.messages = messages;
         this.qos = qos;
         this.retained = retained;
+        this.locker = locker;
     }
 
-    public ManualPublisher(String brokerURL, String topic, String[] messages, Integer qos) {
+    public ManualPublisher(String brokerURL, String topic, String[] messages, Integer qos, File locker) {
         this.brokerURL = brokerURL;
         this.topic = topic;
         this.messages = messages;
         this.qos = qos;
+        this.locker = locker;
     }
 
-    public ManualPublisher(String brokerURL, String topic, String[] messages, Boolean retained) {
+    public ManualPublisher(String brokerURL, String topic, String[] messages, Boolean retained, File locker) {
         this.brokerURL = brokerURL;
         this.topic = topic;
         this.messages = messages;
         this.retained = retained;
+        this.locker = locker;
     }
 
-    public ManualPublisher(String brokerURL, String topic, String[] messages){
+    public ManualPublisher(String brokerURL, String topic, String[] messages, File locker){
         this.brokerURL = brokerURL;
         this.topic = topic;
         this.messages = messages;
+        this.locker = locker;
     }
 
-    public ManualPublisher(String brokerURL, String topic, String messages){
+    public ManualPublisher(String brokerURL, String topic, String messages, File locker){
         this.brokerURL = brokerURL;
         this.topic = topic;
         String[] temp = {messages};
         this.messages = temp;
+        this.locker = locker;
     }
 
     @Override
@@ -266,6 +288,7 @@ class ManualPublisher extends Thread{
         Long start = System.currentTimeMillis();
         String publisherId = UUID.randomUUID().toString();
         try {
+            locker.createNewFile();
             IMqttClient publisher = new MqttClient(brokerURL, publisherId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
@@ -283,9 +306,10 @@ class ManualPublisher extends Thread{
             publisher.disconnect();
             publisher.close();
             System.out.printf("[Mannual Publisher] MQTT Publisher took %.2f s\n", (float) (System.currentTimeMillis() - start) / 1000);
-        } catch (MqttException e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        locker.delete();
     }
 }

@@ -85,12 +85,12 @@ public class Bolt_forecast extends BaseRichBolt {
                 logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
                 logs.add(String.format("[Bolt_forecast_%d] DeviceData Total: %-10d | Saved and clean: %-10d\n", gap, deviceDataList.size(), tempDeviceDataForecast.size()));
 
-                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/bolt-forecast-"+ gap +"-log-publish.lck"));
                 for(String data : logs){
                     System.out.println(data);
                 }
                 try {
-                    FileWriter log = new FileWriter(new File("tmp/bolt_forecast_"+ gap +".tmp"), false);
+                    FileWriter log = new FileWriter(new File("./tmp/bolt_forecast_"+ gap +".tmp"), false);
                     PrintWriter pwOb = new PrintWriter(log , false);
                     pwOb.flush();
                     for(String data : logs){

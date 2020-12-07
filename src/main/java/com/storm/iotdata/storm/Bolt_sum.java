@@ -245,7 +245,7 @@ public class Bolt_sum extends BaseRichBolt {
                     // House noti saved
                     // Publish noti
                     if(config.isNotificationMQTT()){
-                        MQTT_publisher.houseNotificationsPublish(houseNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                        MQTT_publisher.houseNotificationsPublish(houseNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/housenoti2mqtt-"+gap+".lck"));
                     }
                 }
                 else if(++houseNotiUpdateFailCount>=3){
@@ -257,7 +257,7 @@ public class Bolt_sum extends BaseRichBolt {
                     // House noti pushed
                     // Publish noti
                     if(config.isNotificationMQTT()){
-                        MQTT_publisher.householdNotificationsPublish(householdNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                        MQTT_publisher.householdNotificationsPublish(householdNotificationList, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/householdnoti2mqtt-"+gap+".lck"));
                     }
                 }
                 else if(++householdNotiUpdateFailCount>=3){
@@ -273,12 +273,12 @@ public class Bolt_sum extends BaseRichBolt {
                 logs.push(String.format("[Bolt_sum_%-3d] Timeslice | Total: %-10d | Need clean: %-10d\n", gap, allData.size(), timesliceNeedClean.size()));
                 logs.push(String.format("[Bolt_sum_%-3d] Notification | House: %-10d | Household: %-10d\n", gap, houseNotificationList.size(), householdNotificationList.size()));
                 logs.push(String.format("[Bolt_sum_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
-                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/bolt-sum-"+gap+"-log-publish.lck"));
                 for(String data : logs){
                     System.out.println(data);
                 }
                 try {
-                    FileWriter log = new FileWriter(new File("tmp/bolt_sum_"+ gap +".tmp"), false);
+                    FileWriter log = new FileWriter(new File("./tmp/bolt_sum_"+ gap +".tmp"), false);
                     PrintWriter pwOb = new PrintWriter(log , false);
                     pwOb.flush();
                     for(String data : logs){

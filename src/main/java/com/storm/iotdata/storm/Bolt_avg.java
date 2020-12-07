@@ -128,7 +128,7 @@ public class Bolt_avg extends BaseRichBolt {
                     //Noti saved
                     //Publish Noti
                     if(config.isNotificationMQTT()){
-                        MQTT_publisher.deviceNotificationsPublish(deviceNotificationList, config.getSpoutBrokerURL(), config.getMqttTopicPrefix());
+                        MQTT_publisher.deviceNotificationsPublish(deviceNotificationList, config.getSpoutBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/devicenoti2mqtt-"+ gap +".lck"));
                     }
                 }
                 else if(++deviceNotiUpdateFailCount>=3){
@@ -143,12 +143,12 @@ public class Bolt_avg extends BaseRichBolt {
                 logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
                 logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
 
-                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix());
+                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/bolt-avg-"+ gap +"-log-publish.lck"));
                 for(String data : logs){
                     System.out.println(data);
                 }
                 try {
-                    FileWriter log = new FileWriter(new File("tmp/bolt_avg_"+ gap +".tmp"), false);
+                    FileWriter log = new FileWriter(new File("./tmp/bolt_avg_"+ gap +".tmp"), false);
                     PrintWriter pwOb = new PrintWriter(log , false);
                     pwOb.flush();
                     for(String data : logs){

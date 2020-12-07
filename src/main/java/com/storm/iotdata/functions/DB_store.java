@@ -807,6 +807,7 @@ class DeviceProp2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -858,6 +859,7 @@ class HouseholdProp2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -908,6 +910,7 @@ class HouseProp2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -963,6 +966,7 @@ class DeviceData2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -1015,6 +1019,7 @@ class HouseholdData2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -1068,6 +1073,7 @@ class HouseData2DB extends Thread {
             conn.commit();
             conn.close();
             locker.delete();
+            dataList = null;
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1125,6 +1131,7 @@ class DeviceDataForecast2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -1179,6 +1186,7 @@ class HouseholdDataForecast2DB extends Thread {
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
+            dataList = null;
         } catch (Exception ex) {
             try {
                 System.out.printf("\n[%s] Wait for 10s then try again", locker.getName());
@@ -1234,6 +1242,7 @@ class HouseDataForecast2DB extends Thread {
             conn.commit();
             conn.close();
             locker.delete();
+            dataList = null;
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1291,6 +1300,7 @@ class DeviceNotification2DB extends Thread {
             conn.commit();
             conn.close();
             locker.delete();
+            dataList = null;
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1348,6 +1358,7 @@ class HouseholdNotification2DB extends Thread {
             conn.commit();
             conn.close();
             locker.delete();
+            dataList = null;
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
@@ -1404,6 +1415,7 @@ class HouseNotification2DB extends Thread {
             conn.commit();
             conn.close();
             locker.delete();
+            dataList = null;
             System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
