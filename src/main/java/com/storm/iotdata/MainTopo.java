@@ -101,8 +101,8 @@ public class MainTopo {
                             builder.setBolt("avg-" + windowSize, new Bolt_avg(windowSize, config), 1));
                     sumList.put("sum-" + windowSize,
                             builder.setBolt("sum-" + windowSize, new Bolt_sum(windowSize, config), 1));
-                    forecastList.put("forecast-" + windowSize,
-                            builder.setBolt("forecast-" + windowSize, new Bolt_forecast(windowSize, config), 1));
+                    // forecastList.put("forecast-" + windowSize,
+                    //         builder.setBolt("forecast-" + windowSize, new Bolt_forecast(windowSize, config), 1));
                 }
                 
                 for (Integer windowSize : config.getWindowList()) {
@@ -113,14 +113,14 @@ public class MainTopo {
                     avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger", "trigger");
                     sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize, "data");
                     sumList.get("sum-" + windowSize).shuffleGrouping("avg-" + windowSize, "trigger");
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("avg-" + windowSize, "data");
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize, "data");
-                    forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize, "trigger");
+                    // forecastList.get("forecast-" + windowSize).shuffleGrouping("avg-" + windowSize, "data");
+                    // forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize, "data");
+                    // forecastList.get("forecast-" + windowSize).shuffleGrouping("sum-" + windowSize, "trigger");
                 }
 
                 Config conf = new Config();
                 // conf.setDebug(true);
-                conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 10000);
+                conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 5000);
                 // conf.setNumWorkers(1);
 
                 // Local Cluster Test
