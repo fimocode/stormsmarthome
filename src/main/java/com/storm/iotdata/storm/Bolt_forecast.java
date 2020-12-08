@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
