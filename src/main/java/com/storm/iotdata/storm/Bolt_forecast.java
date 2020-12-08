@@ -55,6 +55,8 @@ public class Bolt_forecast extends BaseRichBolt {
                     for(String key : houseDataForecast.keySet()){
                         houseDataList.remove(key);
                     }
+                    houseDataForecast = null;
+                    tempHouseDataForecast = null;
                 };
                 //Log HouseData
                 logs.add(String.format("[Bolt_forecast_%d] HouseData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
@@ -68,6 +70,8 @@ public class Bolt_forecast extends BaseRichBolt {
                     for(String key : householdDataForecast.keySet()){
                         householdDataList.remove(key);
                     }
+                    householdDataForecast = null;
+                    tempHouseholdDataForecast = null;
                 };
                 //Log HouseholdData
                 logs.add(String.format("[Bolt_forecast_%d] HouseholdData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
@@ -80,6 +84,8 @@ public class Bolt_forecast extends BaseRichBolt {
                     for(String key : deviceDataForecast.keySet()){
                         deviceDataList.remove(key);
                     }
+                    deviceDataForecast = null;
+                    tempDeviceDataForecast = null;
                 };
                 //Log HouseData
                 logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
