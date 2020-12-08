@@ -689,37 +689,37 @@ public class DB_store {
 
     public static HashMap<String, HouseData> queryBefore(HouseData houseData, Connection conn){
         HashMap<String, HouseData> result = new HashMap<String, HouseData>();
-        // try{
-        //     try (PreparedStatement tempSql = conn.prepareStatement("select * from house_data where house_id=? and slice_gap=? and slice_index=?")){
-        //         tempSql.setInt(1, houseData.getHouseId());
-        //         tempSql.setInt(2, houseData.getGap());
-        //         tempSql.setInt(3, houseData.getTimeslice().getNextTimeslice(2).getIndex());
-        //         try (ResultSet rs = tempSql.executeQuery()) {
-        //             while (rs.next()) {
-        //                 Integer rsHouseId = rs.getInt("house_id");
-        //                 String rsYear = rs.getString("year");
-        //                 String rsMonth = rs.getString("month");
-        //                 String rsDay = rs.getString("day");
-        //                 Integer rsIndex = rs.getInt("slice_index");
-        //                 Integer rsGap = rs.getInt("slice_gap");
-        //                 Double rsAvg = rs.getDouble("avg");
+        try{
+            try (PreparedStatement tempSql = conn.prepareStatement("select * from house_data where house_id=? and slice_gap=? and slice_index=?")){
+                tempSql.setInt(1, houseData.getHouseId());
+                tempSql.setInt(2, houseData.getGap());
+                tempSql.setInt(3, houseData.getTimeslice().getNextTimeslice(2).getIndex());
+                try (ResultSet rs = tempSql.executeQuery()) {
+                    while (rs.next()) {
+                        Integer rsHouseId = rs.getInt("house_id");
+                        String rsYear = rs.getString("year");
+                        String rsMonth = rs.getString("month");
+                        String rsDay = rs.getString("day");
+                        Integer rsIndex = rs.getInt("slice_index");
+                        Integer rsGap = rs.getInt("slice_gap");
+                        Double rsAvg = rs.getDouble("avg");
                         
-        //                 if(Integer.parseInt(rsYear) <= Integer.parseInt(houseData.getYear())){
-        //                     if(Integer.parseInt(rsMonth) <= Integer.parseInt(houseData.getMonth())){
-        //                         if(Integer.parseInt(rsDay) <= Integer.parseInt(houseData.getDay())){
-        //                             HouseData rsHouseData = new HouseData(rsHouseId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
-        //                             result.put(rsHouseData.getUniqueId(), rsHouseData);
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //             rs.close();
-        //             tempSql.close();
-        //         }
-        //     }
-        // } catch(Exception ex){
-        //     ex.printStackTrace();
-        // }
+                        if(Integer.parseInt(rsYear) <= Integer.parseInt(houseData.getYear())){
+                            if(Integer.parseInt(rsMonth) <= Integer.parseInt(houseData.getMonth())){
+                                if(Integer.parseInt(rsDay) <= Integer.parseInt(houseData.getDay())){
+                                    HouseData rsHouseData = new HouseData(rsHouseId, rsYear, rsMonth, rsDay, rsIndex, rsGap, rsAvg);
+                                    result.put(rsHouseData.getUniqueId(), rsHouseData);
+                                }
+                            }
+                        }
+                    }
+                    rs.close();
+                    tempSql.close();
+                }
+            }
+        } catch(Exception ex){
+            ex.printStackTrace();
+        }
         return result;
     }
 
