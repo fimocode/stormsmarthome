@@ -18,6 +18,10 @@ public class SpoutProp {
     private Long fail = Long.valueOf(0);
     private String lastUpdate = getCurrentISOString();
 
+    public SpoutProp(){
+        this.name = "ERROR";
+        this.connect = false;
+    }
 
     public SpoutProp(String name, Boolean connect, Float totalSpeed, Float loadSpeed, Long total, Long load, Integer queue, Long success, Long fail) {
         this.name = name;
