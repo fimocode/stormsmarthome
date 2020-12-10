@@ -59,7 +59,6 @@ public class Bolt_avg extends BaseRichBolt {
         try{
             if(tuple.getSourceStreamId().equals("trigger")){
                 if(((++triggerCount)%gap)==0){
-                    triggerCount = 0;
                     Integer triggerInterval = (Integer) tuple.getValueByField("trigger");
                     SpoutProp spoutProp = (SpoutProp) tuple.getValueByField("spoutProp");
 
@@ -141,7 +140,7 @@ public class Bolt_avg extends BaseRichBolt {
                     Long execTime = System.currentTimeMillis() - startExec;
 
                     Stack<String> logs = new Stack<String>();
-                    logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/triggerInterval/gap));
+                    logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/triggerInterval/triggerCount));
                     logs.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
                     logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
                     logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
@@ -171,6 +170,7 @@ public class Bolt_avg extends BaseRichBolt {
 
                     _collector.emit("trigger", new Values(triggerInterval, spoutProp));
                     processSpeed = Long.valueOf(0);
+                    triggerCount = 0;
                 }
                 _collector.ack(tuple);
             }
