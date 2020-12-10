@@ -57,120 +57,122 @@ public class Bolt_avg extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         try{
-            if(tuple.getSourceStreamId().equals("trigger") && ((++triggerCount)%gap)==0){
-                triggerCount = 0;
-                Integer triggerInterval = (Integer) tuple.getValueByField("trigger");
-                SpoutProp spoutProp = (SpoutProp) tuple.getValueByField("spoutProp");
+            if(tuple.getSourceStreamId().equals("trigger")){
+                if(((++triggerCount)%gap)==0){
+                    triggerCount = 0;
+                    Integer triggerInterval = (Integer) tuple.getValueByField("trigger");
+                    SpoutProp spoutProp = (SpoutProp) tuple.getValueByField("spoutProp");
 
-                Long startExec = System.currentTimeMillis();
-                Stack<String> needClean = new Stack<String>();
-                Stack<DeviceData> needSave = new Stack<DeviceData>();
-                Stack<DeviceNotification> deviceNotificationList = new Stack<DeviceNotification>();
+                    Long startExec = System.currentTimeMillis();
+                    Stack<String> needClean = new Stack<String>();
+                    Stack<DeviceData> needSave = new Stack<DeviceData>();
+                    Stack<DeviceNotification> deviceNotificationList = new Stack<DeviceNotification>();
 
-                //Init data for save and clean procedure
-                for(String key : deviceDataList.keySet()){
-                    DeviceData data = deviceDataList.get(key);
-                    if(!data.isSaved()){
-                        _collector.emit("data", new Values(data.getClass(), data));
-                        needSave.push(data);
+                    //Init data for save and clean procedure
+                    for(String key : deviceDataList.keySet()){
+                        DeviceData data = deviceDataList.get(key);
+                        if(!data.isSaved()){
+                            _collector.emit("data", new Values(data.getClass(), data));
+                            needSave.push(data);
+                        }
+                        else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(cleanTrigger*gap*60000)){
+                            needClean.push(key);
+                        }
                     }
-                    else if(data.isSaved() && (System.currentTimeMillis()-data.getLastUpdate())>(cleanTrigger*gap*60000)){
-                        needClean.push(key);
-                    }
-                }
 
-                //DB store data
-                if(DB_store.pushDeviceData(needSave, new File("./tmp/deviceData2db-" + gap + ".lck"))){
-                    deviceDataUpdateFailCount=0;
+                    //DB store data
+                    if(DB_store.pushDeviceData(needSave, new File("./tmp/deviceData2db-" + gap + ".lck"))){
+                        deviceDataUpdateFailCount=0;
+                        for(DeviceData deviceData : needSave){
+                            deviceDataList.get(deviceData.getUniqueId()).save();
+                        }
+                    }
+                    else if(++deviceDataUpdateFailCount >= 3) {
+                        new File("./tmp/deviceData2db-" + gap + ".lck").delete();
+                    }
+
+                    //DB store prop
+                    Stack<DeviceProp> tempDevicePropList = new Stack<DeviceProp>();
+                    tempDevicePropList.addAll(devicePropList.values());
+                    if(DB_store.pushDeviceProp(tempDevicePropList, new File("./tmp/deviceProp2db-"+ gap + ".lck"))){
+                        devicePropUpdateFailCount=0;
+                        for(DeviceProp deviceProp : tempDevicePropList){
+                            devicePropList.get(deviceProp.getDeviceUniqueId()).save();
+                        }
+                    }
+                    else if(++devicePropUpdateFailCount >= 3) {
+                        new File("./tmp/deviceProp2db-"+ gap + ".lck").delete();
+                    }
+
+                    //Check outlier
                     for(DeviceData deviceData : needSave){
-                        deviceDataList.get(deviceData.getUniqueId()).save();
+                        String devicePropUniqueId = deviceData.getDeviceUniqueId();
+                        DeviceProp deviceProp = devicePropList.getOrDefault(devicePropUniqueId, new DeviceProp(deviceData.houseId, deviceData.householdId, deviceData.deviceId, this.gap));
+                        if(config.isDeviceCheckMax() && deviceProp.getMax()!=0 && (deviceData.getAvg()-deviceProp.getMax())>=(deviceProp.getMax()*config.getDeviceLogGap()/100)){
+                            //Check over Max
+                            deviceNotificationList.push(new DeviceNotification(1, deviceData, deviceProp));
+                        }
+                        if(config.isDeviceCheckAvg() && deviceProp.getAvg()!=0 && (deviceData.getAvg()-deviceProp.getAvg())>=(deviceProp.getAvg()*config.getDeviceLogGap()/100)){
+                            //Check over Avg
+                            deviceNotificationList.push(new DeviceNotification(0, deviceData, deviceProp));
+                        }
+                        if(config.isDeviceCheckMin() && deviceProp.getMin()!=0 && (deviceProp.getMin()-deviceData.getAvg())<=(deviceProp.getMin()*config.getDeviceLogGap()/100)){
+                            //Check under Min
+                            deviceNotificationList.push(new DeviceNotification(-1, deviceData, deviceProp));
+                        }
+                        //Save data_prop
+                        devicePropList.put(devicePropUniqueId, deviceProp.addValue(deviceData.getAvg()));
                     }
-                }
-                else if(++deviceDataUpdateFailCount >= 3) {
-                    new File("./tmp/deviceData2db-" + gap + ".lck").delete();
-                }
+                    
+                    //Save Noti
+                    if(DB_store.pushDeviceNotification(deviceNotificationList, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
+                        deviceNotiUpdateFailCount = 0;
+                        //Noti saved
+                        //Publish Noti
+                        if(config.isNotificationMQTT()){
+                            MQTT_publisher.deviceNotificationsPublish(deviceNotificationList, config.getSpoutBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/devicenoti2mqtt-"+ gap +".lck"));
+                        }
+                    }
+                    else if(++deviceNotiUpdateFailCount>=3){
+                        new File("./tmp/devicenoti2db-" + gap + ".lck").delete();
+                    }
+                    
+                    //Logging
+                    Long execTime = System.currentTimeMillis() - startExec;
 
-                //DB store prop
-                Stack<DeviceProp> tempDevicePropList = new Stack<DeviceProp>();
-                tempDevicePropList.addAll(devicePropList.values());
-                if(DB_store.pushDeviceProp(tempDevicePropList, new File("./tmp/deviceProp2db-"+ gap + ".lck"))){
-                    devicePropUpdateFailCount=0;
-                    for(DeviceProp deviceProp : tempDevicePropList){
-                        devicePropList.get(deviceProp.getDeviceUniqueId()).save();
-                    }
-                }
-                else if(++devicePropUpdateFailCount >= 3) {
-                    new File("./tmp/deviceProp2db-"+ gap + ".lck").delete();
-                }
+                    Stack<String> logs = new Stack<String>();
+                    logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/triggerInterval/gap));
+                    logs.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
+                    logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
+                    logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
 
-                //Check outlier
-                for(DeviceData deviceData : needSave){
-                    String devicePropUniqueId = deviceData.getDeviceUniqueId();
-                    DeviceProp deviceProp = devicePropList.getOrDefault(devicePropUniqueId, new DeviceProp(deviceData.houseId, deviceData.householdId, deviceData.deviceId, this.gap));
-                    if(config.isDeviceCheckMax() && deviceProp.getMax()!=0 && (deviceData.getAvg()-deviceProp.getMax())>=(deviceProp.getMax()*config.getDeviceLogGap()/100)){
-                        //Check over Max
-                        deviceNotificationList.push(new DeviceNotification(1, deviceData, deviceProp));
-                    }
-                    if(config.isDeviceCheckAvg() && deviceProp.getAvg()!=0 && (deviceData.getAvg()-deviceProp.getAvg())>=(deviceProp.getAvg()*config.getDeviceLogGap()/100)){
-                        //Check over Avg
-                        deviceNotificationList.push(new DeviceNotification(0, deviceData, deviceProp));
-                    }
-                    if(config.isDeviceCheckMin() && deviceProp.getMin()!=0 && (deviceProp.getMin()-deviceData.getAvg())<=(deviceProp.getMin()*config.getDeviceLogGap()/100)){
-                        //Check under Min
-                        deviceNotificationList.push(new DeviceNotification(-1, deviceData, deviceProp));
-                    }
-                    //Save data_prop
-                    devicePropList.put(devicePropUniqueId, deviceProp.addValue(deviceData.getAvg()));
-                }
-                
-                //Save Noti
-                if(DB_store.pushDeviceNotification(deviceNotificationList, new File("./tmp/devicenoti2db-" + gap + ".lck"))){
-                    deviceNotiUpdateFailCount = 0;
-                    //Noti saved
-                    //Publish Noti
-                    if(config.isNotificationMQTT()){
-                        MQTT_publisher.deviceNotificationsPublish(deviceNotificationList, config.getSpoutBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/devicenoti2mqtt-"+ gap +".lck"));
-                    }
-                }
-                else if(++deviceNotiUpdateFailCount>=3){
-                    new File("./tmp/devicenoti2db-" + gap + ".lck").delete();
-                }
-                
-                //Logging
-                Long execTime = System.currentTimeMillis() - startExec;
-
-                Stack<String> logs = new Stack<String>();
-                logs.push(String.format("[Bolt_avg_%-3d] Process speed: %-10d mess/s\n", gap, processSpeed/triggerInterval));
-                logs.push(String.format("[Bolt_avg_%-3d] Noti list: %-10d\n", gap, deviceNotificationList.size()));
-                logs.push(String.format("[Bolt_avg_%-3d] Total: %-10d | Already saved: %-10d | Need save: %-10d | Need clean: %-10d\n",gap, deviceDataList.size(), deviceDataList.size()-needSave.size(), needSave.size(), needClean.size()));
-                logs.push(String.format("[Bolt_avg_%-3d] Storing data execute time %.3f s\n", gap, (float) execTime/1000));
-
-                MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/bolt-avg-"+ gap +"-log-publish.lck"));
-                for(String data : logs){
-                    System.out.println(data);
-                }
-                try {
-                    FileWriter log = new FileWriter(new File("./tmp/bolt_avg_"+ gap +".tmp"), false);
-                    PrintWriter pwOb = new PrintWriter(log , false);
-                    pwOb.flush();
+                    MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/bolt-avg-"+ gap +"-log-publish.lck"));
                     for(String data : logs){
-                        log.write(data);
+                        System.out.println(data);
                     }
-                    pwOb.close();
-                    log.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                
-                //Clean garbage
-                for(String key : needClean){
-                    deviceDataList.remove(key);
-                }
+                    try {
+                        FileWriter log = new FileWriter(new File("./tmp/bolt_avg_"+ gap +".tmp"), false);
+                        PrintWriter pwOb = new PrintWriter(log , false);
+                        pwOb.flush();
+                        for(String data : logs){
+                            log.write(data);
+                        }
+                        pwOb.close();
+                        log.close();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    
+                    //Clean garbage
+                    for(String key : needClean){
+                        deviceDataList.remove(key);
+                    }
 
-                _collector.emit("trigger", new Values(triggerInterval, spoutProp));
+                    _collector.emit("trigger", new Values(triggerInterval, spoutProp));
+                    processSpeed = Long.valueOf(0);
+                }
                 _collector.ack(tuple);
-                processSpeed = Long.valueOf(0);
             }
             else if (tuple.getSourceStreamId().equals("data")) {
                 Integer houseId         = (Integer) tuple.getValueByField("houseId");
