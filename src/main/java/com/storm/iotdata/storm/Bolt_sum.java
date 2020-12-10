@@ -217,7 +217,7 @@ public class Bolt_sum extends BaseRichBolt {
                     }
                     // Check max
                     if(config.isHouseCheckMax() && houseProp.getMax()!=0 && (houseData.getAvg() - houseProp.getMax()) >= (houseProp.getMax()*config.getHouseLogGap()/100)){
-                        houseNotificationList.push(new HouseNotification(0, houseData, houseProp));
+                        houseNotificationList.push(new HouseNotification(1, houseData, houseProp));
                     }
                     housePropList.put(houseData.getHouseUniqueId(), houseProp.addValue(houseData.getAvg()));
                 }
@@ -234,7 +234,7 @@ public class Bolt_sum extends BaseRichBolt {
                     }
                     // Check max
                     if(config.isHouseholdCheckMax() && householdProp.getMax()!=0 && (householdData.getAvg() - householdProp.getMax()) >= (householdProp.getMax()*config.getHouseholdLogGap()/100)){
-                        householdNotificationList.push(new HouseholdNotification(0, householdData, householdProp));
+                        householdNotificationList.push(new HouseholdNotification(1, householdData, householdProp));
                     }
                     householdPropList.put(householdData.getHouseholdUniqueId(), householdProp.addValue(householdData.getAvg()));
                 }
