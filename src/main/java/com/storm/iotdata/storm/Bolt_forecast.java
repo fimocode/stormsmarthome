@@ -55,12 +55,16 @@ public class Bolt_forecast extends BaseRichBolt {
                     for(String key : houseDataForecast.keySet()){
                         houseDataList.remove(key);
                     }
+                    //Log HouseData
+                    logs.add(String.format("[Bolt_forecast_%d] HouseData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
+                    logs.add(String.format("[Bolt_forecast_%d] HouseData Total: %-10d | Saved and clean: %-10d\n", gap, houseDataList.size(), tempHouseDataForecast.size()));
+                    //Cleanning
                     houseDataForecast = null;
                     tempHouseDataForecast = null;
-                };
-                //Log HouseData
-                logs.add(String.format("[Bolt_forecast_%d] HouseData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
-                logs.add(String.format("[Bolt_forecast_%d] HouseData Total: %-10d | Saved and clean: %-10d\n", gap, houseDataList.size(), tempHouseDataForecast.size()));
+                }
+                else {
+                    logs.add(String.format("[Bolt_forecast_%d] HouseData forecast not saved\n", gap));
+                }
 
                 start = System.currentTimeMillis();
                 HashMap<String, HouseholdData> householdDataForecast = forecast(householdDataList);
@@ -70,12 +74,16 @@ public class Bolt_forecast extends BaseRichBolt {
                     for(String key : householdDataForecast.keySet()){
                         householdDataList.remove(key);
                     }
+                    //Log HouseholdData
+                    logs.add(String.format("[Bolt_forecast_%d] HouseholdData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
+                    logs.add(String.format("[Bolt_forecast_%d] HouseholdData Total: %-10d | Saved and clean: %-10d\n", gap, householdDataList.size(), tempHouseholdDataForecast.size()));
+                    //Cleaning
                     householdDataForecast = null;
                     tempHouseholdDataForecast = null;
-                };
-                //Log HouseholdData
-                logs.add(String.format("[Bolt_forecast_%d] HouseholdData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
-                logs.add(String.format("[Bolt_forecast_%d] HouseholdData Total: %-10d | Saved and clean: %-10d\n", gap, householdDataList.size(), tempHouseholdDataForecast.size()));
+                }
+                else {
+                    logs.add(String.format("[Bolt_forecast_%d] HouseholdData forecast not saved\n", gap));
+                }
 
                 HashMap<String, DeviceData> deviceDataForecast = forecast(deviceDataList);
                 Stack<DeviceData> tempDeviceDataForecast = new Stack<DeviceData>();
@@ -84,12 +92,16 @@ public class Bolt_forecast extends BaseRichBolt {
                     for(String key : deviceDataForecast.keySet()){
                         deviceDataList.remove(key);
                     }
+                    //Log HouseData
+                    logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
+                    logs.add(String.format("[Bolt_forecast_%d] DeviceData Total: %-10d | Saved and clean: %-10d\n", gap, deviceDataList.size(), tempDeviceDataForecast.size()));
+                    //Cleaning
                     deviceDataForecast = null;
                     tempDeviceDataForecast = null;
-                };
-                //Log HouseData
-                logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast took %.2fs\n", gap, (float)(System.currentTimeMillis()-start)/1000));
-                logs.add(String.format("[Bolt_forecast_%d] DeviceData Total: %-10d | Saved and clean: %-10d\n", gap, deviceDataList.size(), tempDeviceDataForecast.size()));
+                }
+                else {
+                    logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast not saved\n", gap));
+                }
 
                 MQTT_publisher.stormLogPublish(logs, config.getNotificationBrokerURL(), config.getMqttTopicPrefix(), new File("./tmp/bolt-forecast-"+ gap +"-log-publish.lck"));
                 for(String data : logs){

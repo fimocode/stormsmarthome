@@ -1,7 +1,6 @@
 package com.storm.iotdata.functions;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.Stack;
 import java.util.UUID;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
