@@ -60,6 +60,7 @@ public class Bolt_forecast extends BaseRichBolt {
                     logs.add(String.format("[Bolt_forecast_%d] HouseData Total: %-10d | Saved and clean: %-10d\n", gap, houseDataList.size(), tempHouseDataForecast.size()));
                     //Cleanning
                     houseDataForecast = null;
+                    tempHouseDataForecast = null;
                 }
                 else {
                     logs.add(String.format("[Bolt_forecast_%d] HouseData forecast not saved\n", gap));
@@ -78,6 +79,7 @@ public class Bolt_forecast extends BaseRichBolt {
                     logs.add(String.format("[Bolt_forecast_%d] HouseholdData Total: %-10d | Saved and clean: %-10d\n", gap, householdDataList.size(), tempHouseholdDataForecast.size()));
                     //Cleaning
                     householdDataForecast = null;
+                    tempHouseholdDataForecast = null;
                 }
                 else {
                     logs.add(String.format("[Bolt_forecast_%d] HouseholdData forecast not saved\n", gap));
@@ -95,6 +97,7 @@ public class Bolt_forecast extends BaseRichBolt {
                     logs.add(String.format("[Bolt_forecast_%d] DeviceData Total: %-10d | Saved and clean: %-10d\n", gap, deviceDataList.size(), tempDeviceDataForecast.size()));
                     //Cleaning
                     deviceDataForecast = null;
+                    tempDeviceDataForecast = null;
                 }
                 else {
                     logs.add(String.format("[Bolt_forecast_%d] DeviceData forecast not saved\n", gap));
