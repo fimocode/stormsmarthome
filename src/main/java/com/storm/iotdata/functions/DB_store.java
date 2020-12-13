@@ -837,7 +837,7 @@ class DeviceProp2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -889,7 +889,7 @@ class HouseholdProp2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -940,7 +940,7 @@ class HouseProp2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -996,7 +996,7 @@ class DeviceData2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -1049,7 +1049,7 @@ class HouseholdData2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -1108,7 +1108,7 @@ class HouseData2DB extends Thread {
             conn.close();
             locker.delete();
             dataList = null;
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             try {
@@ -1161,7 +1161,7 @@ class DeviceDataForecast2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -1216,7 +1216,7 @@ class HouseholdDataForecast2DB extends Thread {
             }
             tempSql.executeBatch();
             conn.commit();
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
             conn.close();
             locker.delete();
@@ -1277,7 +1277,7 @@ class HouseDataForecast2DB extends Thread {
             conn.close();
             locker.delete();
             dataList = null;
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             try {
@@ -1335,7 +1335,7 @@ class DeviceNotification2DB extends Thread {
             conn.close();
             locker.delete();
             dataList = null;
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             try {
@@ -1393,7 +1393,7 @@ class HouseholdNotification2DB extends Thread {
             conn.close();
             locker.delete();
             dataList = null;
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             try {
@@ -1450,7 +1450,7 @@ class HouseNotification2DB extends Thread {
             conn.close();
             locker.delete();
             dataList = null;
-            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s\n",
+            System.out.printf("\n[" + locker.getName() + "] DB tooks %.2f s ("+ dataList.size() +" queries)\n",
                     (float) (System.currentTimeMillis() - start) / 1000);
         } catch (Exception ex) {
             try {
