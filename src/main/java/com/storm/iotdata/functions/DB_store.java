@@ -766,11 +766,12 @@ public class DB_store {
     public static HashMap<String, DeviceData> queryBefore(DeviceData deviceData, Connection conn){
         HashMap<String, DeviceData> result = new HashMap<String, DeviceData>();
         try{
-            try (PreparedStatement tempSql = conn.prepareStatement("select * from device_data where house_id=? and household_id=? and slice_gap=? and slice_index=?")){
+            try (PreparedStatement tempSql = conn.prepareStatement("select * from device_data where house_id=? and household_id=? and device_id=? and slice_gap=? and slice_index=?")){
                 tempSql.setInt(1, deviceData.getHouseId());
                 tempSql.setInt(2, deviceData.getHouseholdId());
-                tempSql.setInt(3, deviceData.getGap());
-                tempSql.setInt(4, deviceData.getTimeslice().getNextTimeslice(2).getIndex());
+                tempSql.setInt(3, deviceData.getDeviceId());
+                tempSql.setInt(4, deviceData.getGap());
+                tempSql.setInt(5, deviceData.getTimeslice().getNextTimeslice(2).getIndex());
                 try (ResultSet rs = tempSql.executeQuery()) {
                     while (rs.next()) {
                         Integer rsHouseId = rs.getInt("house_id");
