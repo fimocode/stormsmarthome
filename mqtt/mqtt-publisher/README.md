@@ -11,6 +11,8 @@ Then exact samplefile.zip and copy sample file to folder `data_file` like image 
 ```cmd
 cd mqtt
 
+mkdir data_file
+
 python3 -m venv
 
 source venv/bin/activate
