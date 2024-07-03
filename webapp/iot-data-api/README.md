@@ -13,8 +13,8 @@ duongtm3102/iot-data-api:v1
 ```sh
 cd ./webapp/iot-data-api
 
-# For example, image name iot-api-data:v1
-docker build -t iot-api-data .
+# For example, image name iot-data-api:v1
+docker build -t iot-data-api:v1 .
 
 ```
 ### Run container
