@@ -52,6 +52,7 @@ services:
   
   mysql:
     image: mysql:latest
+    command: --mysql-native-password=ON
     container_name: mysql
     networks:
       storm_network:
@@ -64,6 +65,19 @@ services:
       - 3306:3306
     volumes:
       - mysql_data:/var/lib/mysql
+
+  webapp:
+    image: duongtm3102/iot-data-api:v1
+    container_name: iot-data-api
+    networks:
+      storm_network:
+    ports:
+      - 9000:9000
+    volumes:
+      - ./webapp/cred.json:/opt/app/cred.json
+    depends_on:
+      - mysql
+    restart: always
 
 
 networks:

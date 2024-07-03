@@ -36,13 +36,19 @@ This is the system topology for this project, which includes:
     - Storm supervisor
     - Zookeeper
 - MySQL
-- Web Application
+- [Web Application](./webapp/iot-data-api/README.md)
 
 ![alt text](./image/image2.png)
 
 ### Run topology storm
 
 This [docker compose](./docker-compose.yml) file below will guide you on how to run all the components listed above.
+
+### Create database credential for web app
+```sh
+cp ./webapp/cred.json.example ./webapp/cred.json
+# Edit ./webapp/cred.json base on your environment
+```
 
 **Run all storm cluster**
 
