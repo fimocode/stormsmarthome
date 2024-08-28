@@ -18,8 +18,6 @@ services:
       - ./target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar:/target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar
     networks:
       storm_network:
-    ports:
-      - 6627:6627
       
 
   supervisor:
@@ -51,7 +49,7 @@ services:
       - 1883:1883
   
   mysql:
-    image: mysql:latest
+    image: mysql:8.4.2
     command: --mysql-native-password=ON
     container_name: mysql
     networks:
