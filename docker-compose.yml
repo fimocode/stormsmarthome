@@ -28,6 +28,15 @@ services:
       - ./storm/config/storm-nimbus.yaml:/conf/storm.yaml
     networks:
       storm_network:
+  
+  supervisor2:
+    image: storm
+    container_name: supervisor2
+    command: storm supervisor
+    volumes:
+      - ./storm/config/storm-nimbus.yaml:/conf/storm.yaml
+    networks:
+      storm_network:
 
   ui:
     image: storm
