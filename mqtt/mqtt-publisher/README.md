@@ -5,15 +5,15 @@ Read IoT data from a CSV file and send it to a broker as an MQTT client. Many th
 
 First, install the sample file by downloading it from this [link](https://drive.google.com/file/d/14nO_NhyyJ_ig25RqvTS4wrkm-Zv1revR/view) and down by gdown from pip library
 
-Then exact samplefile.zip and copy sample file to folder `data_file` like image below
+Then exact samplefile.zip and copy sample file to folder `data-file` like image below
 ![alt text](../../image/image.png)
 
 ```cmd
 cd mqtt
 
-mkdir data_file
+mkdir data-file
 
-python3 -m venv
+python3 -m venv venv
 
 source venv/bin/activate
 
@@ -21,7 +21,7 @@ pip install gdown
 
 gdown 14nO_NhyyJ_ig25RqvTS4wrkm-Zv1revR
 
-tar -xzf debs40houses16h.tar.gz -C data_file/
+tar -xzf debs40houses16h.tar.gz -C data-file/
 ```
 
 
@@ -55,7 +55,7 @@ options:
 
 Example
 ```cmd
-node index.js -f ../data_file/house-0.csv -s 100 -b 127.0.0.1
+node index.js -f ../data-file/house-0.csv -s 100 -b 127.0.0.1
 ```
 
 **Run with docker**
@@ -70,4 +70,19 @@ Run image
 
 ```cmd
 docker run --net host --name mqtt-publisher -v /home/mr8/projects/grand_project/stormsmarthome/mqtt/data-file:/app/data-file mr4x2/mqtt-publisher:v1 node index.js -f data-file/house-0.csv -b 10.0.0.5 -s 100
+```
+
+
+**How to run multiple publisher -> broker**
+
+
+Edit some variable env in [docker-compose.yaml](./docker-compose.yaml)
+
+Add some services in docker-compose.yaml if need many traffic
+
+
+Run
+
+```cmd
+docker compose up -d
 ```
