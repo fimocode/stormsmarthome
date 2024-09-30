@@ -120,9 +120,8 @@ public class MainTopo {
 
                 Config conf = new Config();
                 conf.setDebug(true);
-                conf.setNumWorkers(4);
                 // conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 5000);
-
+                conf.setNumWorkers(4);
 
                 // Local Cluster Test
                 if(cmd.hasOption("develop")){
