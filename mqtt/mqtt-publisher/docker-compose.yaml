@@ -3,7 +3,7 @@ services:
     image: mr4x2/mqtt-publisher:v1
     container_name: mqtt-publisher-building-1
     volumes:
-      - /home/mr8/projects/grand_project/stormsmarthome/mqtt/data-file:/app/data-file
+      - /root/stormsmarthome/mqtt/data-file:/app/data-file
     environment:
       - HOSTNAME=10.1.0.167
       - CSV_FILE=house-0.csv
@@ -14,7 +14,7 @@ services:
     image: mr4x2/mqtt-publisher:v1
     container_name: mqtt-publisher-building-2
     volumes:
-      - /home/mr8/projects/grand_project/stormsmarthome/mqtt/data-file:/app/data-file
+      - /root/stormsmarthome/mqtt/data-file:/app/data-file
     environment:
       - HOSTNAME=10.1.0.167
       - CSV_FILE=house-1.csv
@@ -25,7 +25,7 @@ services:
     image: mr4x2/mqtt-publisher:v1
     container_name: mqtt-publisher-building-3
     volumes:
-      - /home/mr8/projects/grand_project/stormsmarthome/mqtt/data-file:/app/data-file
+      - /root/stormsmarthome/mqtt/data-file:/app/data-file
     environment:
       - HOSTNAME=10.1.0.167
       - CSV_FILE=house-2.csv
