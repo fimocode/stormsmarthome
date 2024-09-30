@@ -59,6 +59,8 @@ docker compose up -d
 **Then apply iot-data-smarthome topo**
 
 ```cmd
+docker cp target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar nimbus:/
+
 docker exec -it nimbus bash
 
 storm jar /target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar com.storm.iotdata.MainTopo
