@@ -58,3 +58,16 @@ Example
 node index.js -f ../data_file/house-0.csv -s 100 -b 127.0.0.1
 ```
 
+**Run with docker**
+
+Build image
+
+```cmd
+docker build -t mqtt-publisher .
+```
+
+Run image
+
+```cmd
+docker run --net host --name mqtt-publisher -v /home/mr8/projects/grand_project/stormsmarthome/mqtt/data-file:/app/data-file mr4x2/mqtt-publisher:v1 node index.js -f data-file/house-0.csv -b 10.0.0.5 -s 100
+```
