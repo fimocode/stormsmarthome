@@ -4,18 +4,39 @@ services:
     container_name: mqtt-publisher-building-1
     volumes:
       - /root/stormsmarthome/mqtt/data-file:/app/data-file
-    command: node index.js -f data-file/${CSV_FILE_0} -b ${HOST_NAME} -s ${SPEED}
+    command: "node index.js -f data-file/${CSV_FILE_0} -b ${HOST_NAME} -s ${SPEED}"
 
   building_2:
     image: mr4x2/mqtt-publisher:v1
     container_name: mqtt-publisher-building-2
     volumes:
       - /root/stormsmarthome/mqtt/data-file:/app/data-file
-    command: node index.js -f data-file/${CSV_FILE_1} -b ${HOST_NAME} -s ${SPEED}
+    command: "node index.js -f data-file/${CSV_FILE_1} -b ${HOST_NAME} -s ${SPEED}"
 
   building_3:
     image: mr4x2/mqtt-publisher:v1
     container_name: mqtt-publisher-building-3
     volumes:
       - /root/stormsmarthome/mqtt/data-file:/app/data-file
-    command: node index.js -f data-file/${CSV_FILE_2} -b ${HOSTNAME} -s ${SPEED}
+    command: "node index.js -f data-file/${CSV_FILE_2} -b ${HOST_NAME} -s ${SPEED}"
+
+  building_4:
+    image: mr4x2/mqtt-publisher:v1
+    container_name: mqtt-publisher-building-4
+    volumes:
+      - /root/stormsmarthome/mqtt/data-file:/app/data-file
+    command: "node index.js -f data-file/${CSV_FILE_3} -b ${HOST_NAME} -s ${SPEED}"
+
+  building_5:
+    image: mr4x2/mqtt-publisher:v1
+    container_name: mqtt-publisher-building-5
+    volumes:
+      - /root/stormsmarthome/mqtt/data-file:/app/data-file
+    command: "node index.js -f data-file/${CSV_FILE_4} -b ${HOST_NAME} -s ${SPEED}"
+
+  building_6:
+    image: mr4x2/mqtt-publisher:v1
+    container_name: mqtt-publisher-building-6
+    volumes:
+      - /root/stormsmarthome/mqtt/data-file:/app/data-file
+    command: "node index.js -f data-file/${CSV_FILE_5} -b ${HOST_NAME} -s ${SPEED}"
