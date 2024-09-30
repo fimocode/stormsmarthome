@@ -84,5 +84,5 @@ Add some services in docker-compose.yaml if need many traffic
 Run
 
 ```cmd
-docker compose up -d
+docker compose --env-file mqtt.env up -d
 ```
