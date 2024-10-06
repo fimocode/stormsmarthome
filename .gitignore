@@ -16,4 +16,5 @@ package-lock.json
 *.stat
 venv
 .idea/
+*.tar.gz
 
