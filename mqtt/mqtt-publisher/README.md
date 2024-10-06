@@ -76,7 +76,7 @@ docker run --net host --name mqtt-publisher -v /home/mr8/projects/grand_project/
 **How to run multiple publisher -> broker**
 
 
-Edit some variable env in [docker-compose.yaml](./docker-compose.yaml)
+Edit some variable env in [mqtt.env](./mqtt.env)
 
 Add some services in docker-compose.yaml if need many traffic
 
