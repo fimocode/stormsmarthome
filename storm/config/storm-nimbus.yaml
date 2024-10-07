@@ -273,7 +273,9 @@ topology.state.synchronization.timeout.secs: 60
 topology.stats.sample.rate: 0.05
 topology.builtin.metrics.bucket.size.secs: 60
 topology.fall.back.on.java.serialization: false
-topology.worker.childopts: null
+topology.worker.childopts:
+    -Xms512m
+    -Xmx2048m
 topology.worker.logwriter.childopts: "-Xmx64m"
 topology.tick.tuple.freq.secs: null
 topology.worker.shared.thread.pool.size: 4
