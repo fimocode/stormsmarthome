@@ -157,10 +157,6 @@ supervisor.slots.ports:
     - 6701
     - 6702
     - 6703
-    - 6704
-    - 6705
-    - 6706
-    - 6707
 supervisor.childopts: "-Xmx256m"
 supervisor.run.worker.as.user: false
 #how long supervisor will wait to ensure that a worker process is started
