@@ -121,7 +121,7 @@ public class MainTopo {
                 Config conf = new Config();
                 conf.setDebug(true);
                 // conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 5000);
-                conf.setNumWorkers(4);
+                conf.setNumWorkers(1);
                 conf.registerSerialization(SpoutProp.class);
 
                 // Local Cluster Test
