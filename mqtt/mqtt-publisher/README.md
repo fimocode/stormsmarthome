@@ -81,7 +81,7 @@ Edit some variable env in [mqtt.env](./mqtt.env)
 Add some services in docker-compose.yaml if need many traffic
 
 
-Run
+How to run multiple container to test mqtt
 
 ```cmd
 docker compose --env-file mqtt.env up -d

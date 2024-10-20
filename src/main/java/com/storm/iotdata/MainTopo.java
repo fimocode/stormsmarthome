@@ -96,7 +96,7 @@ public class MainTopo {
                 HashMap<String, BoltDeclarer> forecastList = new HashMap<String, BoltDeclarer>();
                 for (Integer windowSize : config.getWindowList()) {
                     splitList.put("split-" + windowSize,
-                            builder.setBolt("split-" + windowSize, new Bolt_split(windowSize, config), 1));
+                            builder.setBolt("split-" + windowSize, new Bolt_split(windowSize, config), 1).setNumTasks(2));
                     avgList.put("avg-" + windowSize,
                             builder.setBolt("avg-" + windowSize, new Bolt_avg(windowSize, config), 1));
                     sumList.put("sum-" + windowSize,
@@ -107,7 +107,7 @@ public class MainTopo {
                 
                 for (Integer windowSize : config.getWindowList()) {
                     for (String topic : config.getSpoutTopicList()){
-                        splitList.get("split-" + windowSize).shuffleGrouping("spout-data-" + topic, "data");
+                        splitList.get("split-" + windowSize).allGrouping("spout-data-" + topic, "data");
                     }
                     avgList.get("avg-" + windowSize).shuffleGrouping("split-" + windowSize, "data");
                     avgList.get("avg-" + windowSize).shuffleGrouping("spout-trigger", "trigger");
