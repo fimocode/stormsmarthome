@@ -16,3 +16,9 @@ package-lock.json
 *.stat
 venv
 *.tar.gz
+
+.env
+.venv
+mqtt/my_venv
+cred.json
+cred.yaml

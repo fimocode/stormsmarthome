@@ -1,0 +1,8 @@
+services:
+  mqtt-broker:
+    image: mr4x2/mqtt-broker-iotdata:v1
+    container_name: mqtt-broker
+    volumes:
+      - ./mqtt/mqtt-broker/mosquitto.conf:/etc/mosquitto/mosquitto.conf
+    ports:
+      - 1883:1883

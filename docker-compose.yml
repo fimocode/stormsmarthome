@@ -44,6 +44,8 @@ services:
   
   mqtt-broker:
     image: mr4x2/mqtt-broker-iotdata:v1
+    # image: rumispirytus/mqtt-broker-bridge-mode:latest
+    # image: rumispirytus/emqx-broker-bridge-mode:latest
     container_name: mqtt-broker
     networks:
       storm_network:
