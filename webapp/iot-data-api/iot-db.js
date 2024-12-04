@@ -447,8 +447,7 @@ function recalculateMSE(){
                 Object.keys(result).forEach(key=>{
                     data.push(result[key]);
                 })
-                // TODO(duongtm3102): revert to ['v0','v1','v2','v3','ml']; later
-                let versions = ['v0'];
+                let versions = ['v0', 'xgboost', 'arima', 'neuralprophet'];
                 versions.forEach(ver=>{
                     let forecast_data = [];
                     queryforecast(new house_data(null,null,null,null,window,null),ver,(err,forecast_result)=>{

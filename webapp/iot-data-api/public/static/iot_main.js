@@ -1,8 +1,7 @@
 var myChart;
 var interval;
 var exportData = {};
-// TODO(duongtm3102): revert to ['v0','v1','v2','v3','ml']; later
-var version = ['v0'];
+var version = ['v0','xgboost', 'arima', 'neuralprophet'];
 var meta_data;
 var ctx;
 

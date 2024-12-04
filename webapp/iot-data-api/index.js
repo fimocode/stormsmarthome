@@ -28,7 +28,7 @@ app.get('/api/getmeta', (req, res) => {
 
 app.get('/api/queryforecast', (req, res) => {
     let queryParams = req.query;
-    sql.queryforecast(new iot_data(queryParams.house_id, queryParams.household_id, queryParams.device_id, queryParams.year, queryParams.month, queryParams.day, queryParams.slice_gap, queryParams.slice_index), queryParams.version || 'v1', (err, result) => {
+    sql.queryforecast(new iot_data(queryParams.house_id, queryParams.household_id, queryParams.device_id, queryParams.year, queryParams.month, queryParams.day, queryParams.slice_gap, queryParams.slice_index), queryParams.version || 'v0', (err, result) => {
         if (err) res.status(500).send('Server error but it must be your fault');
         else res.json(result);
     });
@@ -44,7 +44,7 @@ app.get('/api/querybyweek', (req, res) => {
 
 app.get('/api/queryforecastbyweek', (req, res) => {
     let queryParams = req.query;
-    sql.queryforecastbyweek(new iot_data(queryParams.house_id, queryParams.year, queryParams.month, queryParams.day, queryParams.slice_gap, queryParams.slice_index), queryParams.week, queryParams.version || 'v1', (err, result) => {
+    sql.queryforecastbyweek(new iot_data(queryParams.house_id, queryParams.year, queryParams.month, queryParams.day, queryParams.slice_gap, queryParams.slice_index), queryParams.week, queryParams.version || 'v0', (err, result) => {
         if (err) res.status(500).send('Server error but it must be your fault');
         else res.json(result);
     });
