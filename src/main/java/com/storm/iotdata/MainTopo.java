@@ -96,7 +96,7 @@ public class MainTopo {
                 HashMap<String, BoltDeclarer> forecastList = new HashMap<String, BoltDeclarer>();
                 for (Integer windowSize : config.getWindowList()) {
                     splitList.put("split-" + windowSize,
-                            builder.setBolt("split-" + windowSize, new Bolt_split(windowSize, config), 1).setNumTasks(2));
+                            builder.setBolt("split-" + windowSize, new Bolt_split(windowSize, config), 1).setNumTasks(4));
                     avgList.put("avg-" + windowSize,
                             builder.setBolt("avg-" + windowSize, new Bolt_avg(windowSize, config), 1));
                     sumList.put("sum-" + windowSize,
@@ -121,8 +121,9 @@ public class MainTopo {
                 Config conf = new Config();
                 conf.setDebug(true);
                 // conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 5000);
-                conf.setNumWorkers(1);
+                conf.setNumWorkers(2);
                 conf.registerSerialization(SpoutProp.class);
+                // conf.registerSerialization(com.storm.iotdata.models.SpoutProp.class);
 
                 // Local Cluster Test
                 if(cmd.hasOption("develop")){
