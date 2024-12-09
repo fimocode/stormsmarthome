@@ -63,7 +63,7 @@ docker cp target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar nimbus:/
 
 docker exec -it nimbus bash
 
-storm jar /Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar com.storm.iotdata.MainTopo
+storm jar Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar com.storm.iotdata.MainTopo
 ```
 
 **Run MQTT components**
