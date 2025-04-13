@@ -27,7 +27,7 @@ services:
     container_name: supervisor
     command: storm supervisor
     volumes:
-      - ./storm/config/storm-nimbus.yaml:/conf/storm.yaml
+      - ./storm/config/storm-supervisor.yaml:/conf/storm.yaml
     networks:
       storm_network:
   
@@ -36,7 +36,7 @@ services:
     container_name: supervisor2
     command: storm supervisor
     volumes:
-      - ./storm/config/storm-nimbus.yaml:/conf/storm.yaml
+      - ./storm/config/storm-supervisor.yaml:/conf/storm.yaml
     networks:
       storm_network:
 
