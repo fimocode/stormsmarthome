@@ -22,6 +22,7 @@ java.library.path: "/usr/local/lib:/opt/local/lib:/usr/lib:/usr/lib64"
 
 ### storm.* configs are general configurations
 # the local dir is where jars are kept
+storm.local.hostname: "nimbus" # the hostname of the nimbus server
 storm.local.dir: "storm-local"
 storm.log4j2.conf.dir: "log4j2"
 storm.zookeeper.servers:
@@ -85,7 +86,7 @@ nimbus.worker.heartbeats.recovery.strategy.class: "org.apache.storm.nimbus.TimeO
 nimbus.topology.blobstore.deletion.delay.ms: 300000
 
 ### ui.* configs are for the master
-ui.host: "ui"
+ui.host: "nimbus"
 ui.port: 8081
 ui.title: "Storm UI"
 ui.childopts: "-Xmx768m"

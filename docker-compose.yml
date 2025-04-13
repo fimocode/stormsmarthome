@@ -10,12 +10,14 @@ services:
 
 
   nimbus:
-    image: storm
     container_name: nimbus
-    command: storm nimbus
+    image: storm
+    command: sh -c "storm nimbus & storm ui"
     volumes:
       - ./storm/config/storm-nimbus.yaml:/conf/storm.yaml
       - ./target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar:/target/Storm-IOTdata-1.0-SNAPSHOT-jar-with-dependencies.jar
+    ports:
+      - 8081:8081
     networks:
       storm_network:
 
@@ -38,17 +40,6 @@ services:
     networks:
       storm_network:
 
-  ui:
-    image: storm
-    container_name: ui
-    command: storm ui
-    volumes:
-      - ./storm/config/storm-nimbus.yaml:/conf/storm.yaml
-    networks:
-      storm_network:
-    ports:
-      - 8081:8081
-  
   mqtt-broker:
     image: mr4x2/mqtt-broker-iotdata:v1
     container_name: mqtt-broker
@@ -90,15 +81,21 @@ services:
     image: mr4x2/stormexporter:v1.2.2
     container_name: storm-exporter
     environment:
-      - STORM_UI_HOST=ui:8081
+      - STORM_UI_HOST=nimbus:8081
       - PORT_EXPOSE=8082
       - REFRESH_RATE=5
     networks:
       storm_network:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://nimbus:8081/api/v1/cluster/summary"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     ports:
       - 8082:8082
     depends_on:
-      - ui
+      - nimbus
     # TODO: update health check with depend on to avoid fail in run container
 
 networks:
