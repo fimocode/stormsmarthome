@@ -10,3 +10,11 @@ tmp/
 src/main/resources/config/cred.yaml
 Error.log
 *tcp*/
+node_modules/
+*.csv
+package-lock.json
+*.stat
+venv
+.idea/
+*.tar.gz
+

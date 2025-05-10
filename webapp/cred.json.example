@@ -1,0 +1,7 @@
+{
+	"db_url": "mysql",
+	"db_port": 3306,
+	"db_user": "replaceme",
+	"db_pass": "replaceme",
+	"db_name": "replaceme"
+}
