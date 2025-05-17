@@ -30,7 +30,7 @@ Go to root path which is mqtt-publisher
 
 ```cmd
 cd /mqtt/mqtt-publisher/
-``
+```
 
 Require NodeJS minimum version 12, npm.
 
