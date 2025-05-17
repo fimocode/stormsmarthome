@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:18-slim
 
 RUN mkdir -p /app/
 
@@ -8,7 +8,4 @@ COPY package.json .
 
 RUN npm install
 
-COPY . .
-
-
-
+COPY index.js .
